@@ -19,7 +19,7 @@ export default function FeaturedPosts() {
         const response = await axios.get("http://localhost:8080/articles");
         console.log("API Response:", response.data);
         if (response.data.status === "success") {
-          setArticles(response.data.data); 
+          setArticles(response.data.data);
         }
       } catch (err) {
         console.error("Error fetching articles:", err);
@@ -29,7 +29,7 @@ export default function FeaturedPosts() {
       }
     };
 
-    fetchArticles(); //
+    fetchArticles();
   }, []);
 
   useEffect(() => {
@@ -69,6 +69,13 @@ export default function FeaturedPosts() {
                   {heroArticle.title}
                 </h2>
                 <p className="text-gray-200 mt-2">{heroArticle.description}</p>
+                <div className="flex items-center mt-4 text-gray-300">
+                  <span className="text-sm">By {heroArticle.author}</span>
+                  <span className="mx-2">|</span>
+                  <span className="text-sm">
+                    {new Date(heroArticle.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
               </div>
             </div>
           </Link>
@@ -94,12 +101,17 @@ export default function FeaturedPosts() {
                 {article.title}
               </h3>
               <p className="text-gray-600 mt-2">{article.description}</p>
+              <div className="flex items-center mt-4 text-gray-500">
+                <span className="text-sm">By {article.author || "Unknown"}</span>
+                <span className="mx-2">|</span>
+                <span className="text-sm">
+                  {new Date(article.createdAt).toLocaleDateString()}
+                </span>
+              </div>
             </div>
           </Link>
         </div>
       );
-
-      // Insert a hero section after every 3 articles
       if ((index + 1) % 3 === 0 && heroIndex < articles.length) {
         const heroArticle = articles[heroIndex];
         result.push(
@@ -122,6 +134,13 @@ export default function FeaturedPosts() {
                   <p className="text-gray-200 mt-2">
                     {heroArticle.description}
                   </p>
+                  <div className="flex items-center mt-4 text-gray-300">
+                    <span className="text-sm">By {heroArticle.author || "Unknown"}</span>
+                    <span className="mx-2">|</span>
+                    <span className="text-sm">
+                      {new Date(heroArticle.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
                 </div>
               </div>
             </Link>
@@ -152,10 +171,7 @@ export default function FeaturedPosts() {
 
   return (
     <section className="max-w-7xl mx-auto p-6 mt-10">
-      <h2 className="text-4xl font-bold text-center mb-12 fade-in">
-        Featured Posts
-      </h2>
-
+      <h2 className="text-4xl font-bold text-center mb-12 fade-in"></h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {articles.length > 0 ? (
           renderArticlesWithHero()

@@ -86,6 +86,13 @@ export default function CategoryPage() {
                   {heroArticle.title}
                 </h2>
                 <p className="text-gray-200 mt-2">{heroArticle.description}</p>
+                <div className="flex items-center mt-4 text-gray-300">
+                  <span className="text-sm">By {heroArticle.author || "Unknown"}</span>
+                  <span className="mx-2">|</span>
+                  <span className="text-sm">
+                    {new Date(heroArticle.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
               </div>
             </div>
           </Link>
@@ -113,6 +120,13 @@ export default function CategoryPage() {
                 {article.title}
               </h3>
               <p className="text-gray-600 mt-2">{article.description}</p>
+              <div className="flex items-center mt-4 text-gray-500">
+                <span className="text-sm">By {article.author || "Unknown"}</span>
+                <span className="mx-2">|</span>
+                <span className="text-sm">
+                  {new Date(article.createdAt).toLocaleDateString()}
+                </span>
+              </div>
             </div>
           </Link>
         </div>
@@ -141,6 +155,13 @@ export default function CategoryPage() {
                   <p className="text-gray-200 mt-2">
                     {heroArticle.description}
                   </p>
+                  <div className="flex items-center mt-4 text-gray-300">
+                    <span className="text-sm">By {heroArticle.author || "Unknown"}</span>
+                    <span className="mx-2">|</span>
+                    <span className="text-sm">
+                      {new Date(heroArticle.createdAt).toLocaleDateString()}
+                    </span>
+                  </div>
                 </div>
               </div>
             </Link>
@@ -173,7 +194,6 @@ export default function CategoryPage() {
     <section className="max-w-7xl mx-auto p-6 mt-10">
       {/* Category Title */}
       <h2 className="text-4xl font-bold text-center mb-12 fade-in">
-        {category.charAt(0).toUpperCase() + category.slice(1)} News
       </h2>
 
       {/* Articles Grid with Hero Sections */}
