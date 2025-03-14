@@ -3,23 +3,30 @@ import { useEffect, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import axios from "axios";
-import Loading from "./loading";
 import Link from "next/link";
+import { useParams } from "next/navigation";
+import Loading from "../loading";
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function FeaturedPosts() {
+export default function CategoryPage() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const params = useParams();
+  const category = params.category;
+
+  // Fetch articles for the category
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        const response = await axios.get("http://localhost:8080/articles");
+        const response = await axios.get(
+          `http://localhost:8080/articles/${category}`
+        );
         console.log("API Response:", response.data);
         if (response.data.status === "success") {
-          setArticles(response.data.data); 
+          setArticles(response.data.data);
         }
       } catch (err) {
         console.error("Error fetching articles:", err);
@@ -29,26 +36,36 @@ export default function FeaturedPosts() {
       }
     };
 
-    fetchArticles(); //
-  }, []);
+    fetchArticles();
+  }, [category]);
 
+  // GSAP animations for article cards
   useEffect(() => {
-    gsap.from(".fade-in", {
-      opacity: 0,
-      y: 50,
-      duration: 1,
-      scrollTrigger: {
-        trigger: ".fade-in",
-        start: "top 90%",
-        toggleActions: "play none none none",
-      },
+    gsap.utils.toArray(".fade-in").forEach((card, index) => {
+      gsap.from(card, {
+        opacity: 0,
+        y: 50,
+        scale: 0.95,
+        duration: 1,
+        delay: index * 0.2,
+        ease: "expo.out",
+        scrollTrigger: {
+          trigger: card,
+          start: "top 80%",
+          end: "bottom 20%",
+          toggleActions: "play none none none",
+          scrub: 1,
+        },
+      });
     });
   }, [articles]);
 
+  // Function to insert hero section at the top and after every 3 articles
   const renderArticlesWithHero = () => {
     const result = [];
     let heroIndex = 0;
 
+    // Add hero section at the top
     if (articles.length > 0) {
       const heroArticle = articles[heroIndex];
       result.push(
@@ -77,7 +94,9 @@ export default function FeaturedPosts() {
       heroIndex++;
     }
 
+    // Add regular articles and hero sections after every 3 articles
     articles.forEach((article, index) => {
+      // Add a regular article card
       result.push(
         <div
           key={article._id}
@@ -152,10 +171,12 @@ export default function FeaturedPosts() {
 
   return (
     <section className="max-w-7xl mx-auto p-6 mt-10">
+      {/* Category Title */}
       <h2 className="text-4xl font-bold text-center mb-12 fade-in">
-        Featured Posts
+        {category.charAt(0).toUpperCase() + category.slice(1)} News
       </h2>
 
+      {/* Articles Grid with Hero Sections */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {articles.length > 0 ? (
           renderArticlesWithHero()
