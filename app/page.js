@@ -16,14 +16,16 @@ export default function FeaturedPosts() {
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        const response = await axios.get("http://localhost:8080/articles");
+        const response = await axios.get(
+          "https://informativejournal-backend.vercel.app/articles"
+        );
         console.log("API Response:", response.data);
         if (response.data.status === "success") {
           setArticles(response.data.data);
         }
       } catch (err) {
         console.error("Error fetching articles:", err);
-        setError("Failed to fetch articles. Please try again later.");
+        setError(<Loading />);
       } finally {
         setLoading(false);
       }
@@ -102,7 +104,9 @@ export default function FeaturedPosts() {
               </h3>
               <p className="text-gray-600 mt-2">{article.description}</p>
               <div className="flex items-center mt-4 text-gray-500">
-                <span className="text-sm">By {article.author || "Unknown"}</span>
+                <span className="text-sm">
+                  By {article.author || "Unknown"}
+                </span>
                 <span className="mx-2">|</span>
                 <span className="text-sm">
                   {new Date(article.createdAt).toLocaleDateString()}
@@ -135,7 +139,9 @@ export default function FeaturedPosts() {
                     {heroArticle.description}
                   </p>
                   <div className="flex items-center mt-4 text-gray-300">
-                    <span className="text-sm">By {heroArticle.author || "Unknown"}</span>
+                    <span className="text-sm">
+                      By {heroArticle.author || "Unknown"}
+                    </span>
                     <span className="mx-2">|</span>
                     <span className="text-sm">
                       {new Date(heroArticle.createdAt).toLocaleDateString()}

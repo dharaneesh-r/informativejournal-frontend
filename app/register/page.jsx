@@ -12,7 +12,6 @@ export default function Home() {
   const buttonRef = useRef(null);
 
   useEffect(() => {
-    // GSAP Animations for initial load
     gsap.from(containerRef.current, {
       opacity: 0,
       y: 50,
@@ -34,7 +33,6 @@ export default function Home() {
       ease: "power2.out",
     });
 
-    // Animate shadow effects
     gsap.to(containerRef.current, {
       boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
       duration: 2,
@@ -43,7 +41,6 @@ export default function Home() {
       ease: "power1.inOut",
     });
 
-    // Animate form inputs on focus
     const inputs = [emailInputRef.current, passwordInputRef.current];
     inputs.forEach((input) => {
       input.addEventListener("focus", () => {
@@ -64,7 +61,6 @@ export default function Home() {
       });
     });
 
-    // Animate button on hover
     gsap.to(buttonRef.current, {
       scale: 1.05,
       boxShadow: "0 0 20px rgba(59, 130, 246, 0.7)",
@@ -83,24 +79,21 @@ export default function Home() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // GSAP form exit animation
     gsap.to(containerRef.current, {
-      x: -1000, // Slide out to the left
+      x: -1000, 
       opacity: 0,
       duration: 1,
       ease: "power2.inOut",
       onComplete: () => {
-        // Show SweetAlert2 message
         Swal.fire({
           title: "Success!",
           text: "Registration Successful!",
           icon: "success",
           confirmButtonText: "OK",
           customClass: {
-            popup: "animated tada", // Add custom animations to SweetAlert2
+            popup: "animated tada", 
           },
         }).then(() => {
-          // Reload the page after the alert is closed
           window.location.reload();
         });
       },

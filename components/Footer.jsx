@@ -2,6 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import Link from "next/link";
 
 // Register ScrollTrigger plugin
 gsap.registerPlugin(ScrollTrigger);
@@ -87,10 +88,10 @@ const Footer = () => {
 
     // Floating icons animation
     floatingIconsRef.current.forEach((icon, index) => {
-      const randomX = gsap.utils.random(-200, 200); // Wider range for more movement
-      const randomY = gsap.utils.random(-200, 200); // Wider range for more movement
-      const randomDuration = gsap.utils.random(3, 8); // Longer duration for smoother movement
-      const randomRotation = gsap.utils.random(-180, 180); // Full rotation for more dynamism
+      const randomX = gsap.utils.random(-50, 50);
+      const randomY = gsap.utils.random(-50, 50);
+      const randomDuration = gsap.utils.random(3, 8);
+      const randomRotation = gsap.utils.random(-180, 180);
 
       gsap.to(icon, {
         x: randomX,
@@ -119,10 +120,9 @@ const Footer = () => {
   }, []);
 
   const scrollToTop = () => {
-    gsap.to(window, {
-      duration: 1,
-      scrollTo: 0,
-      ease: "power3.out",
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
     });
   };
 
@@ -133,26 +133,26 @@ const Footer = () => {
     >
       {/* Floating Icons */}
       {[
-        "💻", // Technology
-        "📈", // Finance
-        "🎬", // Entertainment
-        "🏛️", // Politics
-        "🌍", // World News
-        "🏥", // Health
-        "🏀", // Sports
-        "💰", // Budget
-        "📰", // News
-        "🎮", // Gaming
-        "📚", // Education
-        "🚀", // Space
-        "🍿", // Movies
-        "🎤", // Music
-        "📱", // Mobile
-        "💡", // Innovation
-        "🌱", // Environment
-        "🛒", // Shopping
-        "🍔", // Food
-        "🚗", // Automotive
+        "💻",
+        "📈",
+        "🎬",
+        "🏛️",
+        "🌍",
+        "🏥",
+        "🏀",
+        "💰",
+        "📰",
+        "🎮",
+        "📚",
+        "🚀",
+        "🍿",
+        "🎤",
+        "📱",
+        "💡",
+        "🌱",
+        "🛒",
+        "🍔",
+        "🚗",
       ].map((icon, index) => (
         <div
           key={index}
@@ -192,25 +192,26 @@ const Footer = () => {
         {/* Categories Section */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-12">
           {[
-            { name: "Technology", icon: "💻" },
-            { name: "Sports", icon: "🏀" },
-            { name: "Business", icon: "💼" },
-            { name: "Entertainment", icon: "🎬" },
-            { name: "Health", icon: "🏥" },
-            { name: "Politics", icon: "🏛️" },
-            { name: "Finance", icon: "📈" },
-            { name: "World News", icon: "🌍" },
-            { name: "Education", icon: "📚" },
-            { name: "Environment", icon: "🌱" },
+            { name: "Technology", icon: "💻", href: "/technology" },
+            { name: "Sports", icon: "🏀", href: "/sports" },
+            { name: "Business", icon: "💼", href: "/business" },
+            { name: "Entertainment", icon: "🎬", href: "/entertainment" },
+            { name: "Health", icon: "🏥", href: "/health" },
+            { name: "Politics", icon: "🏛️", href: "/politics" },
+            { name: "Finance", icon: "📈", href: "/finance" },
+            { name: "World News", icon: "🌍", href: "/" },
+            { name: "Education", icon: "📚", href: "/education" },
+            { name: "Environment", icon: "🌱", href: "/environment" },
           ].map((category, index) => (
-            <div
+            <Link
               key={index}
+              href={category.href}
               ref={(el) => (categoriesRef.current[index] = el)}
-              className="text-center p-4 bg-white/10 backdrop-blur-md rounded-lg hover:bg-white/20 transition-colors duration-300"
+              className="text-center p-4 bg-white/10 backdrop-blur-md rounded-lg hover:bg-white/20 transition-colors duration-300 text-decoration-none"
             >
               <span className="text-2xl mb-2">{category.icon}</span>
               <h3 className="text-lg font-semibold">{category.name}</h3>
-            </div>
+            </Link>
           ))}
         </div>
 
@@ -251,12 +252,12 @@ const Footer = () => {
         {/* Copyright and Privacy Policy Section */}
         <div ref={copyrightRef} className="text-center text-gray-400 text-sm">
           &copy; {new Date().getFullYear()} NewsHub. All rights reserved. |{" "}
-          <a
+          <Link
             href="/privacy-policy"
             className="hover:text-blue-500 transition-colors duration-300"
           >
             Privacy Policy
-          </a>
+          </Link>
         </div>
       </div>
 
@@ -265,6 +266,7 @@ const Footer = () => {
         <button
           onClick={scrollToTop}
           className="fixed bottom-8 right-8 bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full shadow-lg transition-colors duration-300"
+          aria-label="Scroll to top"
         >
           <svg
             className="w-6 h-6"

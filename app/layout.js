@@ -24,15 +24,10 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {/* Navbar inside the body */}
         <header>
           <Navbar />
         </header>
-
-        {/* Main content */}
         <main className="my-15">{children}</main>
-
-        {/* Footer inside the body */}
         <footer>
           <Footer />
         </footer>

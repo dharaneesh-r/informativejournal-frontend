@@ -30,7 +30,7 @@ export default function CategoryPage() {
         }
       } catch (err) {
         console.error("Error fetching articles:", err);
-        setError("Failed to fetch articles. Please try again later.");
+        setError(<Loading />);
       } finally {
         setLoading(false);
       }
