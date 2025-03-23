@@ -6,6 +6,8 @@ import axios from "axios";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Loading from "../loading";
+import Image from "next/image";
+import { FaPlay, FaStop } from "react-icons/fa"; 
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -13,20 +15,23 @@ export default function CategoryPage() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [heroArticles, setHeroArticles] = useState([]);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const params = useParams();
   const category = params.category;
 
-  // Fetch articles for the category
+  // Fetch articles
   useEffect(() => {
     const fetchArticles = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:8080/articles/${category}`
+          `https://informativejournal-backend.vercel.app/articles/${category}`
         );
         console.log("API Response:", response.data);
         if (response.data.status === "success") {
           setArticles(response.data.data);
+          setHeroArticles(response.data.data.slice(0, 4));
         }
       } catch (err) {
         console.error("Error fetching articles:", err);
@@ -39,7 +44,7 @@ export default function CategoryPage() {
     fetchArticles();
   }, [category]);
 
-  // GSAP animations for article cards
+  // GSAP animations
   useEffect(() => {
     gsap.utils.toArray(".fade-in").forEach((card, index) => {
       gsap.from(card, {
@@ -60,92 +65,104 @@ export default function CategoryPage() {
     });
   }, [articles]);
 
-  // Function to insert hero section at the top and after every 3 articles
+  // Shuffle hero articles every 10 seconds
+  useEffect(() => {
+    if (articles.length > 0) {
+      const interval = setInterval(() => {
+        const shuffledArticles = [...articles].sort(() => Math.random() - 0.5);
+        setHeroArticles(shuffledArticles.slice(0, 4));
+      }, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [articles]);
+
+  // Auto-read news feature
+  useEffect(() => {
+    if (
+      articles.length > 0 &&
+      typeof window !== "undefined" &&
+      "speechSynthesis" in window
+    ) {
+      const speech = new SpeechSynthesisUtterance();
+      speech.lang = "en-US";
+      speech.rate = 1;
+      speech.pitch = 1;
+
+      const newsText = articles
+        .map((article) => `${article.title}. ${article.description}`)
+        .join(". ");
+      speech.text = newsText;
+
+      // Start speaking
+      if (isSpeaking) {
+        window.speechSynthesis.speak(speech);
+      }
+
+      // Cleanup function to stop speech when the component unmounts or isSpeaking changes
+      return () => {
+        window.speechSynthesis.cancel();
+      };
+    }
+  }, [articles, isSpeaking]);
+
+  // Render articles with hero section
   const renderArticlesWithHero = () => {
     const result = [];
-    let heroIndex = 0;
+    let heroCount = 0;
 
-    // Add hero section at the top
-    if (articles.length > 0) {
-      const heroArticle = articles[heroIndex];
-      result.push(
-        <div
-          key={`hero-top`}
-          className="col-span-1 md:col-span-2 lg:col-span-3 fade-in"
-        >
-          <Link href={`/${heroArticle.category}/${heroArticle.slug}`}>
-            <div className="relative h-96 rounded-lg overflow-hidden">
-              <img
-                src={heroArticle.image || "/news-image.jpg"}
-                alt={heroArticle.title}
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
-              <div className="absolute bottom-6 left-6 right-6">
-                <h2 className="text-3xl font-bold text-white">
-                  {heroArticle.title}
-                </h2>
-                <p className="text-gray-200 mt-2">{heroArticle.description}</p>
-                <div className="flex items-center mt-4 text-gray-300">
-                  <span className="text-sm">By {heroArticle.author || "Unknown"}</span>
+    for (let i = 0; i < articles.length; i += 3) {
+      const chunk = articles.slice(i, i + 3);
+      chunk.forEach((article) => {
+        result.push(
+          <div
+            key={article._id}
+            className="bg-white shadow-lg rounded-lg overflow-hidden transform transition duration-500 hover:scale-105 fade-in"
+          >
+            <Link href={`/${article.category}/${article.slug}`}>
+              <div className="w-full h-48 relative">
+                <Image
+                  src={article.image || "/news-image.jpg"}
+                  alt={article.title}
+                  className="object-cover"
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                />
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-semibold hover:text-blue-600">
+                  {article.title}
+                </h3>
+                <p className="text-gray-600 mt-2">{article.description}</p>
+                <div className="flex items-center mt-4 text-gray-500">
+                  <span className="text-sm">
+                    By {article.author || "Unknown"}
+                  </span>
                   <span className="mx-2">|</span>
                   <span className="text-sm">
-                    {new Date(heroArticle.createdAt).toLocaleDateString()}
+                    {new Date(article.createdAt).toLocaleDateString()}
                   </span>
                 </div>
               </div>
-            </div>
-          </Link>
-        </div>
-      );
-      heroIndex++;
-    }
+            </Link>
+          </div>
+        );
+      });
 
-    // Add regular articles and hero sections after every 3 articles
-    articles.forEach((article, index) => {
-      // Add a regular article card
-      result.push(
-        <div
-          key={article._id}
-          className="bg-white shadow-lg rounded-lg overflow-hidden transform transition duration-500 hover:scale-105 fade-in"
-        >
-          <Link href={`/${article.category}/${article.slug}`}>
-            <img
-              src={article.image || "/news-image.jpg"}
-              alt={article.title}
-              className="w-full h-48 object-cover"
-            />
-            <div className="p-6">
-              <h3 className="text-xl font-semibold hover:text-blue-600">
-                {article.title}
-              </h3>
-              <p className="text-gray-600 mt-2">{article.description}</p>
-              <div className="flex items-center mt-4 text-gray-500">
-                <span className="text-sm">By {article.author || "Unknown"}</span>
-                <span className="mx-2">|</span>
-                <span className="text-sm">
-                  {new Date(article.createdAt).toLocaleDateString()}
-                </span>
-              </div>
-            </div>
-          </Link>
-        </div>
-      );
-
-      // Insert a hero section after every 3 articles
-      if ((index + 1) % 3 === 0 && heroIndex < articles.length) {
-        const heroArticle = articles[heroIndex];
+      if (heroCount < heroArticles.length) {
+        const heroArticle = heroArticles[heroCount];
         result.push(
           <div
-            key={`hero-${heroIndex}`}
+            key={`hero-${heroCount}`}
             className="col-span-1 md:col-span-2 lg:col-span-3 fade-in"
           >
             <Link href={`/${heroArticle.category}/${heroArticle.slug}`}>
               <div className="relative h-96 rounded-lg overflow-hidden">
-                <img
+                <Image
                   src={heroArticle.image || "/news-image.jpg"}
                   alt={heroArticle.title}
-                  className="w-full h-full object-cover"
+                  className="object-cover"
+                  fill
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
                 <div className="absolute bottom-6 left-6 right-6">
@@ -156,7 +173,9 @@ export default function CategoryPage() {
                     {heroArticle.description}
                   </p>
                   <div className="flex items-center mt-4 text-gray-300">
-                    <span className="text-sm">By {heroArticle.author || "Unknown"}</span>
+                    <span className="text-sm">
+                      By {heroArticle.author || "Unknown"}
+                    </span>
                     <span className="mx-2">|</span>
                     <span className="text-sm">
                       {new Date(heroArticle.createdAt).toLocaleDateString()}
@@ -167,9 +186,9 @@ export default function CategoryPage() {
             </Link>
           </div>
         );
-        heroIndex++;
+        heroCount++;
       }
-    });
+    }
 
     return result;
   };
@@ -192,11 +211,10 @@ export default function CategoryPage() {
 
   return (
     <section className="max-w-7xl mx-auto p-6 mt-10">
-      {/* Category Title */}
       <h2 className="text-4xl font-bold text-center mb-12 fade-in">
+        {category.charAt(0).toUpperCase() + category.slice(1)} News
       </h2>
 
-      {/* Articles Grid with Hero Sections */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {articles.length > 0 ? (
           renderArticlesWithHero()
@@ -205,6 +223,26 @@ export default function CategoryPage() {
             <Loading />
           </p>
         )}
+      </div>
+
+      {/* Sticky "Start Reading News" Button */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <button
+          onClick={() => setIsSpeaking(!isSpeaking)}
+          className="flex items-center bg-blue-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+        >
+          {isSpeaking ? (
+            <>
+              <FaStop className="mr-2" />
+              Stop Reading News
+            </>
+          ) : (
+            <>
+              <FaPlay className="mr-2" />
+              Start Reading News
+            </>
+          )}
+        </button>
       </div>
     </section>
   );
