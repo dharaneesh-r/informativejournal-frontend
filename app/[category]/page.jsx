@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import axios from "axios";
@@ -17,6 +17,7 @@ import {
   FaMicrophone,
   FaBell,
   FaShareAlt,
+  FaTimes,
 } from "react-icons/fa"; // Import icons
 
 gsap.registerPlugin(ScrollTrigger);
@@ -32,9 +33,16 @@ export default function CategoryPage() {
   const [savedArticles, setSavedArticles] = useState([]);
   const [isListening, setIsListening] = useState(false);
   const [isSpeechSupported, setIsSpeechSupported] = useState(false);
+  const [isFabExpanded, setIsFabExpanded] = useState(false);
 
   const params = useParams();
   const category = params.category;
+
+  // Refs for GSAP animations
+  const fabMenuRef = useRef(null);
+  const fabButtonRef = useRef(null);
+  const searchBarRef = useRef(null);
+  const voiceButtonRef = useRef(null);
 
   // Supported languages
   const languages = [
@@ -50,6 +58,43 @@ export default function CategoryPage() {
       setIsSpeechSupported(true);
     }
   }, []);
+
+  // GSAP animations for FAB expansion and collapse
+  useEffect(() => {
+    if (fabMenuRef.current && fabButtonRef.current) {
+      if (isFabExpanded) {
+        // Expand the FAB menu
+        gsap.to(fabMenuRef.current, {
+          opacity: 1,
+          height: "auto",
+          width: "18rem",
+          padding: "1rem",
+          duration: 0.3,
+          ease: "power2.out",
+        });
+        gsap.to(fabButtonRef.current, {
+          rotate: 180,
+          duration: 0.3,
+          ease: "power2.out",
+        });
+      } else {
+        // Collapse the FAB menu
+        gsap.to(fabMenuRef.current, {
+          opacity: 0,
+          height: 0,
+          width: 0,
+          padding: 0,
+          duration: 0.3,
+          ease: "power2.in",
+        });
+        gsap.to(fabButtonRef.current, {
+          rotate: 0,
+          duration: 0.3,
+          ease: "power2.in",
+        });
+      }
+    }
+  }, [isFabExpanded]);
 
   // Fetch articles
   useEffect(() => {
@@ -97,7 +142,7 @@ export default function CategoryPage() {
     localStorage.setItem("savedArticles", JSON.stringify(updatedSavedArticles));
   };
 
-  // GSAP animations
+  // GSAP animations for article cards
   useEffect(() => {
     gsap.from(".fade-in", {
       opacity: 0,
@@ -315,7 +360,6 @@ export default function CategoryPage() {
   return (
     <section className="max-w-7xl mx-auto p-6 mt-10">
       <h2 className="text-4xl font-bold text-center mb-12 fade-in">
-        {category.charAt(0).toUpperCase() + category.slice(1)} News
       </h2>
 
       {/* Main Articles Grid */}
@@ -329,63 +373,91 @@ export default function CategoryPage() {
         )}
       </div>
 
-      {/* Fixed Bottom-Right Buttons */}
-      <div className="fixed bottom-6 right-6 z-50 flex gap-2">
-        {/* Search Bar */}
-        <div className="flex items-center bg-white shadow-lg rounded-full px-4 py-2">
-          <FaSearch className="text-gray-500" />
-          <input
-            type="text"
-            placeholder="Search articles..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="ml-2 outline-none"
-          />
-          {isSpeechSupported && (
-            <button
-              onClick={() => setIsListening(!isListening)}
-              className="ml-2 p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+      {/* Floating Action Button (FAB) */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <div className="flex flex-col items-end gap-2">
+          {/* FAB Menu */}
+          <div
+            ref={fabMenuRef}
+            className="flex flex-col gap-2 bg-white shadow-lg rounded-lg overflow-hidden w-0 h-0 opacity-0"
+          >
+            {/* Search Bar */}
+            <div
+              ref={searchBarRef}
+              className="flex items-center bg-white shadow-lg rounded-full px-4 py-2 w-full"
             >
-              <FaMicrophone className="text-gray-500" />
+              <FaSearch className="text-gray-500" />
+              <input
+                type="text"
+                placeholder="Search articles..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="ml-2 outline-none flex-1"
+              />
+              {isSpeechSupported && (
+                <button
+                  ref={voiceButtonRef}
+                  onClick={() => setIsListening(!isListening)}
+                  className="ml-2 p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors"
+                >
+                  <FaMicrophone className="text-gray-500" />
+                </button>
+              )}
+            </div>
+
+            {/* Notification Button */}
+            <button
+              onClick={() => alert("Notifications enabled!")}
+              className="flex items-center justify-between bg-purple-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-purple-700 transition-colors"
+            >
+              <FaBell className="mr-2" />
+              <span>Notifications</span>
             </button>
-          )}
+
+            {/* Auto-Read Button */}
+            <button
+              onClick={() => setIsSpeaking(!isSpeaking)}
+              className="flex items-center justify-between bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+            >
+              {isSpeaking ? (
+                <>
+                  <FaStop className="mr-2" />
+                  <span>Stop Reading</span>
+                </>
+              ) : (
+                <>
+                  <FaPlay className="mr-2" />
+                  <span>Start Reading</span>
+                </>
+              )}
+            </button>
+
+            {/* Language Selection Button */}
+            <button
+              onClick={nextLanguage}
+              className="flex items-center justify-between bg-green-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-green-700 transition-colors"
+            >
+              <FaLanguage className="mr-2" />
+              <span>
+                {languages.find((lang) => lang.code === language)?.name ||
+                  "Unknown"}
+              </span>
+            </button>
+          </div>
+
+          {/* Main FAB Button */}
+          <button
+            ref={fabButtonRef}
+            onClick={() => setIsFabExpanded(!isFabExpanded)}
+            className="flex items-center justify-center w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors"
+          >
+            {isFabExpanded ? (
+              <FaTimes className="text-xl" />
+            ) : (
+              <FaPlay className="text-xl" />
+            )}
+          </button>
         </div>
-
-        {/* Notification Button */}
-        <button
-          onClick={() => alert("Notifications enabled!")}
-          className="flex items-center bg-purple-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-purple-700 transition-colors"
-        >
-          <FaBell className="mr-2" />
-          Notifications
-        </button>
-
-        {/* Auto-Read Button */}
-        <button
-          onClick={() => setIsSpeaking(!isSpeaking)}
-          className="flex items-center bg-blue-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
-        >
-          {isSpeaking ? (
-            <>
-              <FaStop className="mr-2" />
-              Stop Reading News
-            </>
-          ) : (
-            <>
-              <FaPlay className="mr-2" />
-              Start Reading News
-            </>
-          )}
-        </button>
-
-        {/* Language Selection Button */}
-        <button
-          onClick={nextLanguage}
-          className="flex items-center bg-green-600 text-white px-6 py-3 rounded-full shadow-lg hover:bg-green-700 transition-colors"
-        >
-          <FaLanguage className="mr-2" />
-          {languages.find((lang) => lang.code === language)?.name || "Unknown"}
-        </button>
       </div>
     </section>
   );
