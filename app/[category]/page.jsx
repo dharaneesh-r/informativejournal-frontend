@@ -7,7 +7,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import Loading from "../loading";
 import Image from "next/image";
-import { FaPlay, FaStop } from "react-icons/fa"; 
+import { FaPlay, FaStop } from "react-icons/fa";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -211,10 +211,6 @@ export default function CategoryPage() {
 
   return (
     <section className="max-w-7xl mx-auto p-6 mt-10">
-      <h2 className="text-4xl font-bold text-center mb-12 fade-in">
-        {category.charAt(0).toUpperCase() + category.slice(1)} News
-      </h2>
-
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {articles.length > 0 ? (
           renderArticlesWithHero()
