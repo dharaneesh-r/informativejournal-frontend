@@ -146,7 +146,7 @@ export default function FeaturedPosts() {
         }
       } catch (err) {
         console.error("Error fetching articles:", err);
-        setError("Failed to load articles. Please try again later.");
+        setError(<Loading />);
       } finally {
         setLoading(false);
       }
@@ -247,8 +247,6 @@ export default function FeaturedPosts() {
       return () => recognition.stop();
     }
   }, [isListening, language, isSpeechSupported]);
-
-  // Filter articles based on search query and preferred categories
   const filteredArticles = articles.filter((article) => {
     const matchesCategory =
       preferredCategories.length === 0 ||
@@ -258,8 +256,6 @@ export default function FeaturedPosts() {
       article.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
-
-  // Render articles with hero section
   const renderArticlesWithHero = () => {
     const result = [];
     let heroCount = 0;
@@ -388,8 +384,6 @@ export default function FeaturedPosts() {
   return (
     <section className="max-w-7xl mx-auto p-6 mt-10">
       <h2 className="text-4xl font-bold text-center mb-12 fade-in"></h2>
-
-      {/* Main Articles Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {filteredArticles.length > 0 ? (
           renderArticlesWithHero()
@@ -399,16 +393,12 @@ export default function FeaturedPosts() {
           </p>
         )}
       </div>
-
-      {/* Floating Action Button (FAB) */}
       <div className="fixed bottom-6 right-6 z-50">
         <div className="flex flex-col items-end gap-2">
-          {/* FAB Menu */}
           <div
             ref={fabMenuRef}
             className="flex flex-col gap-2 bg-white shadow-lg rounded-lg overflow-hidden w-0 h-0 opacity-0"
           >
-            {/* Search Bar */}
             <div
               ref={searchBarRef}
               className={`flex items-center bg-white shadow-lg rounded-full px-4 py-2 w-full transition-all duration-300 ${
@@ -441,8 +431,6 @@ export default function FeaturedPosts() {
                 </button>
               )}
             </div>
-
-            {/* Notification Button */}
             <button
               onClick={() => alert("Notifications enabled!")}
               className="flex items-center justify-between bg-purple-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-purple-700 transition-colors"
@@ -450,8 +438,6 @@ export default function FeaturedPosts() {
               <FaBell className="mr-2" />
               <span>Notifications</span>
             </button>
-
-            {/* Auto-Read Button */}
             <button
               onClick={() => setIsSpeaking(!isSpeaking)}
               className="flex items-center justify-between bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
@@ -468,8 +454,6 @@ export default function FeaturedPosts() {
                 </>
               )}
             </button>
-
-            {/* Language Selection Button */}
             <button
               onClick={nextLanguage}
               className="flex items-center justify-between bg-green-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-green-700 transition-colors"
