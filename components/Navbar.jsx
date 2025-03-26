@@ -183,10 +183,10 @@ const Navbar = () => {
                 Business
               </a>
               <a
-                href="/entertainment"
+                href="/finance"
                 className="nav-link text-white transition-colors duration-300 relative"
               >
-                Entertainment
+                Finance
               </a>
             </div>
 
@@ -383,10 +383,10 @@ const Navbar = () => {
                 Business
               </a>
               <a
-                href="/entertainment"
+                href="/finance"
                 className="block px-4 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-300"
               >
-                Entertainment
+                Finance
               </a>
 
               <div
