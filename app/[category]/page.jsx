@@ -34,6 +34,7 @@ export default function CategoryPage() {
   const [isListening, setIsListening] = useState(false);
   const [isSpeechSupported, setIsSpeechSupported] = useState(false);
   const [isFabExpanded, setIsFabExpanded] = useState(false);
+  const [showSavedArticles, setShowSavedArticles] = useState(false);
 
   const params = useParams();
   const category = params.category;
@@ -43,6 +44,7 @@ export default function CategoryPage() {
   const fabButtonRef = useRef(null);
   const searchBarRef = useRef(null);
   const voiceButtonRef = useRef(null);
+  const savedPanelRef = useRef(null);
 
   // Supported languages
   const languages = [
@@ -59,11 +61,10 @@ export default function CategoryPage() {
     }
   }, []);
 
-  // GSAP animations for FAB expansion and collapse
+  // GSAP animations
   useEffect(() => {
     if (fabMenuRef.current && fabButtonRef.current) {
       if (isFabExpanded) {
-        // Expand the FAB menu
         gsap.to(fabMenuRef.current, {
           opacity: 1,
           height: "auto",
@@ -78,7 +79,6 @@ export default function CategoryPage() {
           ease: "power2.out",
         });
       } else {
-        // Collapse the FAB menu
         gsap.to(fabMenuRef.current, {
           opacity: 0,
           height: 0,
@@ -96,6 +96,25 @@ export default function CategoryPage() {
     }
   }, [isFabExpanded]);
 
+  useEffect(() => {
+    if (savedPanelRef.current) {
+      if (showSavedArticles) {
+        gsap.fromTo(
+          savedPanelRef.current,
+          { x: 300, opacity: 0 },
+          { x: 0, opacity: 1, duration: 0.3, ease: "power2.out" }
+        );
+      } else {
+        gsap.to(savedPanelRef.current, {
+          x: 300,
+          opacity: 0,
+          duration: 0.2,
+          ease: "power2.in",
+        });
+      }
+    }
+  }, [showSavedArticles]);
+
   // Fetch articles
   useEffect(() => {
     const fetchArticles = async () => {
@@ -103,7 +122,6 @@ export default function CategoryPage() {
         const response = await axios.get(
           `https://informativejournal-backend.vercel.app/articles/${category}`
         );
-        console.log("API Response:", response.data);
         if (response.data.status === "success") {
           setArticles(response.data.data);
           setHeroArticles(response.data.data.slice(0, 4));
@@ -140,6 +158,11 @@ export default function CategoryPage() {
 
     setSavedArticles(updatedSavedArticles);
     localStorage.setItem("savedArticles", JSON.stringify(updatedSavedArticles));
+
+    // Show the saved articles panel when saving
+    if (!isSaved) {
+      setShowSavedArticles(true);
+    }
   };
 
   // GSAP animations for article cards
@@ -156,7 +179,7 @@ export default function CategoryPage() {
     });
   }, [articles]);
 
-  // Shuffle hero articles every 10 seconds
+  // Shuffle hero articles
   useEffect(() => {
     if (articles.length > 0) {
       const interval = setInterval(() => {
@@ -167,7 +190,7 @@ export default function CategoryPage() {
     }
   }, [articles]);
 
-  // Auto-read news feature with language support
+  // Auto-read news feature
   useEffect(() => {
     if (
       articles.length > 0 &&
@@ -178,18 +201,15 @@ export default function CategoryPage() {
       speech.lang = language;
       speech.rate = 1;
       speech.pitch = 1;
-
       const newsText = articles
         .map((article) => `${article.title}. ${article.description}`)
         .join(". ");
       speech.text = newsText;
 
-      // Start speaking
       if (isSpeaking) {
         window.speechSynthesis.speak(speech);
       }
 
-      // Cleanup function to stop speech when the component unmounts or isSpeaking changes
       return () => {
         window.speechSynthesis.cancel();
       };
@@ -215,7 +235,6 @@ export default function CategoryPage() {
     }
   }, [isListening, language, isSpeechSupported]);
 
-  // Filter articles based on search query
   const filteredArticles = articles.filter((article) => {
     const matchesSearch =
       article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -223,7 +242,6 @@ export default function CategoryPage() {
     return matchesSearch;
   });
 
-  // Render articles with hero section
   const renderArticlesWithHero = () => {
     const result = [];
     let heroCount = 0;
@@ -235,7 +253,7 @@ export default function CategoryPage() {
         result.push(
           <div
             key={article._id}
-            className="bg-white shadow-lg rounded-lg overflow-hidden transform transition duration-500 hover:scale-105 fade-in"
+            className="bg-white shadow-lg rounded-lg overflow-hidden transform transition duration-500 hover:scale-105 fade-in relative"
           >
             <Link href={`/${article.category}/${article.slug}`}>
               <div className="w-full h-48 relative">
@@ -264,7 +282,11 @@ export default function CategoryPage() {
               </div>
             </Link>
             <button
-              onClick={() => toggleSaveArticle(article)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleSaveArticle(article);
+              }}
               className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
             >
               {isSaved ? (
@@ -274,7 +296,9 @@ export default function CategoryPage() {
               )}
             </button>
             <button
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 navigator.share({
                   title: article.title,
                   text: article.description,
@@ -288,13 +312,12 @@ export default function CategoryPage() {
           </div>
         );
       });
-
       if (heroCount < heroArticles.length) {
         const heroArticle = heroArticles[heroCount];
         result.push(
           <div
             key={`hero-${heroCount}`}
-            className="col-span-1 md:col-span-2 lg:col-span-3 fade-in"
+            className="col-span-1 md:col-span-2 lg:col-span-3 fade-in relative"
           >
             <Link href={`/${heroArticle.category}/${heroArticle.slug}`}>
               <div className="relative h-96 rounded-lg overflow-hidden">
@@ -325,6 +348,20 @@ export default function CategoryPage() {
                 </div>
               </div>
             </Link>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleSaveArticle(heroArticle);
+              }}
+              className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+            >
+              {savedArticles.some((a) => a._id === heroArticle._id) ? (
+                <FaBookmark className="text-blue-600" />
+              ) : (
+                <FaRegBookmark className="text-gray-500" />
+              )}
+            </button>
           </div>
         );
         heroCount++;
@@ -357,22 +394,108 @@ export default function CategoryPage() {
   }
 
   return (
-    <section className="max-w-7xl mx-auto p-6 mt-10">
-      <h2 className="text-4xl font-bold text-center mb-12 fade-in">
-      </h2>
+    <div className="relative">
+      <section className="max-w-7xl mx-auto p-6 mt-10">
+        <h2 className="text-4xl font-bold text-center mb-12 fade-in"></h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {filteredArticles.length > 0 ? (
+            renderArticlesWithHero()
+          ) : (
+            <p className="text-center col-span-3">
+              <Loading />
+            </p>
+          )}
+        </div>
+      </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {filteredArticles.length > 0 ? (
-          renderArticlesWithHero()
+      {/* Saved Articles Panel */}
+      <div
+        ref={savedPanelRef}
+        className={`fixed top-0 right-0 h-full w-80 bg-white shadow-xl z-50 p-4 overflow-y-auto ${
+          showSavedArticles ? "block" : "hidden"
+        }`}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold flex items-center">
+            <FaBookmark className="mr-2" /> Saved Articles (
+            {savedArticles.length})
+          </h3>
+          <button
+            onClick={() => setShowSavedArticles(false)}
+            className="p-2 rounded-full hover:bg-gray-100"
+          >
+            <FaTimes />
+          </button>
+        </div>
+
+        {savedArticles.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            No saved articles yet. Click the bookmark icon to save articles.
+          </div>
         ) : (
-          <p className="text-center col-span-3">
-            <Loading />
-          </p>
+          <div className="space-y-4">
+            {savedArticles.map((article) => (
+              <div
+                key={article._id}
+                className="border rounded-lg p-3 hover:shadow-md transition-shadow"
+              >
+                <Link href={`/${article.category}/${article.slug}`}>
+                  <div className="flex items-start">
+                    <div className="w-16 h-16 relative flex-shrink-0 mr-3">
+                      <Image
+                        src={article.image || "/news-image.jpg"}
+                        alt={article.title}
+                        className="object-cover rounded"
+                        fill
+                        sizes="64px"
+                      />
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-sm line-clamp-2">
+                        {article.title}
+                      </h4>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {article.author || "Unknown"}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {new Date(article.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+                <div className="flex justify-end mt-2">
+                  <button
+                    onClick={() => toggleSaveArticle(article)}
+                    className="text-xs text-red-500 hover:text-red-700"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
 
+      {/* Floating Action Button */}
       <div className="fixed bottom-6 right-6 z-50">
         <div className="flex flex-col items-end gap-2">
+          {/* Only show bookmark button if there are saved articles */}
+          {savedArticles.length > 0 && (
+            <button
+              onClick={() => {
+                setIsFabExpanded(false);
+                setShowSavedArticles(!showSavedArticles);
+              }}
+              className="flex items-center justify-center w-12 h-12 bg-yellow-600 text-white rounded-full shadow-lg hover:bg-yellow-700 transition-colors"
+            >
+              <FaBookmark className="text-lg" />
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                {savedArticles.length}
+              </span>
+            </button>
+          )}
+
           <div
             ref={fabMenuRef}
             className="flex flex-col gap-2 bg-white shadow-lg rounded-lg overflow-hidden w-0 h-0 opacity-0"
@@ -400,7 +523,10 @@ export default function CategoryPage() {
               )}
             </div>
             <button
-              onClick={() => alert("Notifications enabled!")}
+              onClick={() => {
+                setIsFabExpanded(false);
+                alert("Notifications enabled!");
+              }}
               className="flex items-center justify-between bg-purple-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-purple-700 transition-colors"
             >
               <FaBell className="mr-2" />
@@ -408,7 +534,10 @@ export default function CategoryPage() {
             </button>
 
             <button
-              onClick={() => setIsSpeaking(!isSpeaking)}
+              onClick={() => {
+                setIsFabExpanded(false);
+                setIsSpeaking(!isSpeaking);
+              }}
               className="flex items-center justify-between bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
             >
               {isSpeaking ? (
@@ -425,7 +554,10 @@ export default function CategoryPage() {
             </button>
 
             <button
-              onClick={nextLanguage}
+              onClick={() => {
+                setIsFabExpanded(false);
+                nextLanguage();
+              }}
               className="flex items-center justify-between bg-green-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-green-700 transition-colors"
             >
               <FaLanguage className="mr-2" />
@@ -449,6 +581,6 @@ export default function CategoryPage() {
           </button>
         </div>
       </div>
-    </section>
+    </div>
   );
 }

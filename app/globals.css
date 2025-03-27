@@ -3,3 +3,17 @@
 ::-webkit-scrollbar {
   display: none;
 }
+
+/* Customize 360° viewer */
+.pnlm-container {
+  border-radius: 0.5rem !important;
+}
+
+/* Style hotspots */
+.custom-hotspot {
+  background: rgba(255, 255, 255, 0.8);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  backdrop-filter: blur(2px);
+}

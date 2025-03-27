@@ -17,7 +17,8 @@ import {
   FaBell,
   FaShareAlt,
   FaTimes,
-} from "react-icons/fa"; // Import icons
+  FaBook,
+} from "react-icons/fa";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -35,12 +36,14 @@ export default function FeaturedPosts() {
   const [isSpeechSupported, setIsSpeechSupported] = useState(false);
   const [isFabExpanded, setIsFabExpanded] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [showSavedArticles, setShowSavedArticles] = useState(false);
 
   // Refs for GSAP animations
   const searchBarRef = useRef(null);
   const voiceButtonRef = useRef(null);
   const fabMenuRef = useRef(null);
   const fabButtonRef = useRef(null);
+  const savedPanelRef = useRef(null);
 
   // Check if Web Speech API is supported
   useEffect(() => {
@@ -49,7 +52,7 @@ export default function FeaturedPosts() {
     }
   }, []);
 
-  // GSAP animations for search bar
+  // GSAP animations
   useEffect(() => {
     if (searchBarRef.current) {
       if (isSearchFocused) {
@@ -68,7 +71,6 @@ export default function FeaturedPosts() {
     }
   }, [isSearchFocused]);
 
-  // GSAP animation for voice search button vibration
   useEffect(() => {
     if (isListening && voiceButtonRef.current) {
       gsap.to(voiceButtonRef.current, {
@@ -80,11 +82,9 @@ export default function FeaturedPosts() {
     }
   }, [isListening]);
 
-  // GSAP animation for FAB expansion and collapse
   useEffect(() => {
     if (fabMenuRef.current && fabButtonRef.current) {
       if (isFabExpanded) {
-        // Expand the FAB menu
         gsap.to(fabMenuRef.current, {
           opacity: 1,
           height: "auto",
@@ -99,7 +99,6 @@ export default function FeaturedPosts() {
           ease: "power2.out",
         });
       } else {
-        // Collapse the FAB menu
         gsap.to(fabMenuRef.current, {
           opacity: 0,
           height: 0,
@@ -117,6 +116,25 @@ export default function FeaturedPosts() {
     }
   }, [isFabExpanded]);
 
+  useEffect(() => {
+    if (savedPanelRef.current) {
+      if (showSavedArticles) {
+        gsap.fromTo(
+          savedPanelRef.current,
+          { x: 300, opacity: 0 },
+          { x: 0, opacity: 1, duration: 0.3, ease: "power2.out" }
+        );
+      } else {
+        gsap.to(savedPanelRef.current, {
+          x: 300,
+          opacity: 0,
+          duration: 0.2,
+          ease: "power2.in",
+        });
+      }
+    }
+  }, [showSavedArticles]);
+
   // Supported languages
   const languages = [
     { code: "en-US", name: "English" },
@@ -125,7 +143,6 @@ export default function FeaturedPosts() {
     { code: "ta-IN", name: "Tamil" },
   ];
 
-  // Function to cycle through languages
   const nextLanguage = () => {
     const currentIndex = languages.findIndex((lang) => lang.code === language);
     const nextIndex = (currentIndex + 1) % languages.length;
@@ -139,10 +156,9 @@ export default function FeaturedPosts() {
         const response = await axios.get(
           "https://informativejournal-backend.vercel.app/articles"
         );
-        console.log("API Response:", response.data);
         if (response.data.status === "success") {
           setArticles(response.data.data);
-          setHeroArticles(response.data.data.slice(0, 4)); // Set hero articles
+          setHeroArticles(response.data.data.slice(0, 4));
         }
       } catch (err) {
         console.error("Error fetching articles:", err);
@@ -176,6 +192,11 @@ export default function FeaturedPosts() {
 
     setSavedArticles(updatedSavedArticles);
     localStorage.setItem("savedArticles", JSON.stringify(updatedSavedArticles));
+
+    // Show the saved articles panel when saving
+    if (!isSaved) {
+      setShowSavedArticles(true);
+    }
   };
 
   // GSAP animations for article cards
@@ -192,7 +213,7 @@ export default function FeaturedPosts() {
     });
   }, [articles]);
 
-  // Shuffle hero articles every 10 seconds
+  // Shuffle hero articles
   useEffect(() => {
     if (articles.length > 0) {
       const interval = setInterval(() => {
@@ -203,7 +224,7 @@ export default function FeaturedPosts() {
     }
   }, [articles]);
 
-  // Auto-read news feature with language support
+  // Auto-read news feature
   useEffect(() => {
     if (
       articles.length > 0 &&
@@ -247,6 +268,7 @@ export default function FeaturedPosts() {
       return () => recognition.stop();
     }
   }, [isListening, language, isSpeechSupported]);
+
   const filteredArticles = articles.filter((article) => {
     const matchesCategory =
       preferredCategories.length === 0 ||
@@ -256,6 +278,7 @@ export default function FeaturedPosts() {
       article.description.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
+
   const renderArticlesWithHero = () => {
     const result = [];
     let heroCount = 0;
@@ -267,7 +290,7 @@ export default function FeaturedPosts() {
         result.push(
           <div
             key={article._id}
-            className="bg-white shadow-lg rounded-lg overflow-hidden transform transition duration-500 hover:scale-105 fade-in"
+            className="bg-white shadow-lg rounded-lg overflow-hidden transform transition duration-500 hover:scale-105 fade-in relative"
           >
             <Link href={`/${article.category}/${article.slug}`}>
               <div className="w-full h-48 relative">
@@ -296,7 +319,11 @@ export default function FeaturedPosts() {
               </div>
             </Link>
             <button
-              onClick={() => toggleSaveArticle(article)}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleSaveArticle(article);
+              }}
               className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
             >
               {isSaved ? (
@@ -306,7 +333,9 @@ export default function FeaturedPosts() {
               )}
             </button>
             <button
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
                 navigator.share({
                   title: article.title,
                   text: article.description,
@@ -325,7 +354,7 @@ export default function FeaturedPosts() {
         result.push(
           <div
             key={`hero-${heroCount}`}
-            className="col-span-1 md:col-span-2 lg:col-span-3 fade-in"
+            className="col-span-1 md:col-span-2 lg:col-span-3 fade-in relative"
           >
             <Link href={`/${heroArticle.category}/${heroArticle.slug}`}>
               <div className="relative h-96 rounded-lg overflow-hidden">
@@ -356,6 +385,20 @@ export default function FeaturedPosts() {
                 </div>
               </div>
             </Link>
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleSaveArticle(heroArticle);
+              }}
+              className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+            >
+              {savedArticles.some((a) => a._id === heroArticle._id) ? (
+                <FaBookmark className="text-blue-600" />
+              ) : (
+                <FaRegBookmark className="text-gray-500" />
+              )}
+            </button>
           </div>
         );
         heroCount++;
@@ -382,23 +425,110 @@ export default function FeaturedPosts() {
   }
 
   return (
-    <section className="max-w-7xl mx-auto p-6 mt-10">
-      <h2 className="text-4xl font-bold text-center mb-12 fade-in"></h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {filteredArticles.length > 0 ? (
-          renderArticlesWithHero()
+    <div className="relative">
+      <section className="max-w-7xl mx-auto p-6 mt-10">
+        <h2 className="text-4xl font-bold text-center mb-12 fade-in"></h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {filteredArticles.length > 0 ? (
+            renderArticlesWithHero()
+          ) : (
+            <p className="text-center col-span-3">
+              <Loading />
+            </p>
+          )}
+        </div>
+      </section>
+
+      {/* Saved Articles Panel */}
+      <div
+        ref={savedPanelRef}
+        className={`fixed top-0 right-0 h-full w-80 bg-white shadow-xl z-50 p-4 overflow-y-auto ${
+          showSavedArticles ? "block" : "hidden"
+        }`}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold flex items-center">
+            <FaBook className="mr-2" /> Saved Articles ({savedArticles.length})
+          </h3>
+          <button
+            onClick={() => setShowSavedArticles(false)}
+            className="p-2 rounded-full hover:bg-gray-100"
+          >
+            <FaTimes />
+          </button>
+        </div>
+
+        {savedArticles.length === 0 ? (
+          <div className="text-center py-8 text-gray-500">
+            No saved articles yet. Click the bookmark icon to save articles.
+          </div>
         ) : (
-          <p className="text-center col-span-3">
-            <Loading />
-          </p>
+          <div className="space-y-4">
+            {savedArticles.map((article) => (
+              <div
+                key={article._id}
+                className="border rounded-lg p-3 hover:shadow-md transition-shadow"
+              >
+                <Link href={`/${article.category}/${article.slug}`}>
+                  <div className="flex items-start">
+                    <div className="w-16 h-16 relative flex-shrink-0 mr-3">
+                      <Image
+                        src={article.image || "/news-image.jpg"}
+                        alt={article.title}
+                        className="object-cover rounded"
+                        fill
+                        sizes="64px"
+                      />
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-sm line-clamp-2">
+                        {article.title}
+                      </h4>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {article.author || "Unknown"}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {new Date(article.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                </Link>
+                <div className="flex justify-end mt-2">
+                  <button
+                    onClick={() => toggleSaveArticle(article)}
+                    className="text-xs text-red-500 hover:text-red-700"
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         )}
       </div>
+
+      {/* Floating Action Button */}
       <div className="fixed bottom-6 right-6 z-50">
         <div className="flex flex-col items-end gap-2">
+        {savedArticles.length > 0 && (
+            <button
+              onClick={() => {
+                setIsFabExpanded(false);
+                setShowSavedArticles(!showSavedArticles);
+              }}
+              className="flex items-center justify-center w-12 h-12 bg-yellow-600 text-white rounded-full shadow-lg hover:bg-yellow-700 transition-colors"
+            >
+              <FaBookmark className="text-lg" />
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                {savedArticles.length}
+              </span>
+            </button>
+          )}
           <div
             ref={fabMenuRef}
             className="flex flex-col gap-2 bg-white shadow-lg rounded-lg overflow-hidden w-0 h-0 opacity-0"
           >
+            {/* Search Bar */}
             <div
               ref={searchBarRef}
               className={`flex items-center bg-white shadow-lg rounded-full px-4 py-2 w-full transition-all duration-300 ${
@@ -418,7 +548,10 @@ export default function FeaturedPosts() {
               {isSpeechSupported && (
                 <button
                   ref={voiceButtonRef}
-                  onClick={() => setIsListening(!isListening)}
+                  onClick={() => {
+                    setIsListening(!isListening);
+                    setIsFabExpanded(false);
+                  }}
                   className={`ml-2 p-2 rounded-full transition-all duration-300 ${
                     isListening ? "bg-red-500" : "bg-gray-100"
                   } hover:bg-gray-200`}
@@ -431,15 +564,24 @@ export default function FeaturedPosts() {
                 </button>
               )}
             </div>
+
+            {/* Other FAB Buttons */}
             <button
-              onClick={() => alert("Notifications enabled!")}
+              onClick={() => {
+                setIsFabExpanded(false);
+                alert("Notifications enabled!");
+              }}
               className="flex items-center justify-between bg-purple-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-purple-700 transition-colors"
             >
               <FaBell className="mr-2" />
               <span>Notifications</span>
             </button>
+
             <button
-              onClick={() => setIsSpeaking(!isSpeaking)}
+              onClick={() => {
+                setIsFabExpanded(false);
+                setIsSpeaking(!isSpeaking);
+              }}
               className="flex items-center justify-between bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
             >
               {isSpeaking ? (
@@ -454,8 +596,12 @@ export default function FeaturedPosts() {
                 </>
               )}
             </button>
+
             <button
-              onClick={nextLanguage}
+              onClick={() => {
+                setIsFabExpanded(false);
+                nextLanguage();
+              }}
               className="flex items-center justify-between bg-green-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-green-700 transition-colors"
             >
               <FaLanguage className="mr-2" />
@@ -480,6 +626,6 @@ export default function FeaturedPosts() {
           </button>
         </div>
       </div>
-    </section>
+    </div>
   );
 }
