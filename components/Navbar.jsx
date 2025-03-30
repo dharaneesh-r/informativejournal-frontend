@@ -9,21 +9,57 @@ const Navbar = () => {
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [userEmail, setUserEmail] = useState("user@example.com");
+  const [userEmail, setUserEmail] = useState("");
   const navbarRef = useRef(null);
   const mobileMenuRef = useRef(null);
   const logoRef = useRef(null);
   const languageDropdownRef = useRef(null);
   const authDropdownRef = useRef(null);
 
+  // Add event listener for storage changes
+  useEffect(() => {
+    const checkAuthStatus = () => {
+      const token = localStorage.getItem("authToken");
+      const email =
+        localStorage.getItem("userEmail") ||
+        sessionStorage.getItem("userEmail");
+
+      setIsLoggedIn(!!token);
+      if (email) setUserEmail(email);
+    };
+    checkAuthStatus();
+    const handleStorageChange = () => {
+      checkAuthStatus();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("authChange", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("authChange", handleStorageChange);
+    };
+  });
+
   const handleLogin = () => {
+    const email =
+      localStorage.getItem("userEmail") || sessionStorage.getItem("userEmail");
     setIsLoggedIn(true);
     setIsAuthOpen(false);
+    if (email) setUserEmail(email);
+    window.dispatchEvent(new Event("authChange"));
   };
 
   const handleLogout = () => {
     setIsLoggedIn(false);
     setIsAuthOpen(false);
+    setUserEmail("");
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("user");
+    localStorage.removeItem("tokenExpiration");
+    sessionStorage.removeItem("userEmail");
+    window.dispatchEvent(new Event("authChange"));
   };
 
   useEffect(() => {
@@ -37,103 +73,6 @@ const Navbar = () => {
         scrub: true,
       },
     });
-  }, []);
-
-  useEffect(() => {
-    gsap.from(logoRef.current, {
-      y: -50,
-      opacity: 0,
-      duration: 1,
-      ease: "bounce.out",
-      delay: 0.5,
-    });
-  }, []);
-
-  useEffect(() => {
-    if (isMobileMenuOpen) {
-      gsap.from(mobileMenuRef.current, {
-        y: -50,
-        opacity: 0,
-        duration: 0.5,
-        ease: "power3.out",
-      });
-    }
-  }, [isMobileMenuOpen]);
-
-  useEffect(() => {
-    if (isLanguageOpen) {
-      gsap.from(languageDropdownRef.current, {
-        opacity: 0,
-        y: -20,
-        duration: 0.3,
-        ease: "power2.out",
-      });
-    }
-  }, [isLanguageOpen]);
-
-  useEffect(() => {
-    if (isAuthOpen) {
-      gsap.from(authDropdownRef.current, {
-        opacity: 0,
-        y: -20,
-        duration: 0.3,
-        ease: "power2.out",
-      });
-    }
-  }, [isAuthOpen]);
-
-  useEffect(() => {
-    const links = gsap.utils.toArray(".nav-link");
-    links.forEach((link) => {
-      const underline = document.createElement("div");
-      underline.style.height = "2px";
-      underline.style.backgroundColor = "#3b82f6";
-      underline.style.position = "absolute";
-      underline.style.bottom = "0";
-      underline.style.left = "0";
-      underline.style.width = "0";
-      underline.style.transition = "width 0.3s ease";
-      link.appendChild(underline);
-
-      link.addEventListener("mouseenter", () => {
-        gsap.to(underline, {
-          width: "100%",
-          duration: 0.3,
-          ease: "power2.out",
-        });
-      });
-      link.addEventListener("mouseleave", () => {
-        gsap.to(underline, {
-          width: "0",
-          duration: 0.3,
-          ease: "power2.out",
-        });
-      });
-    });
-  }, []);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        languageDropdownRef.current &&
-        !languageDropdownRef.current.contains(event.target) &&
-        !event.target.closest(".language-button")
-      ) {
-        setIsLanguageOpen(false);
-      }
-      if (
-        authDropdownRef.current &&
-        !authDropdownRef.current.contains(event.target) &&
-        !event.target.closest(".auth-button")
-      ) {
-        setIsAuthOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
   }, []);
 
   return (
@@ -257,12 +196,10 @@ const Navbar = () => {
               >
                 {isLoggedIn ? (
                   <>
-                    <img
-                      src="https://via.placeholder.com/30"
-                      alt="User Avatar"
-                      className="w-8 h-8 rounded-full mr-2"
-                    />
-                    <span>{userEmail}</span>
+                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium mr-2">
+                      {userEmail ? userEmail.charAt(0).toUpperCase() : "U"}
+                    </div>
+                    <span className="max-w-xs truncate">{userEmail}</span>
                   </>
                 ) : (
                   "Account"
@@ -437,12 +374,10 @@ const Navbar = () => {
                 <button className="block w-full text-left px-4 py-2 text-gray-200 hover:bg-gray-700">
                   {isLoggedIn ? (
                     <>
-                      <img
-                        src="https://via.placeholder.com/30"
-                        alt="User Avatar"
-                        className="w-8 h-8 rounded-full mr-2"
-                      />
-                      <span>{userEmail}</span>
+                      <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium mr-2 inline-block">
+                        {userEmail ? userEmail.charAt(0).toUpperCase() : "U"}
+                      </div>
+                      <span className="max-w-xs truncate">{userEmail}</span>
                     </>
                   ) : (
                     "Account"

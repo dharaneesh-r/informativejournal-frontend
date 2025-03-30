@@ -1,110 +1,158 @@
 "use client";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import Swal from "sweetalert2";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 const LoginPage = () => {
+  const router = useRouter();
   const containerRef = useRef(null);
   const headingRef = useRef(null);
   const formRef = useRef(null);
   const emailInputRef = useRef(null);
   const passwordInputRef = useRef(null);
   const buttonRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
 
   useEffect(() => {
-    // GSAP Animations for initial load
+    // Check if user is already logged in
+    const token = localStorage.getItem("authToken");
+    if (token) {
+      router.push("/");
+    }
+
+    // GSAP Animations
     gsap.from(containerRef.current, {
       opacity: 0,
       y: 50,
       duration: 1,
       ease: "power2.out",
     });
-    gsap.from(headingRef.current, {
-      y: -20,
-      opacity: 0,
-      duration: 1,
-      delay: 0.5,
-      ease: "bounce.out",
-    });
-    gsap.from(formRef.current, {
-      y: 20,
-      opacity: 0,
-      duration: 1,
-      delay: 1,
-      ease: "power2.out",
-    });
+  }, [router]);
 
-    // Animate shadow effects
-    gsap.to(containerRef.current, {
-      boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-      duration: 2,
-      repeat: -1,
-      yoyo: true,
-      ease: "power1.inOut",
-    });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
-    // Animate form inputs on focus
-    const inputs = [emailInputRef.current, passwordInputRef.current];
-    inputs.forEach((input) => {
-      input.addEventListener("focus", () => {
-        gsap.to(input, {
-          scale: 1.05,
-          boxShadow: "0 0 15px rgba(59, 130, 246, 0.5)",
-          duration: 0.3,
-          ease: "power2.out",
-        });
-      });
-      input.addEventListener("blur", () => {
-        gsap.to(input, {
-          scale: 1,
-          boxShadow: "none",
-          duration: 0.3,
-          ease: "power2.out",
-        });
-      });
-    });
-
-    // Animate button on hover
-    gsap.to(buttonRef.current, {
-      scale: 1.05,
-      boxShadow: "0 0 20px rgba(59, 130, 246, 0.7)",
-      duration: 0.3,
-      paused: true,
-      ease: "power2.out",
-    });
-    buttonRef.current.addEventListener("mouseenter", () =>
-      gsap.to(buttonRef.current, { scale: 1.05, play: true })
-    );
-    buttonRef.current.addEventListener("mouseleave", () =>
-      gsap.to(buttonRef.current, { scale: 1, play: true })
-    );
-  }, []);
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
 
-    // GSAP form exit animation
-    gsap.to(containerRef.current, {
-      x: -1000, // Slide out to the left
-      opacity: 0,
-      duration: 1,
-      ease: "power2.inOut",
-      onComplete: () => {
-        // Show SweetAlert2 message
-        Swal.fire({
-          title: "Success!",
-          text: "Login Successful!",
-          icon: "success",
-          confirmButtonText: "OK",
-          customClass: {
-            popup: "animated tada", // Add custom animations to SweetAlert2
+    // Input validation
+    if (!formData.email || !formData.password) {
+      setIsLoading(false);
+      Swal.fire({
+        title: "Error!",
+        text: "Please fill in all fields",
+        icon: "error",
+      });
+      return;
+    }
+
+    try {
+      // API call to backend
+      const response = await axios.post(
+        "https://informativejournal-backend.vercel.app/login",
+        {
+          email: formData.email,
+          password: formData.password,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
           },
-        }).then(() => {
-          // Redirect or reload the page after the alert is closed
-          window.location.href = "/dashboard"; // Replace with your desired route
+        }
+      );
+
+      if (response.data.token) {
+        const tokenExpiration = Date.now() + 7 * 24 * 60 * 60 * 1000;
+        localStorage.setItem("authToken", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.data));
+        localStorage.setItem("tokenExpiration", tokenExpiration.toString());
+        
+        localStorage.setItem("userEmail", formData.email);
+        sessionStorage.setItem("userEmail", formData.email);
+
+        gsap.to(containerRef.current, {
+          x: -1000,
+          opacity: 0,
+          duration: 1,
+          ease: "power2.inOut",
+          onComplete: () => {
+            Swal.fire({
+              title: "Success!",
+              text: "Login successful!",
+              icon: "success",
+              timer: 1500,
+              showConfirmButton: false,
+            }).then(() => {
+              router.push("/");
+            });
+          },
         });
-      },
-    });
+      } else {
+        throw new Error("Login failed - no token received");
+      }
+    } catch (error) {
+      setIsLoading(false);
+      gsap.to(buttonRef.current, {
+        backgroundColor: "#2563eb",
+        duration: 0.3,
+      });
+
+      gsap.from(containerRef.current, {
+        x: [10, -10, 10, -10, 0],
+        duration: 0.5,
+        ease: "power1.inOut",
+      });
+
+      let errorMessage = "Login failed. Please try again.";
+      if (axios.isAxiosError(error)) {
+        if (error.response) {
+          switch (error.response.status) {
+            case 400:
+              errorMessage = "Invalid request. Please check your input.";
+              break;
+            case 401:
+              errorMessage = "Invalid email or password.";
+              break;
+            case 403:
+              errorMessage = "Account not verified. Please check your email.";
+              break;
+            case 404:
+              errorMessage = "User not found.";
+              break;
+            case 500:
+              errorMessage = "Server error. Please try again later.";
+              break;
+            default:
+              errorMessage =
+                error.response.data?.message ||
+                "An unexpected error occurred. Please try again.";
+          }
+        } else if (error.request) {
+          errorMessage = "No response from server. Please check your connection.";
+        }
+      } else if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+
+      Swal.fire({
+        title: "Error!",
+        text: errorMessage,
+        icon: "error",
+        confirmButtonText: "Try Again",
+      });
+    }
   };
 
   return (
@@ -132,6 +180,8 @@ const LoginPage = () => {
               type="email"
               id="email"
               name="email"
+              value={formData.email}
+              onChange={handleChange}
               required
               className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-300"
               placeholder="Enter your email"
@@ -149,24 +199,83 @@ const LoginPage = () => {
               type="password"
               id="password"
               name="password"
+              value={formData.password}
+              onChange={handleChange}
               required
+              minLength={6}
               className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-300"
               placeholder="Enter your password"
             />
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <input
+                id="remember-me"
+                name="remember-me"
+                type="checkbox"
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              />
+              <label
+                htmlFor="remember-me"
+                className="ml-2 block text-sm text-gray-900"
+              >
+                Remember me
+              </label>
+            </div>
+            <div className="text-sm">
+              <a
+                href="/forgot-password"
+                className="font-medium text-blue-600 hover:text-blue-500"
+              >
+                Forgot password?
+              </a>
+            </div>
           </div>
           <div>
             <button
               ref={buttonRef}
               type="submit"
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-300 transform hover:scale-105"
+              disabled={isLoading}
+              className={`w-full ${
+                isLoading ? "bg-blue-800" : "bg-blue-600"
+              } text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-300 transform hover:scale-105 flex justify-center items-center`}
             >
-              Login
+              {isLoading ? (
+                <>
+                  <svg
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Processing...
+                </>
+              ) : (
+                "Login"
+              )}
             </button>
           </div>
         </form>
         <p className="mt-6 text-center text-gray-600">
           Don't have an account?{" "}
-          <a href="/register" className="text-blue-600 hover:underline">
+          <a
+            href="/register"
+            className="text-blue-600 hover:underline font-medium"
+          >
             Sign up
           </a>
         </p>

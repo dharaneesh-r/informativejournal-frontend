@@ -6,6 +6,7 @@ import axios from "axios";
 import Loading from "./loading";
 import Link from "next/link";
 import Image from "next/image";
+import GamificationDashboard from "../components/GamificationDashboard";
 import {
   FaPlay,
   FaStop,
@@ -18,11 +19,13 @@ import {
   FaShareAlt,
   FaTimes,
   FaBook,
+  FaTrophy,
 } from "react-icons/fa";
 
 gsap.registerPlugin(ScrollTrigger);
 
-export default function FeaturedPosts() {
+export default function FeaturedPosts({ userId }) {
+  // Accept userId as prop
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -37,6 +40,7 @@ export default function FeaturedPosts() {
   const [isFabExpanded, setIsFabExpanded] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [showSavedArticles, setShowSavedArticles] = useState(false);
+  const [showGamification, setShowGamification] = useState(false); // New state for gamification panel
 
   // Refs for GSAP animations
   const searchBarRef = useRef(null);
@@ -44,6 +48,7 @@ export default function FeaturedPosts() {
   const fabMenuRef = useRef(null);
   const fabButtonRef = useRef(null);
   const savedPanelRef = useRef(null);
+  const gamificationPanelRef = useRef(null);
 
   // Check if Web Speech API is supported
   useEffect(() => {
@@ -135,6 +140,26 @@ export default function FeaturedPosts() {
     }
   }, [showSavedArticles]);
 
+  // Animation for gamification panel
+  useEffect(() => {
+    if (gamificationPanelRef.current) {
+      if (showGamification) {
+        gsap.fromTo(
+          gamificationPanelRef.current,
+          { x: 300, opacity: 0 },
+          { x: 0, opacity: 1, duration: 0.3, ease: "power2.out" }
+        );
+      } else {
+        gsap.to(gamificationPanelRef.current, {
+          x: 300,
+          opacity: 0,
+          duration: 0.2,
+          ease: "power2.in",
+        });
+      }
+    }
+  }, [showGamification]);
+
   // Supported languages
   const languages = [
     { code: "en-US", name: "English" },
@@ -193,7 +218,6 @@ export default function FeaturedPosts() {
     setSavedArticles(updatedSavedArticles);
     localStorage.setItem("savedArticles", JSON.stringify(updatedSavedArticles));
 
-    // Show the saved articles panel when saving
     if (!isSaved) {
       setShowSavedArticles(true);
     }
@@ -327,9 +351,9 @@ export default function FeaturedPosts() {
               className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
             >
               {isSaved ? (
-                <FaBookmark className="text-blue-600" />
+                <FaBookmark className="text-blue-600 cursor-pointer" />
               ) : (
-                <FaRegBookmark className="text-gray-500" />
+                <FaRegBookmark className="text-gray-500 cursor-pointer" />
               )}
             </button>
             <button
@@ -496,7 +520,7 @@ export default function FeaturedPosts() {
                 <div className="flex justify-end mt-2">
                   <button
                     onClick={() => toggleSaveArticle(article)}
-                    className="text-xs text-red-500 hover:text-red-700"
+                    className="text-xs text-red-500 hover:text-red-700 cursor-pointer"
                   >
                     Remove
                   </button>
@@ -507,10 +531,31 @@ export default function FeaturedPosts() {
         )}
       </div>
 
+      {/* Gamification Dashboard Panel */}
+      <div
+        ref={gamificationPanelRef}
+        className={`fixed top-0 right-0 h-full w-80 bg-white shadow-xl z-50 p-4 overflow-y-auto ${
+          showGamification ? "block" : "hidden"
+        }`}
+      >
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold flex items-center">
+            <FaTrophy className="mr-2" /> Your Progress
+          </h3>
+          <button
+            onClick={() => setShowGamification(false)}
+            className="p-2 rounded-full hover:bg-gray-100"
+          >
+            <FaTimes />
+          </button>
+        </div>
+        <GamificationDashboard userId={userId} />
+      </div>
+
       {/* Floating Action Button */}
       <div className="fixed bottom-6 right-6 z-50">
         <div className="flex flex-col items-end gap-2">
-        {savedArticles.length > 0 && (
+          {savedArticles.length > 0 && (
             <button
               onClick={() => {
                 setIsFabExpanded(false);
@@ -524,6 +569,15 @@ export default function FeaturedPosts() {
               </span>
             </button>
           )}
+          <button
+            onClick={() => {
+              setIsFabExpanded(false);
+              setShowGamification(!showGamification);
+            }}
+            className="flex items-center justify-center w-12 h-12 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 transition-colors"
+          >
+            <FaTrophy className="text-lg" />
+          </button>
           <div
             ref={fabMenuRef}
             className="flex flex-col gap-2 bg-white shadow-lg rounded-lg overflow-hidden w-0 h-0 opacity-0"
