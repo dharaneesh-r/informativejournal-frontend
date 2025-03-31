@@ -1,7 +1,8 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import Swal from "sweetalert2";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const formRef = useRef(null);
@@ -10,8 +11,11 @@ export default function Home() {
   const emailInputRef = useRef(null);
   const passwordInputRef = useRef(null);
   const buttonRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
+    // Animation setup
     gsap.from(containerRef.current, {
       opacity: 0,
       y: 50,
@@ -61,43 +65,87 @@ export default function Home() {
       });
     });
 
-    gsap.to(buttonRef.current, {
+    const button = buttonRef.current;
+    gsap.to(button, {
       scale: 1.05,
       boxShadow: "0 0 20px rgba(59, 130, 246, 0.7)",
       duration: 0.3,
       paused: true,
       ease: "power2.out",
     });
-    buttonRef.current.addEventListener("mouseenter", () =>
-      gsap.to(buttonRef.current, { scale: 1.05, play: true })
+    button.addEventListener("mouseenter", () =>
+      gsap.to(button, { scale: 1.05, play: true })
     );
-    buttonRef.current.addEventListener("mouseleave", () =>
-      gsap.to(buttonRef.current, { scale: 1, play: true })
+    button.addEventListener("mouseleave", () =>
+      gsap.to(button, { scale: 1, play: true })
     );
+
+    // Cleanup function
+    return () => {
+      inputs.forEach((input) => {
+        input.removeEventListener("focus", () => {});
+        input.removeEventListener("blur", () => {});
+      });
+      button.removeEventListener("mouseenter", () => {});
+      button.removeEventListener("mouseleave", () => {});
+    };
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
 
-    gsap.to(containerRef.current, {
-      x: -1000, 
-      opacity: 0,
-      duration: 1,
-      ease: "power2.inOut",
-      onComplete: () => {
-        Swal.fire({
-          title: "Success!",
-          text: "Registration Successful!",
-          icon: "success",
-          confirmButtonText: "OK",
-          customClass: {
-            popup: "animated tada", 
+    const formData = {
+      email: emailInputRef.current.value,
+      password: passwordInputRef.current.value,
+    };
+
+    try {
+      const response = await fetch(
+        "https://informativejournal-backend.vercel.app/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
           },
-        }).then(() => {
-          window.location.reload();
-        });
-      },
-    });
+          body: JSON.stringify(formData),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Registration failed");
+      }
+
+      gsap.to(containerRef.current, {
+        x: -1000,
+        opacity: 0,
+        duration: 1,
+        ease: "power2.inOut",
+        onComplete: () => {
+          Swal.fire({
+            title: "Success!",
+            text: data.message || "Registration Successful!",
+            icon: "success",
+            confirmButtonText: "OK",
+            customClass: {
+              popup: "animated tada",
+            },
+          }).then(() => {
+            router.push("/login");
+          });
+        },
+      });
+    } catch (error) {
+      setIsLoading(false);
+      Swal.fire({
+        title: "Error!",
+        text: error.message,
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    }
   };
 
   return (
@@ -143,23 +191,34 @@ export default function Home() {
               id="password"
               name="password"
               required
+              minLength={6}
               className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-300"
-              placeholder="Enter your password"
+              placeholder="Enter your password (min 6 characters)"
             />
           </div>
           <div>
             <button
               ref={buttonRef}
               type="submit"
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-300 transform hover:scale-105"
+              disabled={isLoading}
+              className={`w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-300 transform hover:scale-105 ${
+                isLoading ? "opacity-70 cursor-not-allowed" : ""
+              }`}
             >
-              Register
+              {isLoading ? "Registering..." : "Register"}
             </button>
           </div>
         </form>
         <p className="mt-6 text-center text-gray-600">
           Already have an account?{" "}
-          <a href="#" className="text-blue-600 hover:underline">
+          <a
+            href="/login"
+            className="text-blue-600 hover:underline"
+            onClick={(e) => {
+              e.preventDefault();
+              router.push("/login");
+            }}
+          >
             Sign in
           </a>
         </p>
@@ -167,4 +226,3 @@ export default function Home() {
     </div>
   );
 }
-  

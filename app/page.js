@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { ScrollTrigger, ScrollToPlugin } from "gsap/all";
 import axios from "axios";
 import Loading from "./loading";
 import Link from "next/link";
@@ -10,7 +10,8 @@ import GamificationDashboard from "../components/GamificationDashboard";
 import {
   FaPlay,
   FaStop,
-  FaLanguage,
+  FaPause,
+  FaVolumeUp,
   FaSearch,
   FaBookmark,
   FaRegBookmark,
@@ -20,19 +21,18 @@ import {
   FaTimes,
   FaBook,
   FaTrophy,
+  FaCheck,
+  FaChevronDown,
 } from "react-icons/fa";
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
 export default function FeaturedPosts({ userId }) {
-  // Accept userId as prop
+  // State management
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [heroArticles, setHeroArticles] = useState([]);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [language, setLanguage] = useState("en-US");
-  const [preferredCategories, setPreferredCategories] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [savedArticles, setSavedArticles] = useState([]);
   const [isListening, setIsListening] = useState(false);
@@ -41,185 +41,108 @@ export default function FeaturedPosts({ userId }) {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [showSavedArticles, setShowSavedArticles] = useState(false);
   const [showGamification, setShowGamification] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-  // Refs for GSAP animations
+  // Speech state
+  const [speechState, setSpeechState] = useState("idle");
+  const [language, setLanguage] = useState("en-US");
+  const [speechProgress, setSpeechProgress] = useState(0);
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
+  const [showLanguageModal, setShowLanguageModal] = useState(false);
+  const [currentArticleIndex, setCurrentArticleIndex] = useState(0);
+
+  // Refs
   const searchBarRef = useRef(null);
   const voiceButtonRef = useRef(null);
   const fabMenuRef = useRef(null);
   const fabButtonRef = useRef(null);
   const savedPanelRef = useRef(null);
   const gamificationPanelRef = useRef(null);
-
-  // Check if Web Speech API is supported
-  useEffect(() => {
-    if (typeof window !== "undefined" && "webkitSpeechRecognition" in window) {
-      setIsSpeechSupported(true);
-    }
-  }, []);
-
-  // GSAP animations
-  useEffect(() => {
-    if (searchBarRef.current) {
-      if (isSearchFocused) {
-        gsap.to(searchBarRef.current, {
-          scale: 1.02,
-          boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          duration: 0.3,
-        });
-      } else {
-        gsap.to(searchBarRef.current, {
-          scale: 1,
-          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-          duration: 0.3,
-        });
-      }
-    }
-  }, [isSearchFocused]);
-
-  useEffect(() => {
-    if (isListening && voiceButtonRef.current) {
-      gsap.to(voiceButtonRef.current, {
-        x: [-2, 2, -2, 2, 0],
-        duration: 0.5,
-        repeat: 1,
-        ease: "power1.inOut",
-      });
-    }
-  }, [isListening]);
-
-  useEffect(() => {
-    if (fabMenuRef.current && fabButtonRef.current) {
-      if (isFabExpanded) {
-        gsap.to(fabMenuRef.current, {
-          opacity: 1,
-          height: "auto",
-          width: "18rem",
-          padding: "1rem",
-          duration: 0.3,
-          ease: "power2.out",
-        });
-        gsap.to(fabButtonRef.current, {
-          rotate: 180,
-          duration: 0.3,
-          ease: "power2.out",
-        });
-      } else {
-        gsap.to(fabMenuRef.current, {
-          opacity: 0,
-          height: 0,
-          width: 0,
-          padding: 0,
-          duration: 0.3,
-          ease: "power2.in",
-        });
-        gsap.to(fabButtonRef.current, {
-          rotate: 0,
-          duration: 0.3,
-          ease: "power2.in",
-        });
-      }
-    }
-  }, [isFabExpanded]);
-
-  useEffect(() => {
-    if (savedPanelRef.current) {
-      if (showSavedArticles) {
-        gsap.fromTo(
-          savedPanelRef.current,
-          { x: 300, opacity: 0 },
-          { x: 0, opacity: 1, duration: 0.3, ease: "power2.out" }
-        );
-      } else {
-        gsap.to(savedPanelRef.current, {
-          x: 300,
-          opacity: 0,
-          duration: 0.2,
-          ease: "power2.in",
-        });
-      }
-    }
-  }, [showSavedArticles]);
-
-  // Animation for gamification panel
-  useEffect(() => {
-    if (gamificationPanelRef.current) {
-      if (showGamification) {
-        gsap.fromTo(
-          gamificationPanelRef.current,
-          { x: 300, opacity: 0 },
-          { x: 0, opacity: 1, duration: 0.3, ease: "power2.out" }
-        );
-      } else {
-        gsap.to(gamificationPanelRef.current, {
-          x: 300,
-          opacity: 0,
-          duration: 0.2,
-          ease: "power2.in",
-        });
-      }
-    }
-  }, [showGamification]);
+  const modalRef = useRef(null);
+  const articleRefs = useRef([]);
+  const containerRef = useRef(null);
+  const speechRef = useRef({
+    utterance: null,
+    startTime: 0,
+    pauseTime: 0,
+    words: [],
+    currentArticle: null,
+  });
+  const progressIntervalRef = useRef(null);
 
   // Supported languages
   const languages = [
-    { code: "en-US", name: "English (United States)" },
-    { code: "en-GB", name: "English (United Kingdom)" },
-    { code: "es-ES", name: "Spanish (Spain)" },
-    { code: "es-MX", name: "Spanish (Mexico)" },
-    { code: "fr-FR", name: "French (France)" },
-    { code: "fr-CA", name: "French (Canada)" },
-    { code: "de-DE", name: "German" },
-    { code: "ru-RU", name: "Russian" },
-    { code: "zh-CN", name: "Chinese (Simplified)" },
-    { code: "zh-TW", name: "Chinese (Traditional)" },
-    { code: "ja-JP", name: "Japanese" },
-    { code: "ko-KR", name: "Korean" },
-    { code: "pt-PT", name: "Portuguese (Portugal)" },
-    { code: "pt-BR", name: "Portuguese (Brazil)" },
-    { code: "it-IT", name: "Italian" },
-    { code: "nl-NL", name: "Dutch" },
-    { code: "sv-SE", name: "Swedish" },
-    { code: "da-DK", name: "Danish" },
-    { code: "fi-FI", name: "Finnish" },
-    { code: "no-NO", name: "Norwegian" },
-    { code: "pl-PL", name: "Polish" },
-    { code: "tr-TR", name: "Turkish" },
-    { code: "cs-CZ", name: "Czech" },
-    { code: "el-GR", name: "Greek" },
-    { code: "he-IL", name: "Hebrew" },
-    { code: "th-TH", name: "Thai" },
-    { code: "id-ID", name: "Indonesian" },
-    { code: "vi-VN", name: "Vietnamese" },
-    { code: "hu-HU", name: "Hungarian" },
-    { code: "uk-UA", name: "Ukrainian" },
-    { code: "bg-BG", name: "Bulgarian" },
-    { code: "ro-RO", name: "Romanian" },
-    { code: "sk-SK", name: "Slovak" },
-    { code: "hr-HR", name: "Croatian" },
-    { code: "lt-LT", name: "Lithuanian" },
-    { code: "lv-LV", name: "Latvian" },
-    { code: "et-EE", name: "Estonian" },
-    { code: "ms-MY", name: "Malay" },
-    { code: "bn-BD", name: "Bengali (Bangladesh)" },
-    { code: "bn-IN", name: "Bengali (India)" },
-    { code: "fa-IR", name: "Persian" },
-    { code: "ur-PK", name: "Urdu (Pakistan)" },
-    { code: "ur-IN", name: "Urdu (India)" },
-    { code: "te-IN", name: "Telugu" },
-    { code: "mr-IN", name: "Marathi" },
-    { code: "gu-IN", name: "Gujarati" },
-    { code: "pa-IN", name: "Punjabi" },
-    { code: "kn-IN", name: "Kannada" },
-    { code: "ml-IN", name: "Malayalam" },
-    { code: "si-LK", name: "Sinhala" },
+    { code: "en-US", name: "English", flag: "🇺🇸" },
+    { code: "es-ES", name: "Spanish", flag: "🇪🇸" },
+    { code: "fr-FR", name: "French", flag: "🇫🇷" },
+    { code: "de-DE", name: "German", flag: "🇩🇪" },
+    { code: "it-IT", name: "Italian", flag: "🇮🇹" },
+    { code: "pt-PT", name: "Portuguese", flag: "🇵🇹" },
+    { code: "ru-RU", name: "Russian", flag: "🇷🇺" },
+    { code: "ja-JP", name: "Japanese", flag: "🇯🇵" },
+    { code: "zh-CN", name: "Chinese", flag: "🇨🇳" },
+    { code: "hi-IN", name: "Hindi", flag: "🇮🇳" },
+    { code: "ar-SA", name: "Arabic", flag: "🇸🇦" },
+    { code: "ko-KR", name: "Korean", flag: "🇰🇷" },
   ];
 
-  const nextLanguage = () => {
-    const currentIndex = languages.findIndex((lang) => lang.code === language);
-    const nextIndex = (currentIndex + 1) % languages.length;
-    setLanguage(languages[nextIndex].code);
-    setIsFabExpanded(false);
-  };
+  // Check for mobile view and setup smooth scrolling
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    // Setup smooth scrolling
+    gsap.config({
+      nullTargetWarn: false,
+    });
+
+    return () => {
+      window.removeEventListener("resize", checkMobile);
+      ScrollTrigger.getAll().forEach((instance) => instance.kill());
+    };
+  }, []);
+
+  // Check Web Speech API support
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if ("webkitSpeechRecognition" in window) {
+        setIsSpeechSupported(true);
+      }
+      if (!("speechSynthesis" in window)) {
+        console.warn("Text-to-speech not supported");
+      }
+    }
+  }, []);
+
+  // Close modals when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (modalRef.current && !modalRef.current.contains(event.target)) {
+        setShowLanguageModal(false);
+      }
+      if (
+        savedPanelRef.current &&
+        !savedPanelRef.current.contains(event.target) &&
+        showSavedArticles
+      ) {
+        setShowSavedArticles(false);
+      }
+      if (
+        gamificationPanelRef.current &&
+        !gamificationPanelRef.current.contains(event.target) &&
+        showGamification
+      ) {
+        setShowGamification(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showSavedArticles, showGamification]);
 
   // Fetch articles
   useEffect(() => {
@@ -230,7 +153,12 @@ export default function FeaturedPosts({ userId }) {
         );
         if (response.data.status === "success") {
           setArticles(response.data.data);
-          setHeroArticles(response.data.data.slice(0, 4));
+          setHeroArticles(
+            response.data.data.slice(
+              0,
+              Math.ceil(response.data.data.length / 3)
+            )
+          );
         }
       } catch (err) {
         console.error("Error fetching articles:", err);
@@ -243,7 +171,7 @@ export default function FeaturedPosts({ userId }) {
     fetchArticles();
   }, []);
 
-  // Load saved articles from localStorage
+  // Load saved articles
   useEffect(() => {
     if (typeof window !== "undefined") {
       const saved = JSON.parse(localStorage.getItem("savedArticles")) || [];
@@ -251,7 +179,7 @@ export default function FeaturedPosts({ userId }) {
     }
   }, []);
 
-  // Save or remove an article
+  // Save/remove article
   const toggleSaveArticle = (article) => {
     const isSaved = savedArticles.some((a) => a._id === article._id);
     let updatedSavedArticles;
@@ -270,56 +198,219 @@ export default function FeaturedPosts({ userId }) {
     }
   };
 
-  // GSAP animations for article cards
+  // GSAP animations
   useEffect(() => {
-    gsap.from(".fade-in", {
-      opacity: 0,
-      y: 50,
-      duration: 1,
-      scrollTrigger: {
-        trigger: ".fade-in",
-        start: "top 90%",
-        toggleActions: "play none none none",
-      },
+    if (articles.length === 0) return;
+
+    // Article animations
+    gsap.utils.toArray(".fade-in").forEach((element, i) => {
+      gsap.from(element, {
+        opacity: 0,
+        y: 50,
+        duration: 0.8,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: element,
+          start: "top 90%",
+          toggleActions: "play none none none",
+        },
+        delay: i * 0.1,
+      });
     });
+
+    // Hero animations
+    gsap.utils.toArray(".hero-article").forEach((element) => {
+      gsap.from(element, {
+        opacity: 0,
+        scale: 0.95,
+        duration: 1,
+        ease: "back.out(1.7)",
+        scrollTrigger: {
+          trigger: element,
+          start: "top 80%",
+        },
+      });
+    });
+
+    // Smooth scroll setup
+    if (containerRef.current) {
+      gsap.to(containerRef.current, {
+        scrollTo: { y: 0, autoKill: false },
+        duration: 0.1,
+      });
+    }
+
+    return () => {
+      ScrollTrigger.getAll().forEach((instance) => instance.kill());
+    };
   }, [articles]);
 
   // Shuffle hero articles
   useEffect(() => {
     if (articles.length > 0) {
       const interval = setInterval(() => {
-        const shuffledArticles = [...articles].sort(() => Math.random() - 0.5);
-        setHeroArticles(shuffledArticles.slice(0, 4));
+        gsap.to(".hero-article", {
+          opacity: 0,
+          y: 20,
+          duration: 0.5,
+          onComplete: () => {
+            const shuffled = [...articles].sort(() => Math.random() - 0.5);
+            setHeroArticles(shuffled.slice(0, Math.ceil(articles.length / 3)));
+            gsap.fromTo(
+              ".hero-article",
+              { opacity: 0, y: -20 },
+              { opacity: 1, y: 0, duration: 0.5 }
+            );
+          },
+        });
       }, 10000);
       return () => clearInterval(interval);
     }
   }, [articles]);
 
-  // Auto-read news feature
-  useEffect(() => {
-    if (
-      articles.length > 0 &&
-      typeof window !== "undefined" &&
-      "speechSynthesis" in window
-    ) {
-      const speech = new SpeechSynthesisUtterance();
+  // Speech controls
+  const toggleSpeech = () => {
+    if (speechState === "idle") {
+      startSpeech();
+    } else if (speechState === "playing") {
+      pauseSpeech();
+    } else if (speechState === "paused") {
+      resumeSpeech();
+    }
+  };
+
+  const startSpeech = (article = null) => {
+    if (articles.length === 0) return;
+
+    const targetArticle = article || articles[currentArticleIndex];
+    if (!targetArticle) return;
+
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+
+      const contentToRead = `${targetArticle.title}. ${
+        targetArticle.description
+      }. ${targetArticle.content?.map((c) => c.content).join(" ")}`;
+      const words = contentToRead.split(/\s+/);
+      speechRef.current.words = words;
+      speechRef.current.currentArticle = targetArticle;
+      setCurrentWordIndex(0);
+
+      const speech = new SpeechSynthesisUtterance(contentToRead);
       speech.lang = language;
       speech.rate = 1;
       speech.pitch = 1;
-      const newsText = articles
-        .map((article) => `${article.title}. ${article.description}`)
-        .join(". ");
-      speech.text = newsText;
+      speechRef.current.utterance = speech;
+      speechRef.current.startTime = Date.now();
 
-      if (isSpeaking) {
-        window.speechSynthesis.speak(speech);
-      }
+      setSpeechProgress(0);
+      progressIntervalRef.current = setInterval(() => {
+        if (speechState === "playing") {
+          const elapsed = Date.now() - speechRef.current.startTime;
+          const estimatedTotal = (contentToRead.length / 15) * 1000;
+          const progress = Math.min((elapsed / estimatedTotal) * 100, 100);
+          setSpeechProgress(progress);
 
-      return () => {
-        window.speechSynthesis.cancel();
+          const wordsPerMs = words.length / estimatedTotal;
+          const currentWord = Math.floor(elapsed * wordsPerMs);
+          setCurrentWordIndex(Math.min(currentWord, words.length - 1));
+        }
+      }, 100);
+
+      speech.onboundary = (event) => {
+        if (event.name === "word") {
+          const wordIndex = speechRef.current.words.findIndex(
+            (_, i) => i >= event.charIndex
+          );
+          setCurrentWordIndex(wordIndex);
+        }
       };
+
+      speech.onend = () => {
+        setSpeechState("idle");
+        clearInterval(progressIntervalRef.current);
+        setSpeechProgress(100);
+        setTimeout(() => setSpeechProgress(0), 1000);
+
+        if (!article && currentArticleIndex < articles.length - 1) {
+          setCurrentArticleIndex((prev) => prev + 1);
+          if (articleRefs.current[currentArticleIndex + 1]) {
+            gsap.to(window, {
+              scrollTo: {
+                y: articleRefs.current[currentArticleIndex + 1],
+                offsetY: isMobile ? 20 : 100,
+                autoKill: true,
+              },
+              duration: 1,
+              ease: "power3.inOut",
+            });
+          }
+          setTimeout(() => startSpeech(), 1000);
+        }
+      };
+
+      speech.onerror = () => {
+        setSpeechState("idle");
+        clearInterval(progressIntervalRef.current);
+        setSpeechProgress(0);
+      };
+
+      window.speechSynthesis.speak(speech);
+      setSpeechState("playing");
+
+      if (articleRefs.current[currentArticleIndex]) {
+        gsap.to(window, {
+          scrollTo: {
+            y: articleRefs.current[currentArticleIndex],
+            offsetY: isMobile ? 20 : 100,
+            autoKill: true,
+          },
+          duration: 1,
+          ease: "power3.inOut",
+        });
+      }
+    } else {
+      alert("Text-to-speech not supported");
     }
-  }, [articles, isSpeaking, language]);
+  };
+
+  const pauseSpeech = () => {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.pause();
+      speechRef.current.pauseTime = Date.now();
+      setSpeechState("paused");
+    }
+  };
+
+  const resumeSpeech = () => {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.resume();
+      speechRef.current.startTime += Date.now() - speechRef.current.pauseTime;
+      setSpeechState("playing");
+    }
+  };
+
+  const stopSpeech = () => {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+    setSpeechState("idle");
+    clearInterval(progressIntervalRef.current);
+    setSpeechProgress(0);
+  };
+
+  const selectLanguage = (langCode) => {
+    const wasPlaying = speechState === "playing";
+    const wasPaused = speechState === "paused";
+
+    setLanguage(langCode);
+    setShowLanguageModal(false);
+
+    if (wasPlaying || wasPaused) {
+      stopSpeech();
+      startSpeech();
+    }
+  };
 
   // Voice search
   useEffect(() => {
@@ -340,95 +431,136 @@ export default function FeaturedPosts({ userId }) {
     }
   }, [isListening, language, isSpeechSupported]);
 
+  // Filter articles
   const filteredArticles = articles.filter((article) => {
-    const matchesCategory =
-      preferredCategories.length === 0 ||
-      preferredCategories.includes(article.category);
     const matchesSearch =
       article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       article.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
+    return matchesSearch;
   });
 
-  const renderArticlesWithHero = () => {
+  // Render articles with hero placement
+  const renderArticles = () => {
     const result = [];
-    let heroCount = 0;
+    let regularArticles = filteredArticles.filter(
+      (article) => !heroArticles.some((a) => a._id === article._id)
+    );
+    let heroIndex = 0;
 
-    for (let i = 0; i < filteredArticles.length; i += 3) {
-      const chunk = filteredArticles.slice(i, i + 3);
-      chunk.forEach((article) => {
-        const isSaved = savedArticles.some((a) => a._id === article._id);
-        result.push(
-          <div
-            key={article._id}
-            className="bg-white shadow-lg rounded-lg overflow-hidden transform transition duration-500 hover:scale-105 fade-in relative"
-          >
-            <Link href={`/${article.category}/${article.slug}`}>
-              <div className="w-full h-48 relative">
-                <Image
-                  src={article.image || "/news-image.jpg"}
-                  alt={article.title}
-                  className="object-cover"
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                />
-              </div>
-              <div className="p-6">
-                <h3 className="text-xl font-semibold hover:text-blue-600">
-                  {article.title}
-                </h3>
-                <p className="text-gray-600 mt-2">{article.description}</p>
-                <div className="flex items-center mt-4 text-gray-500">
-                  <span className="text-sm">
-                    By {article.author || "Unknown"}
-                  </span>
-                  <span className="mx-2">|</span>
-                  <span className="text-sm">
-                    {new Date(article.createdAt).toLocaleDateString()}
-                  </span>
+    // Group regular articles into chunks of 3
+    for (let i = 0; i < regularArticles.length; i += 3) {
+      const chunk = regularArticles.slice(i, i + 3);
+
+      // Add the chunk of 3 regular articles
+      result.push(
+        <div key={`regular-${i}`} className="contents">
+          {chunk.map((article, index) => {
+            const globalIndex = filteredArticles.findIndex(
+              (a) => a._id === article._id
+            );
+            const isSaved = savedArticles.some((a) => a._id === article._id);
+            const isCurrentArticle =
+              globalIndex === currentArticleIndex &&
+              (speechState === "playing" || speechState === "paused");
+
+            return (
+              <div
+                key={article._id}
+                ref={(el) => (articleRefs.current[globalIndex] = el)}
+                className={`bg-white shadow-lg rounded-lg overflow-hidden transform transition duration-500 hover:scale-[1.02] fade-in relative ${
+                  isCurrentArticle ? "ring-4 ring-blue-500" : ""
+                }`}
+              >
+                <Link href={`/${article.category}/${article.slug}`}>
+                  <div className="w-full h-48 sm:h-56 relative">
+                    <Image
+                      src={article.image || "/news-image.jpg"}
+                      alt={article.title}
+                      className="object-cover"
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                  </div>
+                  <div className="p-4 sm:p-6">
+                    <h3 className="text-lg sm:text-xl font-semibold hover:text-blue-600 line-clamp-2">
+                      {article.title}
+                    </h3>
+                    <p className="text-gray-600 mt-2 line-clamp-3">
+                      {article.description}
+                    </p>
+                    <div className="flex items-center mt-4 text-gray-500">
+                      <span className="text-xs sm:text-sm">
+                        By {article.author || "Unknown"}
+                      </span>
+                      <span className="mx-2">|</span>
+                      <span className="text-xs sm:text-sm">
+                        {new Date(article.createdAt).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+                <div className="absolute top-4 right-4 flex gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      toggleSaveArticle(article);
+                    }}
+                    className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+                  >
+                    {isSaved ? (
+                      <FaBookmark className="text-blue-600 cursor-pointer" />
+                    ) : (
+                      <FaRegBookmark className="text-gray-500 cursor-pointer" />
+                    )}
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      navigator.share({
+                        title: article.title,
+                        text: article.description,
+                        url: `https://informativejournal.vercel.app/${article.category}/${article.slug}`,
+                      });
+                    }}
+                    className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <FaShareAlt className="text-gray-500" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setCurrentArticleIndex(globalIndex);
+                      startSpeech(article);
+                    }}
+                    className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <FaVolumeUp className="text-blue-500" />
+                  </button>
                 </div>
               </div>
-            </Link>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                toggleSaveArticle(article);
-              }}
-              className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
-            >
-              {isSaved ? (
-                <FaBookmark className="text-blue-600 cursor-pointer" />
-              ) : (
-                <FaRegBookmark className="text-gray-500 cursor-pointer" />
-              )}
-            </button>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                navigator.share({
-                  title: article.title,
-                  text: article.description,
-                  url: `https://informativejournal.vercel.app/${article.category}/${article.slug}`,
-                });
-              }}
-              className="absolute top-4 right-16 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
-            >
-              <FaShareAlt className="text-gray-500" />
-            </button>
-          </div>
+            );
+          })}
+        </div>
+      );
+
+      // Add a hero article after every 3 regular articles if available
+      if (heroIndex < heroArticles.length) {
+        const heroArticle = heroArticles[heroIndex];
+        const isSaved = savedArticles.some((a) => a._id === heroArticle._id);
+        const globalIndex = filteredArticles.findIndex(
+          (a) => a._id === heroArticle._id
         );
-      });
-      if (heroCount < heroArticles.length) {
-        const heroArticle = heroArticles[heroCount];
+
         result.push(
           <div
-            key={`hero-${heroCount}`}
-            className="col-span-1 md:col-span-2 lg:col-span-3 fade-in relative"
+            key={`hero-${heroIndex}`}
+            className="col-span-1 md:col-span-2 lg:col-span-3 fade-in relative hero-article"
           >
             <Link href={`/${heroArticle.category}/${heroArticle.slug}`}>
-              <div className="relative h-96 rounded-lg overflow-hidden">
+              <div className="relative h-80 sm:h-96 rounded-lg overflow-hidden">
                 <Image
                   src={heroArticle.image || "/news-image.jpg"}
                   alt={heroArticle.title}
@@ -438,10 +570,10 @@ export default function FeaturedPosts({ userId }) {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
                 <div className="absolute bottom-6 left-6 right-6">
-                  <h2 className="text-3xl font-bold text-white">
+                  <h2 className="text-2xl sm:text-3xl font-bold text-white">
                     {heroArticle.title}
                   </h2>
-                  <p className="text-gray-200 mt-2">
+                  <p className="text-gray-200 mt-2 line-clamp-2">
                     {heroArticle.description}
                   </p>
                   <div className="flex items-center mt-4 text-gray-300">
@@ -456,23 +588,36 @@ export default function FeaturedPosts({ userId }) {
                 </div>
               </div>
             </Link>
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                toggleSaveArticle(heroArticle);
-              }}
-              className="absolute top-4 right-4 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
-            >
-              {savedArticles.some((a) => a._id === heroArticle._id) ? (
-                <FaBookmark className="text-blue-600" />
-              ) : (
-                <FaRegBookmark className="text-gray-500" />
-              )}
-            </button>
+            <div className="absolute top-4 right-4 flex gap-2">
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  toggleSaveArticle(heroArticle);
+                }}
+                className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+              >
+                {isSaved ? (
+                  <FaBookmark className="text-blue-600" />
+                ) : (
+                  <FaRegBookmark className="text-gray-500" />
+                )}
+              </button>
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setCurrentArticleIndex(globalIndex);
+                  startSpeech(heroArticle);
+                }}
+                className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+              >
+                <FaVolumeUp className="text-blue-500" />
+              </button>
+            </div>
           </div>
         );
-        heroCount++;
+        heroIndex++;
       }
     }
 
@@ -496,16 +641,48 @@ export default function FeaturedPosts({ userId }) {
   }
 
   return (
-    <div className="relative">
-      <section className="max-w-7xl mx-auto p-6 mt-10">
-        <h2 className="text-4xl font-bold text-center mb-12 fade-in"></h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+    <div className="relative" ref={containerRef}>
+      {/* Main Content */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-6 sm:mb-10 fade-in">
+        </h2>
+
+        {/* Search Bar - Mobile */}
+        <div className="mb-6 sm:hidden">
+          <div className="flex items-center bg-white border rounded-full px-4 py-2 w-full">
+            <FaSearch className="text-gray-500" />
+            <input
+              type="text"
+              placeholder="Search articles..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="ml-2 outline-none flex-1"
+            />
+            {isSpeechSupported && (
+              <button
+                onClick={() => setIsListening(!isListening)}
+                className={`ml-2 p-2 rounded-full transition-all duration-300 ${
+                  isListening ? "bg-red-500" : "bg-gray-100"
+                } hover:bg-gray-200`}
+              >
+                <FaMicrophone
+                  className={`text-gray-500 ${isListening ? "text-white" : ""}`}
+                />
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Articles Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {filteredArticles.length > 0 ? (
-            renderArticlesWithHero()
+            renderArticles()
           ) : (
-            <p className="text-center col-span-3">
-              <Loading />
-            </p>
+            <div className="col-span-3 text-center py-12">
+              <p className="text-gray-500">
+                No articles found matching your search.
+              </p>
+            </div>
           )}
         </div>
       </section>
@@ -513,8 +690,8 @@ export default function FeaturedPosts({ userId }) {
       {/* Saved Articles Panel */}
       <div
         ref={savedPanelRef}
-        className={`fixed top-0 right-0 h-full w-80 bg-white shadow-xl z-50 p-4 overflow-y-auto ${
-          showSavedArticles ? "block" : "hidden"
+        className={`fixed top-0 right-0 h-full w-full sm:w-80 bg-white shadow-xl z-50 p-4 overflow-y-auto transition-transform duration-300 ${
+          showSavedArticles ? "translate-x-0" : "translate-x-full"
         }`}
       >
         <div className="flex justify-between items-center mb-4">
@@ -581,8 +758,8 @@ export default function FeaturedPosts({ userId }) {
       {/* Gamification Dashboard Panel */}
       <div
         ref={gamificationPanelRef}
-        className={`fixed top-0 right-0 h-full w-80 bg-white shadow-xl z-50 p-4 overflow-y-auto ${
-          showGamification ? "block" : "hidden"
+        className={`fixed top-0 right-0 h-full w-full sm:w-80 bg-white shadow-xl z-50 p-4 overflow-y-auto transition-transform duration-300 ${
+          showGamification ? "translate-x-0" : "translate-x-full"
         }`}
       >
         <div className="flex justify-between items-center mb-4">
@@ -598,6 +775,35 @@ export default function FeaturedPosts({ userId }) {
         </div>
         <GamificationDashboard userId={userId} />
       </div>
+
+      {/* Speech Progress Indicator */}
+      {(speechState === "playing" || speechState === "paused") && (
+        <div
+          className={`fixed ${
+            isMobile ? "bottom-20 right-4 w-48" : "bottom-6 left-6 w-64"
+          } z-50 bg-white shadow-lg rounded-lg px-3 py-2 animate-fade-in`}
+        >
+          <div className="flex justify-between items-center mb-1">
+            <span className="text-xs font-medium text-gray-700">
+              {languages.find((l) => l.code === language)?.name || "English"}
+            </span>
+            <span className="text-xs text-gray-500">
+              {Math.round(speechProgress)}%
+            </span>
+          </div>
+          <div className="w-full h-1.5 bg-gray-200 rounded-full overflow-hidden mb-1">
+            <div
+              className="h-full bg-blue-500 transition-all duration-300"
+              style={{ width: `${speechProgress}%` }}
+            ></div>
+          </div>
+          <div className="text-xs text-gray-600 line-clamp-1">
+            {speechRef.current.words
+              .slice(Math.max(0, currentWordIndex - 2), currentWordIndex + 3)
+              .join(" ")}
+          </div>
+        </div>
+      )}
 
       {/* Floating Action Button */}
       <div className="fixed bottom-6 right-6 z-50">
@@ -627,32 +833,23 @@ export default function FeaturedPosts({ userId }) {
           </button>
           <div
             ref={fabMenuRef}
-            className="flex flex-col gap-2 bg-white shadow-lg rounded-lg overflow-hidden w-0 h-0 opacity-0"
+            className={`flex flex-col gap-2 bg-white shadow-lg rounded-lg overflow-hidden ${
+              isFabExpanded ? "w-64 p-4 opacity-100" : "w-0 h-0 opacity-0"
+            } transition-all duration-300`}
           >
-            {/* Search Bar */}
-            <div
-              ref={searchBarRef}
-              className={`flex items-center bg-white shadow-lg rounded-full px-4 py-2 w-full transition-all duration-300 ${
-                isSearchFocused ? "ring-2 ring-blue-500" : ""
-              }`}
-            >
+            {/* Search Bar - Desktop */}
+            <div className="hidden sm:flex items-center bg-white border rounded-full px-4 py-2 w-full">
               <FaSearch className="text-gray-500" />
               <input
                 type="text"
                 placeholder="Search articles..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setIsSearchFocused(false)}
                 className="ml-2 outline-none flex-1"
               />
               {isSpeechSupported && (
                 <button
-                  ref={voiceButtonRef}
-                  onClick={() => {
-                    setIsListening(!isListening);
-                    setIsFabExpanded(false);
-                  }}
+                  onClick={() => setIsListening(!isListening)}
                   className={`ml-2 p-2 rounded-full transition-all duration-300 ${
                     isListening ? "bg-red-500" : "bg-gray-100"
                   } hover:bg-gray-200`}
@@ -666,29 +863,26 @@ export default function FeaturedPosts({ userId }) {
               )}
             </div>
 
-            {/* Other FAB Buttons */}
+            {/* Speech Controls */}
             <button
-              onClick={() => {
-                setIsFabExpanded(false);
-                alert("Notifications enabled!");
-              }}
-              className="flex items-center justify-between bg-purple-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-purple-700 transition-colors"
+              onClick={toggleSpeech}
+              className={`flex items-center justify-between px-4 py-2 rounded-full shadow-lg transition-colors ${
+                speechState === "playing"
+                  ? "bg-yellow-500 hover:bg-yellow-600 text-white"
+                  : speechState === "paused"
+                  ? "bg-blue-600 hover:bg-blue-700 text-white"
+                  : "bg-green-600 hover:bg-green-700 text-white"
+              }`}
             >
-              <FaBell className="mr-2" />
-              <span>Notifications</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setIsFabExpanded(false);
-                setIsSpeaking(!isSpeaking);
-              }}
-              className="flex items-center justify-between bg-blue-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
-            >
-              {isSpeaking ? (
+              {speechState === "playing" ? (
                 <>
-                  <FaStop className="mr-2" />
-                  <span>Stop Reading</span>
+                  <FaPause className="mr-2" />
+                  <span>Pause Reading</span>
+                </>
+              ) : speechState === "paused" ? (
+                <>
+                  <FaPlay className="mr-2" />
+                  <span>Resume Reading</span>
                 </>
               ) : (
                 <>
@@ -699,17 +893,22 @@ export default function FeaturedPosts({ userId }) {
             </button>
 
             <button
+              onClick={() => setShowLanguageModal(true)}
+              className="flex items-center justify-between bg-purple-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-purple-700 transition-colors"
+            >
+              <FaVolumeUp className="mr-2" />
+              <span>Change Language</span>
+            </button>
+
+            <button
               onClick={() => {
                 setIsFabExpanded(false);
-                nextLanguage();
+                stopSpeech();
               }}
-              className="flex items-center justify-between bg-green-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-green-700 transition-colors"
+              className="flex items-center justify-between bg-red-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-red-700 transition-colors"
             >
-              <FaLanguage className="mr-2" />
-              <span>
-                {languages.find((lang) => lang.code === language)?.name ||
-                  "Unknown"}
-              </span>
+              <FaStop className="mr-2" />
+              <span>Stop Reading</span>
             </button>
           </div>
 
@@ -717,16 +916,77 @@ export default function FeaturedPosts({ userId }) {
           <button
             ref={fabButtonRef}
             onClick={() => setIsFabExpanded(!isFabExpanded)}
-            className="flex items-center justify-center w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors animate-fade-in"
+            className="flex items-center justify-center w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors"
           >
             {isFabExpanded ? (
               <FaTimes className="text-xl" />
             ) : (
-              <FaPlay className="text-xl" />
+              <FaVolumeUp className="text-xl" />
             )}
           </button>
         </div>
       </div>
+
+      {/* Language Selection Modal */}
+      {showLanguageModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div
+            ref={modalRef}
+            className={`bg-white rounded-xl shadow-2xl w-full ${
+              isMobile ? "max-w-xs" : "max-w-md"
+            } max-h-[80vh] overflow-hidden animate-fade-in-up`}
+          >
+            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Select Language
+              </h3>
+              <button
+                onClick={() => setShowLanguageModal(false)}
+                className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
+              >
+                <FaTimes size={18} />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto max-h-[60vh]">
+              <ul>
+                {languages.map((lang) => (
+                  <li
+                    key={lang.code}
+                    className="border-b border-gray-100 last:border-0"
+                  >
+                    <button
+                      onClick={() => selectLanguage(lang.code)}
+                      className={`w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors flex justify-between items-center ${
+                        language === lang.code
+                          ? "bg-blue-50 text-blue-600"
+                          : "text-gray-700"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg">{lang.flag}</span>
+                        <span>{lang.name}</span>
+                      </div>
+                      {language === lang.code && (
+                        <FaCheck className="text-blue-500" />
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="p-4 border-t border-gray-200 bg-gray-50">
+              <button
+                onClick={() => setShowLanguageModal(false)}
+                className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition shadow-sm"
+              >
+                Confirm Selection
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
