@@ -40,7 +40,7 @@ export default function FeaturedPosts({ userId }) {
   const [isFabExpanded, setIsFabExpanded] = useState(false);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [showSavedArticles, setShowSavedArticles] = useState(false);
-  const [showGamification, setShowGamification] = useState(false); // New state for gamification panel
+  const [showGamification, setShowGamification] = useState(false);
 
   // Refs for GSAP animations
   const searchBarRef = useRef(null);
@@ -162,16 +162,63 @@ export default function FeaturedPosts({ userId }) {
 
   // Supported languages
   const languages = [
-    { code: "en-US", name: "English" },
-    { code: "es-ES", name: "Spanish" },
-    { code: "hi-IN", name: "Hindi" },
-    { code: "ta-IN", name: "Tamil" },
+    { code: "en-US", name: "English (United States)" },
+    { code: "en-GB", name: "English (United Kingdom)" },
+    { code: "es-ES", name: "Spanish (Spain)" },
+    { code: "es-MX", name: "Spanish (Mexico)" },
+    { code: "fr-FR", name: "French (France)" },
+    { code: "fr-CA", name: "French (Canada)" },
+    { code: "de-DE", name: "German" },
+    { code: "ru-RU", name: "Russian" },
+    { code: "zh-CN", name: "Chinese (Simplified)" },
+    { code: "zh-TW", name: "Chinese (Traditional)" },
+    { code: "ja-JP", name: "Japanese" },
+    { code: "ko-KR", name: "Korean" },
+    { code: "pt-PT", name: "Portuguese (Portugal)" },
+    { code: "pt-BR", name: "Portuguese (Brazil)" },
+    { code: "it-IT", name: "Italian" },
+    { code: "nl-NL", name: "Dutch" },
+    { code: "sv-SE", name: "Swedish" },
+    { code: "da-DK", name: "Danish" },
+    { code: "fi-FI", name: "Finnish" },
+    { code: "no-NO", name: "Norwegian" },
+    { code: "pl-PL", name: "Polish" },
+    { code: "tr-TR", name: "Turkish" },
+    { code: "cs-CZ", name: "Czech" },
+    { code: "el-GR", name: "Greek" },
+    { code: "he-IL", name: "Hebrew" },
+    { code: "th-TH", name: "Thai" },
+    { code: "id-ID", name: "Indonesian" },
+    { code: "vi-VN", name: "Vietnamese" },
+    { code: "hu-HU", name: "Hungarian" },
+    { code: "uk-UA", name: "Ukrainian" },
+    { code: "bg-BG", name: "Bulgarian" },
+    { code: "ro-RO", name: "Romanian" },
+    { code: "sk-SK", name: "Slovak" },
+    { code: "hr-HR", name: "Croatian" },
+    { code: "lt-LT", name: "Lithuanian" },
+    { code: "lv-LV", name: "Latvian" },
+    { code: "et-EE", name: "Estonian" },
+    { code: "ms-MY", name: "Malay" },
+    { code: "bn-BD", name: "Bengali (Bangladesh)" },
+    { code: "bn-IN", name: "Bengali (India)" },
+    { code: "fa-IR", name: "Persian" },
+    { code: "ur-PK", name: "Urdu (Pakistan)" },
+    { code: "ur-IN", name: "Urdu (India)" },
+    { code: "te-IN", name: "Telugu" },
+    { code: "mr-IN", name: "Marathi" },
+    { code: "gu-IN", name: "Gujarati" },
+    { code: "pa-IN", name: "Punjabi" },
+    { code: "kn-IN", name: "Kannada" },
+    { code: "ml-IN", name: "Malayalam" },
+    { code: "si-LK", name: "Sinhala" },
   ];
 
   const nextLanguage = () => {
     const currentIndex = languages.findIndex((lang) => lang.code === language);
     const nextIndex = (currentIndex + 1) % languages.length;
     setLanguage(languages[nextIndex].code);
+    setIsFabExpanded(false);
   };
 
   // Fetch articles

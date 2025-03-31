@@ -1,4 +1,4 @@
-"use client";
+// "use client";
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -19,7 +19,25 @@ gsap.registerPlugin(ScrollTrigger);
 const API_BASE_URL = "https://informativejournal-backend.vercel.app";
 
 export default function GamificationDashboard() {
-  const [gamificationData, setGamificationData] = useState(null);
+  const [gamificationData, setGamificationData] = useState({
+    xp: 0,
+    level: 1,
+    activity: {
+      reads: 0,
+      completes: 0,
+      shares: 0,
+      comments: 0,
+    },
+    badges: [],
+    settings: {
+      xpRates: {
+        read: 10,
+        complete: 20,
+        share: 15,
+        comment: 5,
+      },
+    },
+  });
   const [leaderboard, setLeaderboard] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -59,32 +77,33 @@ export default function GamificationDashboard() {
           axios.get(`${API_BASE_URL}/leaderboard`),
         ]);
 
-        setGamificationData(userResponse.data);
-        setLeaderboard(leaderboardResponse.data);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setError(err.response?.data?.message || "Failed to load data");
-        // Set default data structure if API fails
-        setGamificationData({
-          xp: 0,
-          level: 1,
+        // Transform the API response to match our expected structure
+        const apiData = userResponse.data.data[0];
+        const transformedData = {
+          xp: apiData.xp || 0,
+          level: apiData.level || 1,
           activity: {
-            reads: 0,
-            completes: 0,
-            shares: 0,
-            comments: 0,
+            reads: apiData.activity?.reads || 0,
+            completes: apiData.activity?.completes || 0,
+            shares: apiData.activity?.shares || 0,
+            comments: apiData.activity?.comments || 0,
           },
-          badges: [],
+          badges: apiData.badges || [],
           settings: {
-            xpRates: {
+            xpRates: apiData.settings?.xpRates || {
               read: 10,
               complete: 20,
               share: 15,
               comment: 5,
             },
           },
-        });
-        setLeaderboard([]);
+        };
+
+        setGamificationData(transformedData);
+        setLeaderboard(leaderboardResponse.data.data || []);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+        setError(err.response?.data?.message || "Failed to load data");
       } finally {
         setLoading(false);
       }
@@ -104,9 +123,9 @@ export default function GamificationDashboard() {
   const awardXp = async (action) => {
     try {
       // Optimistic UI update
-      const currentXp = gamificationData?.xp || 0;
-      const currentLevel = gamificationData?.level || 1;
-      const xpGain = gamificationData?.settings?.xpRates?.[action] || 10;
+      const currentXp = gamificationData.xp;
+      const currentLevel = gamificationData.level;
+      const xpGain = gamificationData.settings.xpRates[action];
       const newXp = currentXp + xpGain;
 
       setGamificationData((prev) => ({
@@ -114,7 +133,7 @@ export default function GamificationDashboard() {
         xp: newXp,
         activity: {
           ...prev.activity,
-          [action]: (prev.activity?.[action] || 0) + 1,
+          [action]: (prev.activity[action] || 0) + 1,
         },
       }));
 
@@ -160,7 +179,7 @@ export default function GamificationDashboard() {
         xp: currentXp,
         activity: {
           ...prev.activity,
-          [action]: (prev.activity?.[action] || 0) - 1,
+          [action]: (prev.activity[action] || 0) - 1,
         },
       }));
     }
@@ -407,30 +426,10 @@ export default function GamificationDashboard() {
     );
   }
 
-  const data = gamificationData || {
-    xp: 0,
-    level: 1,
-    activity: {
-      reads: 0,
-      completes: 0,
-      shares: 0,
-      comments: 0,
-    },
-    badges: [],
-    settings: {
-      xpRates: {
-        read: 10,
-        complete: 20,
-        share: 15,
-        comment: 5,
-      },
-    },
-  };
-
   return (
     <div
       ref={containerRef}
-      className="bg-white rounded-xl overflow-hidden p-4 md:p-6 max-w-4xl mx-auto my-4 md:my-8"
+      className="bg-white rounded-xl overflow-hidden p-4 md:p-6 max-w-4xl mx-auto my-4 md:my-8 shadow-sm"
     >
       {/* Level Up Notification */}
       {showLevelUp && (
@@ -439,7 +438,7 @@ export default function GamificationDashboard() {
             <div className="level-up-emoji text-5xl md:text-6xl mb-4">🎉</div>
             <h3 className="text-xl md:text-2xl font-bold mb-2">Level Up!</h3>
             <p className="text-base md:text-lg">
-              You've reached level {data.level}!
+              You've reached level {gamificationData.level}!
             </p>
           </div>
         </div>
@@ -459,23 +458,25 @@ export default function GamificationDashboard() {
             <FaUser className="text-white text-xl md:text-2xl" />
           )}
         </div>
-        <div className="ml-4">
-          <h2 className="text-lg md:text-xl font-bold text-gray-800 truncate max-w-[180px] md:max-w-xs">
+        <div className="ml-4 flex-1 min-w-0">
+          <h2 className="text-lg md:text-xl font-bold text-gray-800 truncate">
             {userEmail || "Guest User"}
           </h2>
           <div className="flex items-center">
             <span className="text-sm md:text-base text-gray-600 mr-2">
-              Level {data.level}
+              Level {gamificationData.level}
             </span>
-            <div className="w-16 md:w-24 bg-gray-200 rounded-full h-2">
-              <div
-                ref={xpBarRef}
-                className="bg-gradient-to-r from-blue-400 to-blue-600 h-2 rounded-full shadow-inner"
-                style={{ width: `${(data.xp % 1000) / 10}%` }}
-              ></div>
+            <div className="flex-1 max-w-[180px] md:max-w-xs">
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  ref={xpBarRef}
+                  className="bg-gradient-to-r from-blue-400 to-blue-600 h-2 rounded-full shadow-inner"
+                  style={{ width: `${(gamificationData.xp % 1000) / 10}%` }}
+                ></div>
+              </div>
             </div>
             <span className="text-xs text-gray-500 ml-2">
-              {data.xp % 1000}/1000
+              {gamificationData.xp % 1000}/1000
             </span>
           </div>
         </div>
@@ -492,28 +493,28 @@ export default function GamificationDashboard() {
             key: "reads",
             label: "Reads",
             color: "blue",
-            points: data.settings?.xpRates?.read || 10,
+            points: gamificationData.settings.xpRates.read,
           },
           {
             icon: <FaBook />,
             key: "completes",
             label: "Completes",
             color: "green",
-            points: data.settings?.xpRates?.complete || 20,
+            points: gamificationData.settings.xpRates.complete,
           },
           {
             icon: <FaShareAlt />,
             key: "shares",
             label: "Shares",
             color: "purple",
-            points: data.settings?.xpRates?.share || 15,
+            points: gamificationData.settings.xpRates.share,
           },
           {
             icon: <FaCommentAlt />,
             key: "comments",
             label: "Comments",
             color: "indigo",
-            points: data.settings?.xpRates?.comment || 5,
+            points: gamificationData.settings.xpRates.comment,
           },
         ].map(({ icon, key, label, color, points }) => (
           <div
@@ -525,13 +526,17 @@ export default function GamificationDashboard() {
             >
               {icon}
             </div>
-            <div>
-              <p className="text-xs md:text-sm text-gray-500">{label}</p>
+            <div className="min-w-0">
+              <p className="text-xs md:text-sm text-gray-500 truncate">
+                {label}
+              </p>
               <div className="flex items-center">
-                <p className="text-sm md:text-base font-bold text-gray-800 mr-2">
-                  {data.activity?.[key] || 0}
+                <p className="text-sm md:text-base font-bold text-gray-800 mr-2 truncate">
+                  {gamificationData.activity[key] || 0}
                 </p>
-                <span className={`text-xs text-${color}-700 font-medium`}>
+                <span
+                  className={`text-xs text-${color}-700 font-medium truncate`}
+                >
                   +{points}XP
                 </span>
               </div>
@@ -545,9 +550,9 @@ export default function GamificationDashboard() {
         <h2 className="text-lg md:text-xl font-bold mb-3 md:mb-4 text-gray-800">
           Your Achievements
         </h2>
-        {data.badges?.length > 0 ? (
+        {gamificationData.badges?.length > 0 ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
-            {data.badges.map((badge) => (
+            {gamificationData.badges.map((badge) => (
               <div
                 key={badge.id}
                 className="badge-item flex flex-col items-center p-3 md:p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition-all duration-200"
@@ -555,7 +560,7 @@ export default function GamificationDashboard() {
                 <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-yellow-100 to-yellow-200 flex items-center justify-center mb-2 shadow-inner">
                   {getBadgeIcon(badge.id)}
                 </div>
-                <span className="text-xs md:text-sm font-medium text-center text-gray-700">
+                <span className="text-xs md:text-sm font-medium text-center text-gray-700 truncate w-full">
                   {getBadgeName(badge.id)}
                 </span>
                 <span className="text-2xs md:text-xs text-gray-500 mt-1">
@@ -674,7 +679,7 @@ export default function GamificationDashboard() {
               <span className="hidden sm:inline">{fullLabel || label}</span>
               <span className="sm:hidden">{label}</span>
               <span className={`ml-1 text-${color}-700 font-bold`}>
-                +{data.settings?.xpRates?.[action] || 10}
+                +{gamificationData.settings.xpRates[action]}
               </span>
             </button>
           ))}
