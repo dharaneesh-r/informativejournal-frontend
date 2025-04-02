@@ -136,7 +136,7 @@ const AdminManager = () => {
         try {
           const token = localStorage.getItem('authToken');
           await axios.delete(
-            `https://informativejournal-backend.vercel.app/${category}/${slug}`,
+            `https://informativejournal-backend.vercel.app/articles/${category}/${slug}`,
             {
               headers: {
                 Authorization: `Bearer ${token}`,
