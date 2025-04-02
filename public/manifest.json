@@ -1,10 +1,22 @@
 {
   "name": "Informative Journal",
-  "theme_color": "#000000",
-  "background_color": "#000000",
   "short_name": "IF News",
-  "id": "RSDS2025",
-  "categories": [
-    "news"
+  "description": "Stay updated with the latest news!",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "categories": ["news"],
+  "icons": [
+    {
+      "src": "/android/android-launchericon-192-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/android/android-launchericon-512-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
   ]
 }

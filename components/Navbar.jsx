@@ -227,11 +227,11 @@ const Navbar = () => {
                   {isLoggedIn ? (
                     <>
                       <a
-                        key="profile"
-                        href="/profile"
+                        key="Admin"
+                        href="/admin-manager"
                         className="block px-4 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-300"
                       >
-                        Profile
+                        Admin
                       </a>
                       <button
                         key="logout"
