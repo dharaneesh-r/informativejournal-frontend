@@ -1,24 +1,29 @@
-'use client';
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import Swal from 'sweetalert2';
-import { useRouter } from 'next/navigation';
+"use client";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import Swal from "sweetalert2";
+import { useRouter } from "next/navigation";
+import { FiEdit, FiTrash2, FiPlus, FiLogOut } from "react-icons/fi";
 
 const AdminManager = () => {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // Check authentication on component mount
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    const storedEmail = localStorage.getItem('userEmail');
-    const storedPassword = localStorage.getItem('user.password');
+    const token = localStorage.getItem("authToken");
+    const storedEmail = localStorage.getItem("userEmail");
+    const storedPassword = localStorage.getItem("user.password");
 
-    if (token && storedEmail === 'dharaneeshr0803@gmail.com' && storedPassword === 'Dhara@080304') {
+    if (
+      token &&
+      storedEmail === "dharaneeshr0803@gmail.com" &&
+      storedPassword === "Dhara@080304"
+    ) {
       verifyToken(token);
     }
   }, []);
@@ -27,7 +32,7 @@ const AdminManager = () => {
   const verifyToken = async (token) => {
     try {
       const response = await axios.get(
-        'https://informativejournal-backend.vercel.app/verify',
+        "https://informativejournal-backend.vercel.app/verify",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -35,7 +40,7 @@ const AdminManager = () => {
         }
       );
 
-      if (response.data.email === 'dharaneeshr0803@gmail.com') {
+      if (response.data.email === "dharaneeshr0803@gmail.com") {
         setIsAuthenticated(true);
         fetchArticles();
       } else {
@@ -52,35 +57,38 @@ const AdminManager = () => {
     setLoading(true);
 
     try {
-      if (email === 'dharaneeshr0803@gmail.com' && password === 'Dhara@080304') {
+      if (
+        email === "dharaneeshr0803@gmail.com" &&
+        password === "Dhara@080304"
+      ) {
         const response = await axios.post(
-          'https://informativejournal-backend.vercel.app/login',
+          "https://informativejournal-backend.vercel.app/login",
           {
             email,
             password,
           }
         );
 
-        localStorage.setItem('authToken', response.data.token);
-        localStorage.setItem('adminEmail', email);
-        localStorage.setItem('adminPassword', password);
+        localStorage.setItem("authToken", response.data.token);
+        localStorage.setItem("adminEmail", email);
+        localStorage.setItem("adminPassword", password);
         setIsAuthenticated(true);
         fetchArticles();
-        
+
         Swal.fire({
-          icon: 'success',
-          title: 'Login Successful',
+          icon: "success",
+          title: "Login Successful",
           showConfirmButton: false,
           timer: 1500,
         });
       } else {
-        throw new Error('Invalid credentials');
+        throw new Error("Invalid credentials");
       }
     } catch (error) {
       Swal.fire({
-        icon: 'error',
-        title: 'Login Failed',
-        text: 'Invalid email or password',
+        icon: "error",
+        title: "Login Failed",
+        text: "Invalid email or password",
       });
     } finally {
       setLoading(false);
@@ -89,9 +97,9 @@ const AdminManager = () => {
 
   // Logout function
   const logout = () => {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('adminEmail');
-    localStorage.removeItem('adminPassword');
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("adminEmail");
+    localStorage.removeItem("adminPassword");
     setIsAuthenticated(false);
     setArticles([]);
   };
@@ -100,9 +108,9 @@ const AdminManager = () => {
   const fetchArticles = async () => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem("authToken");
       const response = await axios.get(
-        'https://informativejournal-backend.vercel.app/articles',
+        "https://informativejournal-backend.vercel.app/articles",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -110,11 +118,12 @@ const AdminManager = () => {
         }
       );
       setArticles(response.data.data);
+      console.log(response.data.data)
     } catch (error) {
       Swal.fire({
-        icon: 'error',
-        title: 'Failed to fetch articles',
-        text: error.response?.data?.message || 'Server error',
+        icon: "error",
+        title: "Failed to fetch articles",
+        text: error.response?.data?.message || "Server error",
       });
     } finally {
       setLoading(false);
@@ -124,17 +133,17 @@ const AdminManager = () => {
   // Delete article
   const handleDelete = async (category, slug) => {
     Swal.fire({
-      title: 'Are you sure?',
+      title: "Are you sure?",
       text: "You won't be able to revert this!",
-      icon: 'warning',
+      icon: "warning",
       showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, delete it!',
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          const token = localStorage.getItem('authToken');
+          const token = localStorage.getItem("authToken");
           await axios.delete(
             `https://informativejournal-backend.vercel.app/articles/${category}/${slug}`,
             {
@@ -143,13 +152,13 @@ const AdminManager = () => {
               },
             }
           );
-          Swal.fire('Deleted!', 'Your article has been deleted.', 'success');
+          Swal.fire("Deleted!", "Your article has been deleted.", "success");
           fetchArticles();
         } catch (error) {
           Swal.fire({
-            icon: 'error',
-            title: 'Delete Failed',
-            text: error.response?.data?.message || 'Server error',
+            icon: "error",
+            title: "Delete Failed",
+            text: error.response?.data?.message || "Server error",
           });
         }
       }
@@ -163,7 +172,7 @@ const AdminManager = () => {
 
   // Navigate to create page
   const handleCreate = () => {
-    router.push('/admin');
+    router.push("/admin/create");
   };
 
   if (!isAuthenticated) {
@@ -200,10 +209,10 @@ const AdminManager = () => {
               type="submit"
               disabled={loading}
               className={`w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 ${
-                loading ? 'opacity-70 cursor-not-allowed' : ''
+                loading ? "opacity-70 cursor-not-allowed" : ""
               }`}
             >
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? "Logging in..." : "Login"}
             </button>
           </form>
         </div>
@@ -214,20 +223,20 @@ const AdminManager = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <h1 className="text-2xl font-bold">Article Management</h1>
-          <div className="flex gap-4">
+          <div className="flex gap-2 w-full sm:w-auto">
             <button
               onClick={handleCreate}
-              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 w-full sm:w-auto justify-center"
             >
-              Create New
+              <FiPlus /> Create New
             </button>
             <button
               onClick={logout}
-              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 w-full sm:w-auto justify-center"
             >
-              Logout
+              <FiLogOut /> Logout
             </button>
           </div>
         </div>
@@ -237,64 +246,86 @@ const AdminManager = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
           </div>
         ) : (
-          <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Title
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Category
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Slug
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {articles.map((article) => (
-                  <tr key={article._id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {article.title}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500 capitalize">
-                        {article.category}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-500">
-                        {article.slug}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <button
-                        onClick={() =>
-                          handleEdit(article.category, article.slug)
-                        }
-                        className="text-blue-600 hover:text-blue-900 mr-4"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleDelete(article.category, article.slug)
-                        }
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
-                    </td>
+          <div className="bg-white shadow overflow-hidden sm:rounded-lg overflow-x-auto">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Title
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Author
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Category
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Created
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {articles.map((article) => (
+                    <tr key={article._id}>
+                      <td className="px-4 py-4 whitespace-normal max-w-xs">
+                        <div className="text-sm font-medium text-gray-900">
+                          {article.title}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {article.slug}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">
+                          {article.author || "Unknown"}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500 capitalize">
+                          {article.category}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-500">
+                          {new Date(article.createdAt).toLocaleDateString()}
+                        </div>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() =>
+                              handleEdit(article.category, article.slug)
+                            }
+                            className="text-blue-600 hover:text-blue-900 p-1 rounded-md"
+                            title="Edit"
+                          >
+                            <FiEdit size={18} />
+                          </button>
+                          <button
+                            onClick={() =>
+                              handleDelete(article.category, article.slug)
+                            }
+                            className="text-red-600 hover:text-red-900 p-1 rounded-md"
+                            title="Delete"
+                          >
+                            <FiTrash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {articles.length === 0 && (
+              <div className="text-center py-8 text-gray-500">
+                No articles found
+              </div>
+            )}
           </div>
         )}
       </div>
