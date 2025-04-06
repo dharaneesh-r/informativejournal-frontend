@@ -633,12 +633,12 @@ const ArticlePostForm = () => {
               )}
               <span
                 className={`text-xs ${
-                  formData.description.length > 200
+                  formData.description.length >1000
                     ? "text-red-600"
                     : "text-gray-500"
                 }`}
               >
-                {formData.description.length}/200
+                {formData.description.length}/1000
               </span>
             </div>
           </div>
