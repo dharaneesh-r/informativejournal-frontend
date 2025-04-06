@@ -172,7 +172,7 @@ const AdminManager = () => {
 
   // Navigate to create page
   const handleCreate = () => {
-    router.push("/admin/create");
+    router.push("/admin");
   };
 
   if (!isAuthenticated) {
