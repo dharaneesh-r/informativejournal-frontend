@@ -30,7 +30,7 @@ export default function CategoryPage() {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [heroArticles, setHeroArticles] = useState([]);
+  const [heroArticle, setHeroArticle] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [savedArticles, setSavedArticles] = useState([]);
   const [isListening, setIsListening] = useState(false);
@@ -153,12 +153,10 @@ export default function CategoryPage() {
         );
         if (response.data.status === "success") {
           setArticles(response.data.data);
-          setHeroArticles(
-            response.data.data.slice(
-              0,
-              Math.ceil(response.data.data.length / 3)
-            )
-          );
+          // Set first article as hero article
+          if (response.data.data.length > 0) {
+            setHeroArticle(response.data.data[0]);
+          }
         }
       } catch (err) {
         console.error("Error fetching articles:", err);
@@ -218,20 +216,6 @@ export default function CategoryPage() {
       });
     });
 
-    // Hero animations
-    gsap.utils.toArray(".hero-article").forEach((element) => {
-      gsap.from(element, {
-        opacity: 0,
-        scale: 0.95,
-        duration: 1,
-        ease: "back.out(1.7)",
-        scrollTrigger: {
-          trigger: element,
-          start: "top 80%",
-        },
-      });
-    });
-
     // Smooth scroll setup
     if (containerRef.current) {
       gsap.to(containerRef.current, {
@@ -243,29 +227,6 @@ export default function CategoryPage() {
     return () => {
       ScrollTrigger.getAll().forEach((instance) => instance.kill());
     };
-  }, [articles]);
-
-  // Shuffle hero articles
-  useEffect(() => {
-    if (articles.length > 0) {
-      const interval = setInterval(() => {
-        gsap.to(".hero-article", {
-          opacity: 0,
-          y: 20,
-          duration: 0.5,
-          onComplete: () => {
-            const shuffled = [...articles].sort(() => Math.random() - 0.5);
-            setHeroArticles(shuffled.slice(0, Math.ceil(articles.length / 3)));
-            gsap.fromTo(
-              ".hero-article",
-              { opacity: 0, y: -20 },
-              { opacity: 1, y: 0, duration: 0.5 }
-            );
-          },
-        });
-      }, 10000);
-      return () => clearInterval(interval);
-    }
   }, [articles]);
 
   // Speech controls
@@ -441,192 +402,199 @@ export default function CategoryPage() {
 
   // Render articles with hero placement
   const renderArticles = () => {
-    const result = [];
-    let regularArticles = filteredArticles.filter(
-      (article) => !heroArticles.some((a) => a._id === article._id)
+    if (filteredArticles.length === 0) {
+      return (
+        <div className="col-span-3 text-center py-12">
+          <p className="text-gray-500">
+            No articles found matching your search.
+          </p>
+        </div>
+      );
+    }
+
+    // Exclude hero article from regular articles
+    const regularArticles = filteredArticles.filter(
+      (article) => !heroArticle || article._id !== heroArticle._id
     );
-    let heroIndex = 0;
 
-    // Group regular articles into chunks of 3
-    for (let i = 0; i < regularArticles.length; i += 3) {
-      const chunk = regularArticles.slice(i, i + 3);
-
-      // Add the chunk of 3 regular articles
-      result.push(
-        <div key={`regular-${i}`} className="contents">
-          {chunk.map((article, index) => {
-            const globalIndex = filteredArticles.findIndex(
-              (a) => a._id === article._id
-            );
-            const isSaved = savedArticles.some((a) => a._id === article._id);
-            const isCurrentArticle =
-              globalIndex === currentArticleIndex &&
-              (speechState === "playing" || speechState === "paused");
-
-            return (
-              <div
-                key={article._id}
-                ref={(el) => (articleRefs.current[globalIndex] = el)}
-                className={`bg-white shadow-lg rounded-lg overflow-hidden transform transition duration-500 hover:scale-[1.02] fade-in relative ${
-                  isCurrentArticle ? "ring-4 ring-blue-500" : ""
-                }`}
-              >
-                <Link href={`/${article.category}/${article.slug}`}>
-                  <div className="w-full h-48 sm:h-56 relative">
-                    <Image
-                      src={article.image || "/news-image.jpg"}
-                      alt={article.title}
-                      className="object-cover"
-                      fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    />
-                  </div>
-                  <div className="p-4 sm:p-6">
-                    <h3 className="text-lg sm:text-xl font-semibold hover:text-blue-600 line-clamp-2">
-                      {article.title}
-                    </h3>
-                    <p className="text-gray-600 mt-2 line-clamp-3">
-                      {article.description}
+    return (
+      <>
+        {/* Hero Article */}
+        {heroArticle &&
+          filteredArticles.some((a) => a._id === heroArticle._id) && (
+            <div
+              key={`hero-${heroArticle._id}`}
+              className="col-span-1 md:col-span-2 lg:col-span-3 fade-in relative hero-article"
+            >
+              <Link href={`/${heroArticle.category}/${heroArticle.slug}`}>
+                <div className="relative h-80 sm:h-96 rounded-lg overflow-hidden">
+                  <Image
+                    src={heroArticle.image || "/news-image.jpg"}
+                    alt={heroArticle.title}
+                    className="object-cover"
+                    fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
+                  <div className="absolute bottom-6 left-6 right-6">
+                    <h2 className="text-2xl sm:text-3xl font-bold text-white">
+                      {heroArticle.title}
+                    </h2>
+                    <p className="text-gray-200 mt-2 line-clamp-2">
+                      {heroArticle.description}
                     </p>
-                    <div className="flex items-center mt-4 text-gray-500">
-                      <span className="text-xs sm:text-sm">
-                        By {article.author || "Unknown"}
+                    <div className="flex items-center mt-4 text-gray-300">
+                      <span className="text-sm">
+                        By {heroArticle.author || "Unknown"}
                       </span>
                       <span className="mx-2">|</span>
-                      <span className="text-xs sm:text-sm">
-                        {new Date(article.createdAt).toLocaleDateString()}
+                      <span className="text-sm">
+                        {new Date(heroArticle.createdAt).toLocaleDateString()}
                       </span>
                     </div>
                   </div>
-                </Link>
-                <div className="absolute top-4 right-4 flex gap-2">
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      toggleSaveArticle(article);
-                    }}
-                    className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
-                  >
-                    {isSaved ? (
-                      <FaBookmark className="text-blue-600 cursor-pointer" />
-                    ) : (
-                      <FaRegBookmark className="text-gray-500 cursor-pointer" />
-                    )}
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      navigator.share({
-                        title: article.title,
-                        text: article.description,
-                        url: `https://informativejournal.vercel.app/${article.category}/${article.slug}`,
-                      });
-                    }}
-                    className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <FaShareAlt className="text-gray-500" />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setCurrentArticleIndex(globalIndex);
-                      startSpeech(article);
-                    }}
-                    className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <FaVolumeUp className="text-blue-500" />
-                  </button>
                 </div>
+              </Link>
+              <div className="absolute top-4 right-4 flex gap-2">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toggleSaveArticle(heroArticle);
+                  }}
+                  className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+                >
+                  {savedArticles.some((a) => a._id === heroArticle._id) ? (
+                    <FaBookmark className="text-blue-600" />
+                  ) : (
+                    <FaRegBookmark className="text-gray-500" />
+                  )}
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setCurrentArticleIndex(
+                      filteredArticles.findIndex(
+                        (a) => a._id === heroArticle._id
+                      )
+                    );
+                    startSpeech(heroArticle);
+                  }}
+                  className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+                >
+                  <FaVolumeUp className="text-blue-500" />
+                </button>
+              </div>
+            </div>
+          )}
+
+        {/* Regular Articles in groups of 3 */}
+        {Array.from({ length: Math.ceil(regularArticles.length / 3) }).map(
+          (_, groupIndex) => {
+            const chunk = regularArticles.slice(
+              groupIndex * 3,
+              groupIndex * 3 + 3
+            );
+            return (
+              <div key={`group-${groupIndex}`} className="contents">
+                {chunk.map((article, index) => {
+                  const globalIndex = filteredArticles.findIndex(
+                    (a) => a._id === article._id
+                  );
+                  const isSaved = savedArticles.some(
+                    (a) => a._id === article._id
+                  );
+                  const isCurrentArticle =
+                    globalIndex === currentArticleIndex &&
+                    (speechState === "playing" || speechState === "paused");
+
+                  return (
+                    <div
+                      key={article._id}
+                      ref={(el) => (articleRefs.current[globalIndex] = el)}
+                      className={`bg-white shadow-lg rounded-lg overflow-hidden transform transition duration-500 hover:scale-[1.02] fade-in relative ${
+                        isCurrentArticle ? "ring-4 ring-blue-500" : ""
+                      }`}
+                    >
+                      <Link href={`/${article.category}/${article.slug}`}>
+                        <div className="w-full h-48 sm:h-56 relative">
+                          <Image
+                            src={article.image || "/news-image.jpg"}
+                            alt={article.title}
+                            className="object-cover"
+                            fill
+                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                          />
+                        </div>
+                        <div className="p-4 sm:p-6">
+                          <h3 className="text-lg sm:text-xl font-semibold hover:text-blue-600 line-clamp-2">
+                            {article.title}
+                          </h3>
+                          <p className="text-gray-600 mt-2 line-clamp-3">
+                            {article.description}
+                          </p>
+                          <div className="flex items-center mt-4 text-gray-500">
+                            <span className="text-xs sm:text-sm">
+                              By {article.author || "Unknown"}
+                            </span>
+                            <span className="mx-2">|</span>
+                            <span className="text-xs sm:text-sm">
+                              {new Date(article.createdAt).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
+                      <div className="absolute top-4 right-4 flex gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleSaveArticle(article);
+                          }}
+                          className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+                        >
+                          {isSaved ? (
+                            <FaBookmark className="text-blue-600 cursor-pointer" />
+                          ) : (
+                            <FaRegBookmark className="text-gray-500 cursor-pointer" />
+                          )}
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            navigator.share({
+                              title: article.title,
+                              text: article.description,
+                              url: `https://informativejournal.vercel.app/${article.category}/${article.slug}`,
+                            });
+                          }}
+                          className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+                        >
+                          <FaShareAlt className="text-gray-500" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setCurrentArticleIndex(globalIndex);
+                            startSpeech(article);
+                          }}
+                          className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+                        >
+                          <FaVolumeUp className="text-blue-500" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             );
-          })}
-        </div>
-      );
-
-      // Add a hero article after every 3 regular articles if available
-      if (heroIndex < heroArticles.length) {
-        const heroArticle = heroArticles[heroIndex];
-        const isSaved = savedArticles.some((a) => a._id === heroArticle._id);
-        const globalIndex = filteredArticles.findIndex(
-          (a) => a._id === heroArticle._id
-        );
-        const isCurrentArticle =
-          globalIndex === currentArticleIndex &&
-          (speechState === "playing" || speechState === "paused");
-
-        result.push(
-          <div
-            key={`hero-${heroIndex}`}
-            className={`col-span-1 md:col-span-2 lg:col-span-3 fade-in relative hero-article ${
-              isCurrentArticle ? "ring-4 ring-blue-500" : ""
-            }`}
-          >
-            <Link href={`/${heroArticle.category}/${heroArticle.slug}`}>
-              <div className="relative h-80 sm:h-96 rounded-lg overflow-hidden">
-                <Image
-                  src={heroArticle.image || "/news-image.jpg"}
-                  alt={heroArticle.title}
-                  className="object-cover"
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
-                <div className="absolute bottom-6 left-6 right-6">
-                  <h2 className="text-2xl sm:text-3xl font-bold text-white">
-                    {heroArticle.title}
-                  </h2>
-                  <p className="text-gray-200 mt-2 line-clamp-2">
-                    {heroArticle.description}
-                  </p>
-                  <div className="flex items-center mt-4 text-gray-300">
-                    <span className="text-sm">
-                      By {heroArticle.author || "Unknown"}
-                    </span>
-                    <span className="mx-2">|</span>
-                    <span className="text-sm">
-                      {new Date(heroArticle.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </Link>
-            <div className="absolute top-4 right-4 flex gap-2">
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  toggleSaveArticle(heroArticle);
-                }}
-                className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
-              >
-                {isSaved ? (
-                  <FaBookmark className="text-blue-600" />
-                ) : (
-                  <FaRegBookmark className="text-gray-500" />
-                )}
-              </button>
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setCurrentArticleIndex(globalIndex);
-                  startSpeech(heroArticle);
-                }}
-                className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
-              >
-                <FaVolumeUp className="text-blue-500" />
-              </button>
-            </div>
-          </div>
-        );
-        heroIndex++;
-      }
-    }
-
-    return result;
+          }
+        )}
+      </>
+    );
   };
 
   if (loading) {
@@ -680,15 +648,7 @@ export default function CategoryPage() {
 
         {/* Articles Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {filteredArticles.length > 0 ? (
-            renderArticles()
-          ) : (
-            <div className="col-span-3 text-center py-12">
-              <p className="text-gray-500">
-                No articles found matching your search.
-              </p>
-            </div>
-          )}
+          {renderArticles()}
         </div>
       </section>
 
