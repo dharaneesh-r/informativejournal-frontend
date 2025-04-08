@@ -15,6 +15,10 @@ import {
   FaTimes,
   FaCheck,
   FaPause,
+  FaThumbsUp,
+  FaThumbsDown,
+  FaRegThumbsUp,
+  FaRegThumbsDown,
 } from "react-icons/fa";
 import Loading from "@/app/loading";
 
@@ -33,6 +37,7 @@ const ArticlePage = () => {
   const [speechProgress, setSpeechProgress] = useState(0);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [userReaction, setUserReaction] = useState(null);
 
   const headerRef = useRef(null);
   const contentRef = useRef(null);
@@ -46,6 +51,7 @@ const ArticlePage = () => {
   });
   const modalRef = useRef(null);
   const progressIntervalRef = useRef(null);
+  const keypointsRef = useRef(null);
 
   // Supported languages
   const languages = [
@@ -72,6 +78,18 @@ const ArticlePage = () => {
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  // Load user reaction from localStorage
+  useEffect(() => {
+    if (article) {
+      const storedReaction = localStorage.getItem(
+        `article_${article._id}_reaction`
+      );
+      if (storedReaction) {
+        setUserReaction(storedReaction);
+      }
+    }
+  }, [article]);
 
   // Close modal when clicking outside
   useEffect(() => {
@@ -171,6 +189,21 @@ const ArticlePage = () => {
           });
         }
       });
+
+      // Keypoints animation
+      if (keypointsRef.current) {
+        gsap.from(keypointsRef.current, {
+          opacity: 0,
+          y: 20,
+          duration: 0.8,
+          delay: 0.4,
+          scrollTrigger: {
+            trigger: keypointsRef.current,
+            start: "top 85%",
+          },
+          ease: "power2.out",
+        });
+      }
     };
 
     const scrollToContent = () => {
@@ -194,6 +227,21 @@ const ArticlePage = () => {
       ScrollTrigger.getAll().forEach((trigger) => trigger.kill());
     };
   }, [article, isMobile]);
+
+  // Handle like/dislike reactions
+  const handleReaction = (reactionType) => {
+    if (!article) return;
+
+    const newReaction = userReaction === reactionType ? null : reactionType;
+    setUserReaction(newReaction);
+
+    // Store in localStorage
+    if (newReaction) {
+      localStorage.setItem(`article_${article._id}_reaction`, newReaction);
+    } else {
+      localStorage.removeItem(`article_${article._id}_reaction`);
+    }
+  };
 
   // Speech control functions
   const toggleSpeech = () => {
@@ -410,40 +458,81 @@ const ArticlePage = () => {
                 {article.description}
               </p>
 
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="flex-shrink-0">
-                  <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-6 w-6 text-gray-500"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-6 w-6 text-gray-500"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                      </svg>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">
+                      {article.author || "Unknown Author"}
+                    </p>
+                    <div className="flex space-x-2 text-sm text-gray-500">
+                      <time dateTime={article.createdAt}>
+                        {new Date(article.createdAt).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          }
+                        )}
+                      </time>
+                      <span>•</span>
+                      <span>5 min read</span>
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-gray-900">
-                    {article.author || "Unknown Author"}
-                  </p>
-                  <div className="flex space-x-2 text-sm text-gray-500">
-                    <time dateTime={article.createdAt}>
-                      {new Date(article.createdAt).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </time>
-                    <span>•</span>
-                    <span>5 min read</span>
-                  </div>
+
+                {/* Like/Dislike Buttons */}
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => handleReaction("like")}
+                    className={`flex items-center space-x-1 px-3 py-1 rounded-full transition-colors ${
+                      userReaction === "like"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                    aria-label="Like this article"
+                  >
+                    {userReaction === "like" ? (
+                      <FaThumbsUp className="text-green-600" />
+                    ) : (
+                      <FaRegThumbsUp />
+                    )}
+                    <span className="text-sm">Like</span>
+                  </button>
+                  <button
+                    onClick={() => handleReaction("dislike")}
+                    className={`flex items-center space-x-1 px-3 py-1 rounded-full transition-colors ${
+                      userReaction === "dislike"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                    aria-label="Dislike this article"
+                  >
+                    {userReaction === "dislike" ? (
+                      <FaThumbsDown className="text-red-600" />
+                    ) : (
+                      <FaRegThumbsDown />
+                    )}
+                    <span className="text-sm">Dislike</span>
+                  </button>
                 </div>
               </div>
 
@@ -512,6 +601,57 @@ const ArticlePage = () => {
                     {article.content[activeSection].title}
                   </h2>
                 )}
+
+                {/* Key Points Section */}
+                {article.content?.[activeSection]?.keypoints &&
+                  article.content[activeSection].keypoints[0]?.points?.length >
+                    0 && (
+                    <div
+                      ref={keypointsRef}
+                      className="bg-blue-50 border border-blue-100 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8"
+                    >
+                      <h3 className="text-lg sm:text-xl font-semibold text-blue-800 mb-3 sm:mb-4 flex items-center">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 mr-2"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        Key Points
+                      </h3>
+                      <ul className="space-y-2 sm:space-y-3">
+                        {article.content[activeSection].keypoints[0].points.map(
+                          (point, index) => (
+                            <li
+                              key={index}
+                              className="flex items-start text-sm sm:text-base text-gray-700"
+                            >
+                              <span className="flex-shrink-0 h-5 w-5 text-blue-500 mr-2 mt-0.5">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  viewBox="0 0 20 20"
+                                  fill="currentColor"
+                                >
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              </span>
+                              <span>{point}</span>
+                            </li>
+                          )
+                        )}
+                      </ul>
+                    </div>
+                  )}
 
                 <div className="space-y-4 sm:space-y-6 text-gray-700">
                   {article.content?.[activeSection]?.content &&

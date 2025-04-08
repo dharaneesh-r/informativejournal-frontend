@@ -16,7 +16,8 @@ const geistMono = Geist_Mono({
 
 export const metadata = {
   title: "Informative Journal",
-  description: "A News Website with AI Driven Platform with Gamfication and Rewards",
+  description:
+    "A News Website with AI Driven Platform with Gamfication and Rewards",
   icons: {
     icon: "/logo.png",
     shortcut: "/logo.png",
@@ -25,7 +26,8 @@ export const metadata = {
   // Open Graph metadata
   openGraph: {
     title: "Informative Journal",
-    description: "A News Website with AI Driven Platform with Gamfication and Rewards",
+    description:
+      "A News Website with AI Driven Platform with Gamfication and Rewards",
     url: "informativejournal.vercel.app",
     siteName: "Informative Journal",
     images: [
@@ -47,11 +49,13 @@ export default function RootLayout({ children }) {
         <header>
           <Navbar />
         </header>
-        <main className="my-15">{children}</main>
+        <main className="my-15">
+          {children}
+          <SpeedInsights />
+        </main>
         <footer>
           <Footer />
         </footer>
-        <SpeedInsights />
       </body>
     </html>
   );
