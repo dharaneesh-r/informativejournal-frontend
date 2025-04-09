@@ -23,6 +23,7 @@ import {
   FaTrophy,
   FaCheck,
   FaChevronDown,
+  FaCircle,
 } from "react-icons/fa";
 
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
@@ -42,6 +43,7 @@ export default function FeaturedPosts({ userId }) {
   const [showSavedArticles, setShowSavedArticles] = useState(false);
   const [showGamification, setShowGamification] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [latestArticles, setLatestArticles] = useState([]);
 
   // Speech state
   const [speechState, setSpeechState] = useState("idle");
@@ -69,6 +71,7 @@ export default function FeaturedPosts({ userId }) {
     currentArticle: null,
   });
   const progressIntervalRef = useRef(null);
+  const marqueeRef = useRef(null);
 
   // Supported languages
   const languages = [
@@ -144,7 +147,7 @@ export default function FeaturedPosts({ userId }) {
     };
   }, [showSavedArticles, showGamification]);
 
-  // Fetch articles
+  // Fetch articles and sort by date (newest first)
   useEffect(() => {
     const fetchArticles = async () => {
       try {
@@ -152,11 +155,17 @@ export default function FeaturedPosts({ userId }) {
           "https://informativejournal-backend.vercel.app/articles"
         );
         if (response.data.status === "success") {
-          setArticles(response.data.data);
+          // Sort articles by date in descending order (newest first)
+          const sortedArticles = response.data.data.sort((a, b) => {
+            return new Date(b.createdAt) - new Date(a.createdAt);
+          });
+          setArticles(sortedArticles);
           // Set first article as hero article
-          if (response.data.data.length > 0) {
-            setHeroArticle(response.data.data[0]);
+          if (sortedArticles.length > 0) {
+            setHeroArticle(sortedArticles[0]);
           }
+          // Set latest 10 articles for marquee
+          setLatestArticles(sortedArticles.slice(0, 10));
         }
       } catch (err) {
         console.error("Error fetching articles:", err);
@@ -167,7 +176,30 @@ export default function FeaturedPosts({ userId }) {
     };
 
     fetchArticles();
+    // Poll for new articles every 30 seconds
+    const interval = setInterval(fetchArticles, 30000);
+    return () => clearInterval(interval);
   }, []);
+
+  // Animate marquee
+  useEffect(() => {
+    if (marqueeRef.current && latestArticles.length > 0) {
+      const marqueeContent = marqueeRef.current;
+      const contentWidth = marqueeContent.scrollWidth;
+      const duration = contentWidth / 50; // Adjust speed as needed
+
+      gsap.fromTo(
+        marqueeContent,
+        { x: 0 },
+        {
+          x: -contentWidth,
+          duration: duration,
+          ease: "none",
+          repeat: -1,
+        }
+      );
+    }
+  }, [latestArticles]);
 
   // Load saved articles
   useEffect(() => {
@@ -196,6 +228,26 @@ export default function FeaturedPosts({ userId }) {
     }
   };
 
+  // Share article
+  const shareArticle = (article) => {
+    if (navigator.share) {
+      navigator
+        .share({
+          title: article.title,
+          text: article.description,
+          url: `${window.location.origin}/${article.category}/${article.slug}`,
+        })
+        .catch((error) => console.log("Error sharing:", error));
+    } else {
+      // Fallback for browsers that don't support Web Share API
+      const shareUrl = `${window.location.origin}/${article.category}/${article.slug}`;
+      navigator.clipboard
+        .writeText(`${article.title}\n\n${shareUrl}`)
+        .then(() => alert("Link copied to clipboard!"))
+        .catch((err) => console.error("Could not copy text: ", err));
+    }
+  };
+
   // GSAP animations
   useEffect(() => {
     if (articles.length === 0) return;
@@ -216,21 +268,6 @@ export default function FeaturedPosts({ userId }) {
       });
     });
 
-    // Hero animations
-    // gsap.utils.toArray(".hero-article").forEach((element) => {
-    //   gsap.from(element, {
-    //     opacity: 0,
-    //     scale: 0.95,
-    //     duration: 1,
-    //     ease: "back.out(1.7)",
-    //     scrollTrigger: {
-    //       trigger: element,
-    //       start: "top 90%", // Starts earlier than 80%
-    //       toggleActions: "play none none none", // Play once when triggered
-    //     },
-    //   });
-    // });
-
     // Smooth scroll setup
     if (containerRef.current) {
       gsap.to(containerRef.current, {
@@ -243,6 +280,13 @@ export default function FeaturedPosts({ userId }) {
       ScrollTrigger.getAll().forEach((instance) => instance.kill());
     };
   }, [articles]);
+
+  // Check if article is among the last 3 posted
+  const isLatestArticle = (article) => {
+    if (articles.length < 3) return true;
+    const latestThree = articles.slice(0, 3);
+    return latestThree.some((a) => a._id === article._id);
+  };
 
   // Speech controls
   const toggleSpeech = () => {
@@ -434,160 +478,191 @@ export default function FeaturedPosts({ userId }) {
 
     return (
       <>
+        {/* Latest Articles Marquee */}
+        <div className="col-span-1 md:col-span-3 bg-gray-100 p-2 mb-6 rounded overflow-hidden">
+          <div className="flex items-center">
+            <div className="bg-red-600 text-white px-3 py-1 rounded font-bold flex items-center mr-3 whitespace-nowrap">
+              <FaCircle className="text-xs mr-2 animate-pulse" /> LATEST NEWS
+            </div>
+            <div className="overflow-hidden">
+              <div ref={marqueeRef} className="whitespace-nowrap inline-block">
+                {latestArticles.map((article, index) => (
+                  <span key={article._id} className="mx-4 inline-block">
+                    {article.title}
+                    {index < latestArticles.length - 1 && "    "}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Hero Article */}
         {heroArticle &&
           filteredArticles.some((a) => a._id === heroArticle._id) && (
             <div
               key={`hero-${heroArticle._id}`}
-              className="col-span-1 md:col-span-2 lg:col-span-3 fade-in relative hero-article"
+              className="col-span-1 md:col-span-3 fade-in relative hero-article mb-8"
             >
-              <Link href={`/${heroArticle.category}/${heroArticle.slug}`}>
-                <div className="relative h-80 sm:h-96 rounded-lg overflow-hidden">
-                  <Image
-                    src={heroArticle.image || "/news-image.jpg"}
-                    alt={heroArticle.title}
-                    className="object-cover"
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent"></div>
-                  <div className="absolute bottom-6 left-6 right-6">
-                    <h2 className="text-2xl sm:text-3xl font-bold text-white">
-                      {heroArticle.title}
-                    </h2>
-                    <p className="text-gray-200 mt-2 line-clamp-2">
-                      {heroArticle.description}
-                    </p>
-                    <div className="flex items-center mt-4 text-gray-300">
-                      <span className="text-sm">
-                        By {heroArticle.author || "Unknown"}
-                      </span>
-                      <span className="mx-2">|</span>
-                      <span className="text-sm">
-                        {new Date(heroArticle.createdAt).toLocaleDateString()}
-                      </span>
+              <div className="bg-white p-4 shadow-md">
+                <Link href={`/${heroArticle.category}/${heroArticle.slug}`}>
+                  <div className="flex flex-col md:flex-row gap-6">
+                    <div className="md:w-2/3 h-96 relative rounded-lg overflow-hidden">
+                      {isLatestArticle(heroArticle) && (
+                        <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center z-10">
+                          <FaCircle className="text-xs mr-1 animate-pulse" />{" "}
+                          LIVE
+                        </div>
+                      )}
+                      <Image
+                        src={heroArticle.image || "/news-image.jpg"}
+                        alt={heroArticle.title}
+                        className="object-cover"
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      />
+                    </div>
+                    <div className="md:w-1/3 flex flex-col justify-between">
+                      <div>
+                        <h2 className="text-3xl font-bold mb-4 leading-tight">
+                          {heroArticle.title}
+                        </h2>
+                        <p className="text-lg text-gray-700 mb-4">
+                          {heroArticle.description}
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-gray-600">
+                            By {heroArticle.author || "Unknown"}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {new Date(
+                              heroArticle.createdAt
+                            ).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleSaveArticle(heroArticle);
+                            }}
+                            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                          >
+                            {savedArticles.some(
+                              (a) => a._id === heroArticle._id
+                            ) ? (
+                              <FaBookmark className="text-blue-600" />
+                            ) : (
+                              <FaRegBookmark className="text-gray-500" />
+                            )}
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              shareArticle(heroArticle);
+                            }}
+                            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                          >
+                            <FaShareAlt className="text-green-500" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setCurrentArticleIndex(
+                                filteredArticles.findIndex(
+                                  (a) => a._id === heroArticle._id
+                                )
+                              );
+                              startSpeech(heroArticle);
+                            }}
+                            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                          >
+                            <FaVolumeUp className="text-blue-500" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Link>
-              <div className="absolute top-4 right-4 flex gap-2">
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleSaveArticle(heroArticle);
-                  }}
-                  className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
-                >
-                  {savedArticles.some((a) => a._id === heroArticle._id) ? (
-                    <FaBookmark className="text-blue-600" />
-                  ) : (
-                    <FaRegBookmark className="text-gray-500" />
-                  )}
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setCurrentArticleIndex(
-                      filteredArticles.findIndex(
-                        (a) => a._id === heroArticle._id
-                      )
-                    );
-                    startSpeech(heroArticle);
-                  }}
-                  className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
-                >
-                  <FaVolumeUp className="text-blue-500" />
-                </button>
+                </Link>
               </div>
             </div>
           )}
 
-        {/* Regular Articles in groups of 3 */}
-        {Array.from({ length: Math.ceil(regularArticles.length / 3) }).map(
-          (_, groupIndex) => {
-            const chunk = regularArticles.slice(
-              groupIndex * 3,
-              groupIndex * 3 + 3
+        {/* Secondary Featured Articles */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {regularArticles.slice(0, 3).map((article, index) => {
+            const globalIndex = filteredArticles.findIndex(
+              (a) => a._id === article._id
             );
-            return (
-              <div key={`group-${groupIndex}`} className="contents">
-                {chunk.map((article, index) => {
-                  const globalIndex = filteredArticles.findIndex(
-                    (a) => a._id === article._id
-                  );
-                  const isSaved = savedArticles.some(
-                    (a) => a._id === article._id
-                  );
-                  const isCurrentArticle =
-                    globalIndex === currentArticleIndex &&
-                    (speechState === "playing" || speechState === "paused");
+            const isSaved = savedArticles.some((a) => a._id === article._id);
+            const isCurrentArticle =
+              globalIndex === currentArticleIndex &&
+              (speechState === "playing" || speechState === "paused");
+            const isLatest = isLatestArticle(article);
 
-                  return (
-                    <div
-                      key={article._id}
-                      ref={(el) => (articleRefs.current[globalIndex] = el)}
-                      className={`bg-white shadow-lg rounded-lg overflow-hidden transform transition duration-500 hover:scale-[1.02] fade-in relative ${
-                        isCurrentArticle ? "ring-4 ring-blue-500" : ""
-                      }`}
-                    >
-                      <Link href={`/${article.category}/${article.slug}`}>
-                        <div className="w-full h-48 sm:h-56 relative">
-                          <Image
-                            src={article.image || "/news-image.jpg"}
-                            alt={article.title}
-                            className="object-cover"
-                            fill
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          />
-                        </div>
-                        <div className="p-4 sm:p-6">
-                          <h3 className="text-lg sm:text-xl font-semibold hover:text-blue-600 line-clamp-2">
-                            {article.title}
-                          </h3>
-                          <p className="text-gray-600 mt-2 line-clamp-3">
-                            {article.description}
-                          </p>
-                          <div className="flex items-center mt-4 text-gray-500">
-                            <span className="text-xs sm:text-sm">
-                              By {article.author || "Unknown"}
-                            </span>
-                            <span className="mx-2">|</span>
-                            <span className="text-xs sm:text-sm">
-                              {new Date(article.createdAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-                      </Link>
-                      <div className="absolute top-4 right-4 flex gap-2">
+            return (
+              <div
+                key={article._id}
+                ref={(el) => (articleRefs.current[globalIndex] = el)}
+                className={`bg-white shadow-md rounded-lg overflow-hidden fade-in relative ${
+                  isCurrentArticle ? "ring-2 ring-blue-500" : ""
+                }`}
+              >
+                <Link href={`/${article.category}/${article.slug}`}>
+                  <div className="h-48 relative">
+                    {isLatest && (
+                      <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center z-10">
+                        <FaCircle className="text-xs mr-1 animate-pulse" /> LIVE
+                      </div>
+                    )}
+                    <Image
+                      src={article.image || "/news-image.jpg"}
+                      alt={article.title}
+                      className="object-cover"
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                  </div>
+                  <div className="p-4">
+                    <h3 className="text-xl font-semibold mb-2 line-clamp-2">
+                      {article.title}
+                    </h3>
+                    <p className="text-gray-600 mb-4 line-clamp-3">
+                      {article.description}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-gray-500">
+                        {new Date(article.createdAt).toLocaleDateString()}
+                      </p>
+                      <div className="flex gap-2">
                         <button
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
                             toggleSaveArticle(article);
                           }}
-                          className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+                          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
                         >
                           {isSaved ? (
-                            <FaBookmark className="text-blue-600 cursor-pointer" />
+                            <FaBookmark className="text-blue-600" />
                           ) : (
-                            <FaRegBookmark className="text-gray-500 cursor-pointer" />
+                            <FaRegBookmark className="text-gray-500" />
                           )}
                         </button>
                         <button
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            navigator.share({
-                              title: article.title,
-                              text: article.description,
-                              url: `https://informativejournal.vercel.app/${article.category}/${article.slug}`,
-                            });
+                            shareArticle(article);
                           }}
-                          className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+                          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
                         >
-                          <FaShareAlt className="text-gray-500" />
+                          <FaShareAlt className="text-green-500" />
                         </button>
                         <button
                           onClick={(e) => {
@@ -596,18 +671,109 @@ export default function FeaturedPosts({ userId }) {
                             setCurrentArticleIndex(globalIndex);
                             startSpeech(article);
                           }}
-                          className="p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+                          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
                         >
                           <FaVolumeUp className="text-blue-500" />
                         </button>
                       </div>
                     </div>
-                  );
-                })}
+                  </div>
+                </Link>
               </div>
             );
-          }
-        )}
+          })}
+        </div>
+
+        {/* More News Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {regularArticles.slice(3).map((article, index) => {
+            const globalIndex = filteredArticles.findIndex(
+              (a) => a._id === article._id
+            );
+            const isSaved = savedArticles.some((a) => a._id === article._id);
+            const isCurrentArticle =
+              globalIndex === currentArticleIndex &&
+              (speechState === "playing" || speechState === "paused");
+            const isLatest = isLatestArticle(article);
+
+            return (
+              <div
+                key={article._id}
+                ref={(el) => (articleRefs.current[globalIndex] = el)}
+                className={`bg-white shadow-sm rounded-lg overflow-hidden fade-in relative ${
+                  isCurrentArticle ? "ring-2 ring-blue-500" : ""
+                }`}
+              >
+                <Link href={`/${article.category}/${article.slug}`}>
+                  <div className="h-40 relative">
+                    {isLatest && (
+                      <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center z-10">
+                        <FaCircle className="text-xs mr-1 animate-pulse" /> LIVE
+                      </div>
+                    )}
+                    <Image
+                      src={article.image || "/news-image.jpg"}
+                      alt={article.title}
+                      className="object-cover"
+                      fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                  </div>
+                  <div className="p-4">
+                    <h3 className="text-lg font-semibold mb-2 line-clamp-2">
+                      {article.title}
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-3 line-clamp-3">
+                      {article.description}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-gray-500">
+                        {new Date(article.createdAt).toLocaleDateString()}
+                      </p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleSaveArticle(article);
+                          }}
+                          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                        >
+                          {isSaved ? (
+                            <FaBookmark className="text-blue-600" />
+                          ) : (
+                            <FaRegBookmark className="text-gray-500" />
+                          )}
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            shareArticle(article);
+                          }}
+                          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                        >
+                          <FaShareAlt className="text-green-500" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setCurrentArticleIndex(globalIndex);
+                            startSpeech(article);
+                          }}
+                          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                        >
+                          <FaVolumeUp className="text-blue-500" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            );
+          })}
+        </div>
       </>
     );
   };
@@ -631,11 +797,9 @@ export default function FeaturedPosts({ userId }) {
   return (
     <div className="relative" ref={containerRef}>
       {/* Main Content */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-6 sm:mb-10 fade-in"></h2>
-
-        {/* Search Bar - Mobile */}
-        <div className="mb-6 sm:hidden">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+        {/* Mobile Search Bar */}
+        <div className="mb-6 md:hidden">
           <div className="flex items-center bg-white border rounded-full px-4 py-2 w-full">
             <FaSearch className="text-gray-500" />
             <input
@@ -661,15 +825,13 @@ export default function FeaturedPosts({ userId }) {
         </div>
 
         {/* Articles Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {renderArticles()}
-        </div>
-      </section>
+        <div className="grid grid-cols-1 gap-6">{renderArticles()}</div>
+      </main>
 
       {/* Saved Articles Panel */}
       <div
         ref={savedPanelRef}
-        className={`fixed top-0 right-0 h-full w-full sm:w-80 bg-white shadow-xl z-50 p-4 overflow-y-auto transition-transform duration-300 ${
+        className={`fixed top-0 right-0 h-full w-full sm:w-96 bg-white shadow-xl z-50 p-4 overflow-y-auto transition-transform duration-300 ${
           showSavedArticles ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -737,7 +899,7 @@ export default function FeaturedPosts({ userId }) {
       {/* Gamification Dashboard Panel */}
       <div
         ref={gamificationPanelRef}
-        className={`fixed top-0 right-0 h-full w-full sm:w-80 bg-white shadow-xl z-50 p-4 overflow-y-auto transition-transform duration-300 ${
+        className={`fixed top-0 right-0 h-full w-full sm:w-96 bg-white shadow-xl z-50 p-4 overflow-y-auto transition-transform duration-300 ${
           showGamification ? "translate-x-0" : "translate-x-full"
         }`}
       >
@@ -787,109 +949,58 @@ export default function FeaturedPosts({ userId }) {
       {/* Floating Action Button */}
       <div className="fixed bottom-6 right-6 z-50">
         <div className="flex flex-col items-end gap-2">
-          {savedArticles.length > 0 && (
-            <button
-              onClick={() => {
-                setIsFabExpanded(false);
-                setShowSavedArticles(!showSavedArticles);
-              }}
-              className="flex items-center justify-center w-12 h-12 bg-yellow-600 text-white rounded-full shadow-lg hover:bg-yellow-700 transition-colors"
-            >
-              <FaBookmark className="text-lg" />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                {savedArticles.length}
-              </span>
-            </button>
-          )}
-          <button
-            onClick={() => {
-              setIsFabExpanded(false);
-              setShowGamification(!showGamification);
-            }}
-            className="flex items-center justify-center w-12 h-12 bg-purple-600 text-white rounded-full shadow-lg hover:bg-purple-700 transition-colors"
-          >
-            <FaTrophy className="text-lg" />
-          </button>
-          <div
-            ref={fabMenuRef}
-            className={`flex flex-col gap-2 bg-white shadow-lg rounded-lg overflow-hidden ${
-              isFabExpanded ? "w-64 p-4 opacity-100" : "w-0 h-0 opacity-0"
-            } transition-all duration-300`}
-          >
-            {/* Search Bar - Desktop */}
-            <div className="hidden sm:flex items-center bg-white border rounded-full px-4 py-2 w-full">
-              <FaSearch className="text-gray-500" />
-              <input
-                type="text"
-                placeholder="Search articles..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="ml-2 outline-none flex-1"
-              />
-              {isSpeechSupported && (
+          {isFabExpanded && (
+            <div className="bg-white shadow-lg rounded-lg p-4 mb-2 w-64">
+              <div className="flex flex-col gap-3">
                 <button
-                  onClick={() => setIsListening(!isListening)}
-                  className={`ml-2 p-2 rounded-full transition-all duration-300 ${
-                    isListening ? "bg-red-500" : "bg-gray-100"
-                  } hover:bg-gray-200`}
+                  onClick={toggleSpeech}
+                  className={`flex items-center justify-between px-4 py-2 rounded-full transition-colors ${
+                    speechState === "playing"
+                      ? "bg-yellow-500 hover:bg-yellow-600 text-white"
+                      : speechState === "paused"
+                      ? "bg-blue-600 hover:bg-blue-700 text-white"
+                      : "bg-green-600 hover:bg-green-700 text-white"
+                  }`}
                 >
-                  <FaMicrophone
-                    className={`text-gray-500 ${
-                      isListening ? "text-white" : ""
-                    }`}
-                  />
+                  {speechState === "playing" ? (
+                    <>
+                      <FaPause className="mr-2" />
+                      <span>Pause Reading</span>
+                    </>
+                  ) : speechState === "paused" ? (
+                    <>
+                      <FaPlay className="mr-2" />
+                      <span>Resume Reading</span>
+                    </>
+                  ) : (
+                    <>
+                      <FaPlay className="mr-2" />
+                      <span>Start Reading</span>
+                    </>
+                  )}
                 </button>
-              )}
+
+                <button
+                  onClick={() => setShowLanguageModal(true)}
+                  className="flex items-center justify-between bg-purple-600 text-white px-4 py-2 rounded-full hover:bg-purple-700 transition-colors"
+                >
+                  <FaVolumeUp className="mr-2" />
+                  <span>Change Language</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    setIsFabExpanded(false);
+                    stopSpeech();
+                  }}
+                  className="flex items-center justify-between bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-700 transition-colors"
+                >
+                  <FaStop className="mr-2" />
+                  <span>Stop Reading</span>
+                </button>
+              </div>
             </div>
-
-            {/* Speech Controls */}
-            <button
-              onClick={toggleSpeech}
-              className={`flex items-center justify-between px-4 py-2 rounded-full shadow-lg transition-colors ${
-                speechState === "playing"
-                  ? "bg-yellow-500 hover:bg-yellow-600 text-white"
-                  : speechState === "paused"
-                  ? "bg-blue-600 hover:bg-blue-700 text-white"
-                  : "bg-green-600 hover:bg-green-700 text-white"
-              }`}
-            >
-              {speechState === "playing" ? (
-                <>
-                  <FaPause className="mr-2" />
-                  <span>Pause Reading</span>
-                </>
-              ) : speechState === "paused" ? (
-                <>
-                  <FaPlay className="mr-2" />
-                  <span>Resume Reading</span>
-                </>
-              ) : (
-                <>
-                  <FaPlay className="mr-2" />
-                  <span>Start Reading</span>
-                </>
-              )}
-            </button>
-
-            <button
-              onClick={() => setShowLanguageModal(true)}
-              className="flex items-center justify-between bg-purple-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-purple-700 transition-colors"
-            >
-              <FaVolumeUp className="mr-2" />
-              <span>Change Language</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setIsFabExpanded(false);
-                stopSpeech();
-              }}
-              className="flex items-center justify-between bg-red-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-red-700 transition-colors"
-            >
-              <FaStop className="mr-2" />
-              <span>Stop Reading</span>
-            </button>
-          </div>
+          )}
 
           {/* Main FAB Button */}
           <button
