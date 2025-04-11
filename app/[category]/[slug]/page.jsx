@@ -441,7 +441,7 @@ const ArticlePage = () => {
         <meta property="og:image" content={article?.image || ""} />
       </Head>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 relative bg-white min-h-screen">
+      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 md:py-8 relative bg-white min-h-screen">
         {article && (
           <>
             {/* Article Header */}
@@ -458,13 +458,13 @@ const ArticlePage = () => {
                 {article.description}
               </p>
 
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+                <div className="flex items-center space-x-3 sm:space-x-4">
                   <div className="flex-shrink-0">
-                    <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                    <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-gray-300 flex items-center justify-center">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
-                        className="h-6 w-6 text-gray-500"
+                        className="h-5 w-5 sm:h-6 sm:w-6 text-gray-500"
                         fill="none"
                         viewBox="0 0 24 24"
                         stroke="currentColor"
@@ -482,7 +482,7 @@ const ArticlePage = () => {
                     <p className="text-sm font-medium text-gray-900">
                       {article.author || "Unknown Author"}
                     </p>
-                    <div className="flex space-x-2 text-sm text-gray-500">
+                    <div className="flex flex-wrap gap-x-2 text-xs sm:text-sm text-gray-500">
                       <time dateTime={article.createdAt}>
                         {new Date(article.createdAt).toLocaleDateString(
                           "en-US",
@@ -500,7 +500,7 @@ const ArticlePage = () => {
                 </div>
 
                 {/* Like/Dislike Buttons */}
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 self-end sm:self-auto">
                   <button
                     onClick={() => handleReaction("like")}
                     className={`flex items-center space-x-1 px-3 py-1 rounded-full transition-colors ${
@@ -515,7 +515,7 @@ const ArticlePage = () => {
                     ) : (
                       <FaRegThumbsUp />
                     )}
-                    <span className="text-sm">Like</span>
+                    <span className="text-xs sm:text-sm">Like</span>
                   </button>
                   <button
                     onClick={() => handleReaction("dislike")}
@@ -531,7 +531,7 @@ const ArticlePage = () => {
                     ) : (
                       <FaRegThumbsDown />
                     )}
-                    <span className="text-sm">Dislike</span>
+                    <span className="text-xs sm:text-sm">Dislike</span>
                   </button>
                 </div>
               </div>
@@ -539,7 +539,7 @@ const ArticlePage = () => {
               {article.image && (
                 <div
                   ref={(el) => (imageRefs.current[0] = el)}
-                  className="relative w-full h-48 sm:h-64 md:h-96 rounded-xl overflow-hidden mb-8"
+                  className="relative w-full h-48 sm:h-64 md:h-80 lg:h-96 rounded-xl overflow-hidden mb-6 sm:mb-8"
                 >
                   <Image
                     src={article.image}
@@ -547,7 +547,7 @@ const ArticlePage = () => {
                     fill
                     className="object-cover"
                     priority
-                    sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 800px"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 800px"
                   />
                 </div>
               )}
@@ -556,8 +556,8 @@ const ArticlePage = () => {
             {/* Article Content Sections */}
             <div ref={contentRef} className="mb-12">
               {article.content?.length > 1 && (
-                <div className="mb-6 sm:mb-8 overflow-x-auto">
-                  <div className="flex space-x-2 pb-2">
+                <div className="mb-4 sm:mb-6 overflow-x-auto">
+                  <div className="flex space-x-2 pb-2 w-max min-w-full">
                     {article.content.map((section, index) => (
                       <button
                         key={section._id || index}
@@ -577,12 +577,12 @@ const ArticlePage = () => {
 
               <article
                 ref={(el) => (sectionRefs.current[activeSection] = el)}
-                className="prose prose-sm sm:prose-lg max-w-none"
+                className="prose prose-sm sm:prose-base lg:prose-lg max-w-none"
               >
                 {article.content?.[activeSection]?.image && (
                   <div
                     ref={(el) => (imageRefs.current[1] = el)}
-                    className="relative w-full h-48 sm:h-64 md:h-80 rounded-lg overflow-hidden mb-6 sm:mb-8"
+                    className="relative w-full h-48 sm:h-64 md:h-80 rounded-lg overflow-hidden mb-4 sm:mb-6"
                   >
                     <Image
                       src={article.content[activeSection].image}
@@ -597,7 +597,7 @@ const ArticlePage = () => {
                 )}
 
                 {article.content?.[activeSection]?.title && (
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-4 sm:mb-6 text-gray-800">
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4 text-gray-800">
                     {article.content[activeSection].title}
                   </h2>
                 )}
@@ -608,12 +608,12 @@ const ArticlePage = () => {
                     0 && (
                     <div
                       ref={keypointsRef}
-                      className="bg-blue-50 border border-blue-100 rounded-xl p-4 sm:p-6 mb-6 sm:mb-8"
+                      className="bg-blue-50 border border-blue-100 rounded-xl p-3 sm:p-4 md:p-6 mb-4 sm:mb-6"
                     >
-                      <h3 className="text-lg sm:text-xl font-semibold text-blue-800 mb-3 sm:mb-4 flex items-center">
+                      <h3 className="text-base sm:text-lg md:text-xl font-semibold text-blue-800 mb-2 sm:mb-3 flex items-center">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
-                          className="h-5 w-5 mr-2"
+                          className="h-4 w-4 sm:h-5 sm:w-5 mr-2"
                           viewBox="0 0 20 20"
                           fill="currentColor"
                         >
@@ -625,14 +625,14 @@ const ArticlePage = () => {
                         </svg>
                         Key Points
                       </h3>
-                      <ul className="space-y-2 sm:space-y-3">
+                      <ul className="space-y-1.5 sm:space-y-2 md:space-y-3">
                         {article.content[activeSection].keypoints[0].points.map(
                           (point, index) => (
                             <li
                               key={index}
-                              className="flex items-start text-sm sm:text-base text-gray-700"
+                              className="flex items-start text-xs sm:text-sm md:text-base text-gray-700"
                             >
-                              <span className="flex-shrink-0 h-5 w-5 text-blue-500 mr-2 mt-0.5">
+                              <span className="flex-shrink-0 h-4 w-4 sm:h-5 sm:w-5 text-blue-500 mr-2 mt-0.5">
                                 <svg
                                   xmlns="http://www.w3.org/2000/svg"
                                   viewBox="0 0 20 20"
@@ -653,12 +653,15 @@ const ArticlePage = () => {
                     </div>
                   )}
 
-                <div className="space-y-4 sm:space-y-6 text-gray-700">
+                <div className="space-y-3 sm:space-y-4 text-gray-700">
                   {article.content?.[activeSection]?.content &&
                     article.content[activeSection].content
                       .split("\n")
                       .map((paragraph, i) => (
-                        <p key={i} className="leading-relaxed">
+                        <p
+                          key={i}
+                          className="leading-relaxed text-sm sm:text-base"
+                        >
                           {paragraph}
                         </p>
                       ))}
@@ -672,23 +675,23 @@ const ArticlePage = () => {
                 ref={(el) =>
                   (sectionRefs.current[article.content?.length || 0] = el)
                 }
-                className="mb-12"
+                className="mb-8 sm:mb-12"
               >
-                <h3 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-gray-800">
+                <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-800">
                   Comments
                 </h3>
-                <div className="space-y-4 sm:space-y-6">
+                <div className="space-y-3 sm:space-y-4">
                   {article.comments.map((comment) => (
                     <div
                       key={comment._id || comment.text}
-                      className="border-b border-gray-200 pb-4 sm:pb-6"
+                      className="border-b border-gray-200 pb-3 sm:pb-4"
                     >
-                      <div className="flex items-start space-x-3 sm:space-x-4">
+                      <div className="flex items-start space-x-2 sm:space-x-3">
                         <div className="flex-shrink-0">
-                          <div className="h-8 sm:h-10 w-8 sm:w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                          <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-full bg-gray-300 flex items-center justify-center">
                             <svg
                               xmlns="http://www.w3.org/2000/svg"
-                              className="h-5 sm:h-6 w-5 sm:w-6 text-gray-500"
+                              className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500"
                               fill="none"
                               viewBox="0 0 24 24"
                               stroke="currentColor"
@@ -702,16 +705,16 @@ const ArticlePage = () => {
                             </svg>
                           </div>
                         </div>
-                        <div>
-                          <div className="flex items-center space-x-2">
-                            <h4 className="text-xs sm:text-sm font-medium text-gray-900">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                            <h4 className="text-xs sm:text-sm font-medium text-gray-900 truncate">
                               {comment.author || "Anonymous"}
                             </h4>
                             <span className="text-xs text-gray-500">
                               {new Date(comment.createdAt).toLocaleDateString()}
                             </span>
                           </div>
-                          <p className="mt-1 text-sm sm:text-base text-gray-700">
+                          <p className="mt-1 text-xs sm:text-sm text-gray-700">
                             {comment.text}
                           </p>
                         </div>
@@ -728,9 +731,9 @@ const ArticlePage = () => {
         {isMobile && (
           <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-2">
             {(speechState === "playing" || speechState === "paused") && (
-              <div className="bg-white shadow-lg rounded-lg px-3 py-2 w-48 animate-fade-in">
+              <div className="bg-white shadow-lg rounded-lg px-3 py-2 w-40 sm:w-48 animate-fade-in">
                 <div className="flex justify-between items-center mb-1">
-                  <span className="text-xs font-medium text-gray-700">
+                  <span className="text-xs font-medium text-gray-700 truncate max-w-[100px]">
                     {languages.find((l) => l.code === language)?.name ||
                       "English"}
                   </span>
@@ -755,7 +758,85 @@ const ArticlePage = () => {
               </div>
             )}
 
-            <div className="flex gap-2 bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow-xl border border-gray-100">
+            <div className="flex gap-2 bg-white/90 backdrop-blur-sm p-1 rounded-full shadow-xl border border-gray-100">
+              <button
+                onClick={toggleSpeech}
+                className={`flex items-center justify-center w-9 h-9 rounded-full transition-all ${
+                  speechState === "playing"
+                    ? "bg-yellow-500 hover:bg-yellow-600 text-white shadow-lg"
+                    : speechState === "paused"
+                    ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
+                    : "bg-green-600 hover:bg-green-700 text-white shadow-md"
+                }`}
+                aria-label={
+                  speechState === "playing"
+                    ? "Pause reading"
+                    : speechState === "paused"
+                    ? "Resume reading"
+                    : "Start reading"
+                }
+              >
+                {speechState === "playing" ? (
+                  <FaPause size={14} />
+                ) : speechState === "paused" ? (
+                  <FaPlay size={14} />
+                ) : (
+                  <FaPlay size={14} />
+                )}
+              </button>
+
+              <button
+                onClick={() => {
+                  if (speechState !== "idle") {
+                    stopSpeech();
+                  }
+                  setShowLanguageModal(true);
+                }}
+                className={`flex items-center justify-center w-9 h-9 rounded-full transition-all ${
+                  speechState === "playing" || speechState === "paused"
+                    ? "bg-purple-600 hover:bg-purple-700 text-white shadow-lg"
+                    : "bg-gray-100 hover:bg-gray-200 text-gray-700 shadow-sm"
+                }`}
+                aria-label="Select language"
+              >
+                <FaVolumeUp size={14} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Speech Controls - Desktop */}
+        {!isMobile && (
+          <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+            {(speechState === "playing" || speechState === "paused") && (
+              <div className="bg-white shadow-xl rounded-lg px-4 py-3 w-64 animate-fade-in">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm font-medium text-gray-700">
+                    {languages.find((l) => l.code === language)?.name ||
+                      "English"}
+                  </span>
+                  <span className="text-xs text-gray-500">
+                    {Math.round(speechProgress)}%
+                  </span>
+                </div>
+                <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mb-2">
+                  <div
+                    className="h-full bg-blue-500 transition-all duration-300"
+                    style={{ width: `${speechProgress}%` }}
+                  ></div>
+                </div>
+                <div className="text-xs text-gray-600 line-clamp-2">
+                  {speechRef.current.words
+                    .slice(
+                      Math.max(0, currentWordIndex - 2),
+                      currentWordIndex + 3
+                    )
+                    .join(" ")}
+                </div>
+              </div>
+            )}
+
+            <div className="flex gap-3 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-xl border border-gray-100">
               <button
                 onClick={toggleSpeech}
                 className={`flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-full transition-all ${
@@ -802,95 +883,17 @@ const ArticlePage = () => {
           </div>
         )}
 
-        {/* Speech Controls - Desktop */}
-        {!isMobile && (
-          <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
-            {(speechState === "playing" || speechState === "paused") && (
-              <div className="bg-white shadow-xl rounded-lg px-4 py-3 w-64 animate-fade-in">
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium text-gray-700">
-                    {languages.find((l) => l.code === language)?.name ||
-                      "English"}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {Math.round(speechProgress)}%
-                  </span>
-                </div>
-                <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mb-2">
-                  <div
-                    className="h-full bg-blue-500 transition-all duration-300"
-                    style={{ width: `${speechProgress}%` }}
-                  ></div>
-                </div>
-                <div className="text-xs text-gray-600 line-clamp-2">
-                  {speechRef.current.words
-                    .slice(
-                      Math.max(0, currentWordIndex - 2),
-                      currentWordIndex + 3
-                    )
-                    .join(" ")}
-                </div>
-              </div>
-            )}
-
-            <div className="flex gap-3 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-xl border border-gray-100">
-              <button
-                onClick={toggleSpeech}
-                className={`flex items-center justify-center w-12 h-12 rounded-full transition-all ${
-                  speechState === "playing"
-                    ? "bg-yellow-500 hover:bg-yellow-600 text-white shadow-lg"
-                    : speechState === "paused"
-                    ? "bg-blue-600 hover:bg-blue-700 text-white shadow-lg"
-                    : "bg-green-600 hover:bg-green-700 text-white shadow-md"
-                }`}
-                aria-label={
-                  speechState === "playing"
-                    ? "Pause reading"
-                    : speechState === "paused"
-                    ? "Resume reading"
-                    : "Start reading"
-                }
-              >
-                {speechState === "playing" ? (
-                  <FaPause size={18} />
-                ) : speechState === "paused" ? (
-                  <FaPlay size={18} />
-                ) : (
-                  <FaPlay size={18} />
-                )}
-              </button>
-
-              <button
-                onClick={() => {
-                  if (speechState !== "idle") {
-                    stopSpeech();
-                  }
-                  setShowLanguageModal(true);
-                }}
-                className={`flex items-center justify-center w-12 h-12 rounded-full transition-all ${
-                  speechState === "playing" || speechState === "paused"
-                    ? "bg-purple-600 hover:bg-purple-700 text-white shadow-lg"
-                    : "bg-gray-100 hover:bg-gray-200 text-gray-700 shadow-sm"
-                }`}
-                aria-label="Select language"
-              >
-                <FaVolumeUp size={18} />
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Language Selection Modal */}
         {showLanguageModal && (
-          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-2 sm:p-4">
             <div
               ref={modalRef}
               className={`bg-white rounded-xl shadow-2xl w-full ${
                 isMobile ? "max-w-xs" : "max-w-md"
-              } max-h-[80vh] overflow-hidden animate-fade-in-up`}
+              } max-h-[90vh] overflow-hidden animate-fade-in-up`}
             >
-              <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-gray-900">
+              <div className="p-3 sm:p-4 border-b border-gray-200 flex justify-between items-center">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                   Select Language
                 </h3>
                 <button
@@ -898,11 +901,11 @@ const ArticlePage = () => {
                   className="text-gray-500 hover:text-gray-700 p-1 rounded-full hover:bg-gray-100"
                   aria-label="Close modal"
                 >
-                  <FaTimes size={18} />
+                  <FaTimes size={16} />
                 </button>
               </div>
 
-              <div className="overflow-y-auto max-h-[60vh]">
+              <div className="overflow-y-auto max-h-[70vh]">
                 <ul>
                   {languages.map((lang) => (
                     <li
@@ -911,20 +914,20 @@ const ArticlePage = () => {
                     >
                       <button
                         onClick={() => selectLanguage(lang.code)}
-                        className={`w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors flex justify-between items-center ${
+                        className={`w-full text-left px-3 sm:px-4 py-2 sm:py-3 hover:bg-blue-50 transition-colors flex justify-between items-center ${
                           language === lang.code
                             ? "bg-blue-50 text-blue-600"
                             : "text-gray-700"
                         }`}
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 sm:gap-3">
                           <span className="text-lg">{lang.flag}</span>
                           <span className="text-sm sm:text-base">
                             {lang.name}
                           </span>
                         </div>
                         {language === lang.code && (
-                          <FaCheck className="text-blue-500" />
+                          <FaCheck className="text-blue-500" size={14} />
                         )}
                       </button>
                     </li>
@@ -932,10 +935,10 @@ const ArticlePage = () => {
                 </ul>
               </div>
 
-              <div className="p-4 border-t border-gray-200 bg-gray-50">
+              <div className="p-3 sm:p-4 border-t border-gray-200 bg-gray-50">
                 <button
                   onClick={() => setShowLanguageModal(false)}
-                  className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition shadow-sm"
+                  className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition shadow-sm text-sm sm:text-base"
                 >
                   Confirm Selection
                 </button>

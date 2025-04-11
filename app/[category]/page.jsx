@@ -257,20 +257,20 @@ export default function CategoryPage() {
     if (articles.length === 0) return;
 
     // Article animations
-    gsap.utils.toArray(".fade-in").forEach((element, i) => {
-      gsap.from(element, {
-        opacity: 0,
-        y: 50,
-        duration: 0.8,
-        ease: "power2.out",
-        scrollTrigger: {
-          trigger: element,
-          start: "top 90%",
-          toggleActions: "play none none none",
-        },
-        delay: i * 0.1,
-      });
-    });
+    // gsap.utils.toArray(".fade-in").forEach((element, i) => {
+    //   gsap.from(element, {
+    //     opacity: 0,
+    //     y: 50,
+    //     duration: 0.8,
+    //     ease: "power2.out",
+    //     scrollTrigger: {
+    //       trigger: element,
+    //       start: "top 90%",
+    //       toggleActions: "play none none none",
+    //     },
+    //     delay: i * 0.1,
+    //   });
+    // });
 
     // Smooth scroll setup
     if (containerRef.current) {
