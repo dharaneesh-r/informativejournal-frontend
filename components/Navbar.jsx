@@ -110,10 +110,10 @@ const Navbar = () => {
                 Technology
               </a>
               <a
-                href="/sports"
+                href="/stock-dashboard"
                 className="nav-link text-white transition-colors duration-300 relative"
               >
-                Sports
+                Stock Dashboard
               </a>
               <a
                 href="/business"
@@ -374,7 +374,7 @@ const Navbar = () => {
                 <button className="block w-full text-left px-4 py-2 text-gray-200 hover:bg-gray-700">
                   {isLoggedIn ? (
                     <>
-                      <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium mr-2 inline-block">
+                      <div className="w-8 h-8 rounded-full bg-blue-600 display-flex items-center justify-center text-white font-medium mr-2 inline-block">
                         {userEmail ? userEmail.charAt(0).toUpperCase() : "U"}
                       </div>
                       <span className="max-w-xs truncate">{userEmail}</span>

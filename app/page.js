@@ -24,6 +24,9 @@ import {
   FaCheck,
   FaChevronDown,
   FaCircle,
+  FaChartLine,
+  FaNewspaper,
+  FaGlobeAmericas,
 } from "react-icons/fa";
 
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
@@ -44,6 +47,8 @@ export default function FeaturedPosts({ userId }) {
   const [showGamification, setShowGamification] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [latestArticles, setLatestArticles] = useState([]);
+  const [activeTab, setActiveTab] = useState("all");
+  const [marketData, setMarketData] = useState(null);
 
   // Speech state
   const [speechState, setSpeechState] = useState("idle");
@@ -89,6 +94,17 @@ export default function FeaturedPosts({ userId }) {
     { code: "ko-KR", name: "Korean", flag: "🇰🇷" },
   ];
 
+  // Categories for filtering
+  const categories = [
+    { id: "all", name: "All News", icon: <FaNewspaper className="mr-2" /> },
+    {
+      id: "business",
+      name: "Business",
+      icon: <FaChartLine className="mr-2" />,
+    },
+    { id: "finance", name: "Finance", icon: <FaGlobeAmericas className="mr-2" /> },
+  ];
+
   // Check for mobile view and setup smooth scrolling
   useEffect(() => {
     const checkMobile = () => {
@@ -118,6 +134,24 @@ export default function FeaturedPosts({ userId }) {
         console.warn("Text-to-speech not supported");
       }
     }
+  }, []);
+
+  // Fetch market data
+  useEffect(() => {
+    const fetchMarketData = async () => {
+      try {
+        const response = await axios.get(
+          "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=5&page=1&sparkline=false"
+        );
+        setMarketData(response.data);
+      } catch (err) {
+        console.error("Error fetching market data:", err);
+      }
+    };
+
+    fetchMarketData();
+    const interval = setInterval(fetchMarketData, 60000); // Update every minute
+    return () => clearInterval(interval);
   }, []);
 
   // Close modals when clicking outside
@@ -186,7 +220,7 @@ export default function FeaturedPosts({ userId }) {
     if (marqueeRef.current && latestArticles.length > 0) {
       const marqueeContent = marqueeRef.current;
       const contentWidth = marqueeContent.scrollWidth;
-      const duration = contentWidth / 50; 
+      const duration = contentWidth / 50;
 
       gsap.fromTo(
         marqueeContent,
@@ -247,39 +281,6 @@ export default function FeaturedPosts({ userId }) {
         .catch((err) => console.error("Could not copy text: ", err));
     }
   };
-
-  // GSAP animations
-  useEffect(() => {
-    if (articles.length === 0) return;
-
-    // Article animations
-    // gsap.utils.toArray(".fade-in").forEach((element, i) => {
-    //   gsap.from(element, {
-    //     opacity: 0,
-    //     y: 50,
-    //     duration: 0.8,
-    //     ease: "power2.out",
-    //     scrollTrigger: {
-    //       trigger: element,
-    //       start: "top 90%",
-    //       toggleActions: "play none none none",
-    //     },
-    //     delay: i * 0.1,
-    //   });
-    // });
-
-    // Smooth scroll setup
-    if (containerRef.current) {
-      gsap.to(containerRef.current, {
-        scrollTo: { y: 0, autoKill: false },
-        duration: 0.1,
-      });
-    }
-
-    return () => {
-      ScrollTrigger.getAll().forEach((instance) => instance.kill());
-    };
-  }, [articles]);
 
   // Check if article is among the last 3 posted
   const isLatestArticle = (article) => {
@@ -451,13 +452,72 @@ export default function FeaturedPosts({ userId }) {
     }
   }, [isListening, language, isSpeechSupported]);
 
-  // Filter articles
+  // Filter articles based on search and active tab
   const filteredArticles = articles.filter((article) => {
     const matchesSearch =
       article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       article.description.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesSearch;
+
+    const matchesCategory =
+      activeTab === "all" ||
+      article.category.toLowerCase() === activeTab.toLowerCase();
+
+    return matchesSearch && matchesCategory;
   });
+
+  // Render market ticker
+  const renderMarketTicker = () => {
+    if (!marketData) return null;
+
+    return (
+      <div className="bg-gradient-to-r from-blue-900 to-indigo-900 text-white p-3 rounded-lg mb-6">
+        <div className="flex overflow-x-auto hide-scrollbar space-x-8">
+          {marketData.map((coin) => (
+            <div key={coin.id} className="flex items-center whitespace-nowrap">
+              <span className="font-semibold mr-2">
+                {coin.symbol.toUpperCase()}
+              </span>
+              <span className="mr-2">
+                ${coin.current_price.toLocaleString()}
+              </span>
+              <span
+                className={`text-sm ${
+                  coin.price_change_percentage_24h >= 0
+                    ? "text-green-400"
+                    : "text-red-400"
+                }`}
+              >
+                {coin.price_change_percentage_24h >= 0 ? "↑" : "↓"}
+                {Math.abs(coin.price_change_percentage_24h).toFixed(2)}%
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Render TradingView widget
+  const renderTradingViewWidget = () => {
+    return (
+      <div className="bg-white rounded-xl shadow-md p-4 mb-6">
+        <div className="flex items-center mb-3">
+          <FaChartLine className="text-blue-600 mr-2" />
+          <h3 className="font-bold text-lg">Market Overview</h3>
+        </div>
+        <div className="h-64">
+          {/* TradingView Widget */}
+          <iframe
+            src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=en#%7B%22symbol%22%3A%22NASDAQ%3AAAPL%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22dateRange%22%3A%2212M%22%2C%22colorTheme%22%3A%22light%22%2C%22trendLineColor%22%3A%22%2360a5fa%22%2C%22gridLineColor%22%3A%22%23e5e7eb%22%2C%22fontColor%22%3A%22%236b7280%22%2C%22underLineColor%22%3A%22%23d1d5db%22%2C%22isTransparent%22%3Afalse%2C%22autosize%22%3Atrue%2C%22largeChartUrl%22%3A%22%22%7D"
+            style={{ width: "100%", height: "100%", border: "none" }}
+            allowTransparency={true}
+            frameBorder="0"
+            scrolling="no"
+          ></iframe>
+        </div>
+      </div>
+    );
+  };
 
   // Render articles with hero placement
   const renderArticles = () => {
@@ -479,23 +539,29 @@ export default function FeaturedPosts({ userId }) {
     return (
       <>
         {/* Latest Articles Marquee */}
-        <div className="col-span-1 md:col-span-3 bg-gray-100 p-2 mb-6 rounded overflow-hidden">
+        <div className="col-span-1 shadow-xl md:col-span-3  text-black p-2 mb-6 rounded overflow-hidden">
           <div className="flex items-center">
-            <div className="bg-red-600 text-white px-3 py-1 rounded font-bold flex items-center mr-3 whitespace-nowrap">
-              <FaCircle className="text-xs mr-2 animate-pulse" /> LATEST NEWS
+            <div className="bg-red-600 text-white px-3 py-1 rounded-full font-bold flex items-center mr-3 whitespace-nowrap">
+              <FaCircle className="text-xs mr-2 animate-pulse" /> BREAKING NEWS
             </div>
             <div className="overflow-hidden">
               <div ref={marqueeRef} className="whitespace-nowrap inline-block">
                 {latestArticles.map((article, index) => (
-                  <span key={article._id} className="mx-4 inline-block">
+                  <span
+                    key={article._id}
+                    className="mx-4 inline-block hover:text-blue-600 transition-colors"
+                  >
                     {article.title}
-                    {index < latestArticles.length - 1 && "    "}
+                    {index < latestArticles.length - 1 && "   "}
                   </span>
                 ))}
               </div>
             </div>
           </div>
         </div>
+
+        {/* Market Data */}
+        {/* {renderMarketTicker()} */}
 
         {/* Hero Article */}
         {heroArticle &&
@@ -504,12 +570,12 @@ export default function FeaturedPosts({ userId }) {
               key={`hero-${heroArticle._id}`}
               className="col-span-1 md:col-span-3 fade-in relative hero-article mb-8"
             >
-              <div className="bg-white p-4 shadow-md">
+              <div className="bg-gradient-to-br from-white to-gray-50 p-6 rounded-2xl shadow-lg">
                 <Link href={`/${heroArticle.category}/${heroArticle.slug}`}>
-                  <div className="flex flex-col md:flex-row gap-6">
-                    <div className="md:w-2/3 h-96 relative rounded-lg overflow-hidden">
+                  <div className="flex flex-col lg:flex-row gap-8">
+                    <div className="lg:w-2/3 h-96 relative rounded-xl overflow-hidden shadow-md">
                       {isLatestArticle(heroArticle) && (
-                        <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center z-10">
+                        <div className="absolute top-4 right-4 bg-red-600 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center z-10">
                           <FaCircle className="text-xs mr-1 animate-pulse" />{" "}
                           LIVE
                         </div>
@@ -522,9 +588,19 @@ export default function FeaturedPosts({ userId }) {
                         sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       />
                     </div>
-                    <div className="md:w-1/3 flex flex-col justify-between">
+                    <div className="lg:w-1/3 flex flex-col justify-between">
                       <div>
-                        <h2 className="text-3xl font-bold mb-4 leading-tight">
+                        <div className="flex items-center mb-3">
+                          <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                            {heroArticle.category}
+                          </span>
+                          <span className="text-gray-500 text-sm ml-2">
+                            {new Date(
+                              heroArticle.createdAt
+                            ).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <h2 className="text-3xl font-bold mb-4 leading-tight hover:text-blue-600 transition-colors">
                           {heroArticle.title}
                         </h2>
                         <p className="text-lg text-gray-700 mb-4">
@@ -532,15 +608,24 @@ export default function FeaturedPosts({ userId }) {
                         </p>
                       </div>
                       <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-gray-600">
-                            By {heroArticle.author || "Unknown"}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {new Date(
-                              heroArticle.createdAt
-                            ).toLocaleDateString()}
-                          </p>
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden mr-3">
+                            <Image
+                              src="/default-avatar.png"
+                              alt="Author"
+                              width={40}
+                              height={40}
+                              className="object-cover"
+                            />
+                          </div>
+                          <div>
+                            <p className="text-gray-800 font-medium">
+                              {heroArticle.author || "Staff Writer"}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {Math.floor(Math.random() * 10) + 1} min read
+                            </p>
+                          </div>
                         </div>
                         <div className="flex gap-2">
                           <button
@@ -550,13 +635,20 @@ export default function FeaturedPosts({ userId }) {
                               toggleSaveArticle(heroArticle);
                             }}
                             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                            aria-label={
+                              savedArticles.some(
+                                (a) => a._id === heroArticle._id
+                              )
+                                ? "Unsave article"
+                                : "Save article"
+                            }
                           >
                             {savedArticles.some(
                               (a) => a._id === heroArticle._id
                             ) ? (
                               <FaBookmark className="text-blue-600" />
                             ) : (
-                              <FaRegBookmark className="text-gray-500" />
+                              <FaRegBookmark className="text-gray-500 hover:text-blue-600" />
                             )}
                           </button>
                           <button
@@ -566,8 +658,9 @@ export default function FeaturedPosts({ userId }) {
                               shareArticle(heroArticle);
                             }}
                             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                            aria-label="Share article"
                           >
-                            <FaShareAlt className="text-green-500" />
+                            <FaShareAlt className="text-green-500 hover:text-green-600" />
                           </button>
                           <button
                             onClick={(e) => {
@@ -581,8 +674,9 @@ export default function FeaturedPosts({ userId }) {
                               startSpeech(heroArticle);
                             }}
                             className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                            aria-label="Listen to article"
                           >
-                            <FaVolumeUp className="text-blue-500" />
+                            <FaVolumeUp className="text-blue-500 hover:text-blue-600" />
                           </button>
                         </div>
                       </div>
@@ -593,186 +687,288 @@ export default function FeaturedPosts({ userId }) {
             </div>
           )}
 
-        {/* Secondary Featured Articles */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {regularArticles.slice(0, 3).map((article, index) => {
-            const globalIndex = filteredArticles.findIndex(
-              (a) => a._id === article._id
-            );
-            const isSaved = savedArticles.some((a) => a._id === article._id);
-            const isCurrentArticle =
-              globalIndex === currentArticleIndex &&
-              (speechState === "playing" || speechState === "paused");
-            const isLatest = isLatestArticle(article);
+        {/* Main Content Area */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Left Column - Articles */}
+          <div className="lg:col-span-3">
+            {/* Category Tabs */}
+            <div className="flex border-b border-gray-200 mb-6">
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => setActiveTab(category.id)}
+                  className={`flex items-center px-4 py-2 font-medium text-sm border-b-2 transition-colors ${
+                    activeTab === category.id
+                      ? "border-blue-600 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  {category.icon}
+                  {category.name}
+                </button>
+              ))}
+            </div>
 
-            return (
-              <div
-                key={article._id}
-                ref={(el) => (articleRefs.current[globalIndex] = el)}
-                className={`bg-white shadow-md rounded-lg overflow-hidden fade-in relative ${
-                  isCurrentArticle ? "ring-2 ring-blue-500" : ""
-                }`}
-              >
-                <Link href={`/${article.category}/${article.slug}`}>
-                  <div className="h-48 relative">
-                    {isLatest && (
-                      <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center z-10">
-                        <FaCircle className="text-xs mr-1 animate-pulse" /> LIVE
+            {/* Secondary Featured Articles */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              {regularArticles.slice(0, 2).map((article, index) => {
+                const globalIndex = filteredArticles.findIndex(
+                  (a) => a._id === article._id
+                );
+                const isSaved = savedArticles.some(
+                  (a) => a._id === article._id
+                );
+                const isCurrentArticle =
+                  globalIndex === currentArticleIndex &&
+                  (speechState === "playing" || speechState === "paused");
+                const isLatest = isLatestArticle(article);
+
+                return (
+                  <div
+                    key={article._id}
+                    ref={(el) => (articleRefs.current[globalIndex] = el)}
+                    className={`bg-white rounded-xl shadow-md overflow-hidden fade-in relative transition-transform hover:-translate-y-1 ${
+                      isCurrentArticle ? "ring-2 ring-blue-500" : ""
+                    }`}
+                  >
+                    <Link href={`/${article.category}/${article.slug}`}>
+                      <div className="h-48 relative">
+                        {isLatest && (
+                          <div className="absolute top-3 right-3 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center z-10">
+                            <FaCircle className="text-xs mr-1 animate-pulse" />{" "}
+                            LIVE
+                          </div>
+                        )}
+                        <Image
+                          src={article.image || "/news-image.jpg"}
+                          alt={article.title}
+                          className="object-cover"
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        />
                       </div>
-                    )}
-                    <Image
-                      src={article.image || "/news-image.jpg"}
-                      alt={article.title}
-                      className="object-cover"
-                      fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    />
+                      <div className="p-5">
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                            {article.category}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {new Date(article.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <h3 className="text-xl font-semibold mb-2 line-clamp-2 hover:text-blue-600 transition-colors">
+                          {article.title}
+                        </h3>
+                        <p className="text-gray-600 mb-4 line-clamp-3">
+                          {article.description}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden mr-2">
+                              <Image
+                                src="/default-avatar.png"
+                                alt="Author"
+                                width={32}
+                                height={32}
+                                className="object-cover"
+                              />
+                            </div>
+                            <span className="text-sm text-gray-700">
+                              {article.author || "Staff Writer"}
+                            </span>
+                          </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleSaveArticle(article);
+                              }}
+                              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                              aria-label={
+                                isSaved ? "Unsave article" : "Save article"
+                              }
+                            >
+                              {isSaved ? (
+                                <FaBookmark className="text-blue-600" />
+                              ) : (
+                                <FaRegBookmark className="text-gray-500 hover:text-blue-600" />
+                              )}
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                shareArticle(article);
+                              }}
+                              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                              aria-label="Share article"
+                            >
+                              <FaShareAlt className="text-green-500 hover:text-green-600" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setCurrentArticleIndex(globalIndex);
+                                startSpeech(article);
+                              }}
+                              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                              aria-label="Listen to article"
+                            >
+                              <FaVolumeUp className="text-blue-500 hover:text-blue-600" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
                   </div>
-                  <div className="p-4">
-                    <h3 className="text-xl font-semibold mb-2 line-clamp-2">
-                      {article.title}
-                    </h3>
-                    <p className="text-gray-600 mb-4 line-clamp-3">
-                      {article.description}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-gray-500">
-                        {new Date(article.createdAt).toLocaleDateString()}
-                      </p>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            toggleSaveArticle(article);
-                          }}
-                          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                        >
-                          {isSaved ? (
-                            <FaBookmark className="text-blue-600" />
-                          ) : (
-                            <FaRegBookmark className="text-gray-500" />
-                          )}
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            shareArticle(article);
-                          }}
-                          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                        >
-                          <FaShareAlt className="text-green-500" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setCurrentArticleIndex(globalIndex);
-                            startSpeech(article);
-                          }}
-                          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                        >
-                          <FaVolumeUp className="text-blue-500" />
-                        </button>
+                );
+              })}
+            </div>
+
+            {/* More News Section */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {regularArticles.slice(2).map((article, index) => {
+                const globalIndex = filteredArticles.findIndex(
+                  (a) => a._id === article._id
+                );
+                const isSaved = savedArticles.some(
+                  (a) => a._id === article._id
+                );
+                const isCurrentArticle =
+                  globalIndex === currentArticleIndex &&
+                  (speechState === "playing" || speechState === "paused");
+                const isLatest = isLatestArticle(article);
+
+                return (
+                  <div
+                    key={article._id}
+                    ref={(el) => (articleRefs.current[globalIndex] = el)}
+                    className={`bg-white rounded-lg shadow-sm overflow-hidden fade-in relative transition-transform hover:-translate-y-1 ${
+                      isCurrentArticle ? "ring-2 ring-blue-500" : ""
+                    }`}
+                  >
+                    <Link href={`/${article.category}/${article.slug}`}>
+                      <div className="h-40 relative">
+                        {isLatest && (
+                          <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center z-10">
+                            <FaCircle className="text-xs mr-1 animate-pulse" />{" "}
+                            LIVE
+                          </div>
+                        )}
+                        <Image
+                          src={article.image || "/news-image.jpg"}
+                          alt={article.title}
+                          className="object-cover"
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        />
+                      </div>
+                      <div className="p-4">
+                        <h3 className="text-lg font-semibold mb-2 line-clamp-2 hover:text-blue-600 transition-colors">
+                          {article.title}
+                        </h3>
+                        <p className="text-sm text-gray-600 mb-3 line-clamp-3">
+                          {article.description}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-gray-500">
+                            {new Date(article.createdAt).toLocaleDateString()}
+                          </p>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleSaveArticle(article);
+                              }}
+                              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                              aria-label={
+                                isSaved ? "Unsave article" : "Save article"
+                              }
+                            >
+                              {isSaved ? (
+                                <FaBookmark className="text-blue-600" />
+                              ) : (
+                                <FaRegBookmark className="text-gray-500 hover:text-blue-600" />
+                              )}
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                shareArticle(article);
+                              }}
+                              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                              aria-label="Share article"
+                            >
+                              <FaShareAlt className="text-green-500 hover:text-green-600" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setCurrentArticleIndex(globalIndex);
+                                startSpeech(article);
+                              }}
+                              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                              aria-label="Listen to article"
+                            >
+                              <FaVolumeUp className="text-blue-500 hover:text-blue-600" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Right Column - Sidebar */}
+          <div className="lg:col-span-1 space-y-6">
+
+            {/* Market Widget */}
+            {renderTradingViewWidget()}
+
+            {/* Trending Now Widget */}
+            <div className="bg-white rounded-xl shadow-md p-4">
+              <div className="flex items-center mb-3">
+                <FaChartLine className="text-blue-600 mr-2" />
+                <h3 className="font-bold text-lg">Trending Now</h3>
+              </div>
+              <div className="space-y-4">
+                {articles.slice(0, 3).map((article) => (
+                  <Link
+                    key={article._id}
+                    href={`/${article.category}/${article.slug}`}
+                  >
+                    <div className="flex items-start hover:bg-gray-50 p-2 rounded-lg transition-colors">
+                      <div className="w-16 h-16 rounded-md overflow-hidden mr-3 flex-shrink-0">
+                        <Image
+                          src={article.image || "/news-image.jpg"}
+                          alt={article.title}
+                          width={64}
+                          height={64}
+                          className="object-cover"
+                        />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm line-clamp-2 hover:text-blue-600 transition-colors">
+                          {article.title}
+                        </h4>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {article.category}
+                        </p>
                       </div>
                     </div>
-                  </div>
-                </Link>
+                  </Link>
+                ))}
               </div>
-            );
-          })}
-        </div>
-
-        {/* More News Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {regularArticles.slice(3).map((article, index) => {
-            const globalIndex = filteredArticles.findIndex(
-              (a) => a._id === article._id
-            );
-            const isSaved = savedArticles.some((a) => a._id === article._id);
-            const isCurrentArticle =
-              globalIndex === currentArticleIndex &&
-              (speechState === "playing" || speechState === "paused");
-            const isLatest = isLatestArticle(article);
-
-            return (
-              <div
-                key={article._id}
-                ref={(el) => (articleRefs.current[globalIndex] = el)}
-                className={`bg-white shadow-sm rounded-lg overflow-hidden fade-in relative ${
-                  isCurrentArticle ? "ring-2 ring-blue-500" : ""
-                }`}
-              >
-                <Link href={`/${article.category}/${article.slug}`}>
-                  <div className="h-40 relative">
-                    {isLatest && (
-                      <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center z-10">
-                        <FaCircle className="text-xs mr-1 animate-pulse" /> LIVE
-                      </div>
-                    )}
-                    <Image
-                      src={article.image || "/news-image.jpg"}
-                      alt={article.title}
-                      className="object-cover"
-                      fill
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="text-lg font-semibold mb-2 line-clamp-2">
-                      {article.title}
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-3">
-                      {article.description}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs text-gray-500">
-                        {new Date(article.createdAt).toLocaleDateString()}
-                      </p>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            toggleSaveArticle(article);
-                          }}
-                          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                        >
-                          {isSaved ? (
-                            <FaBookmark className="text-blue-600" />
-                          ) : (
-                            <FaRegBookmark className="text-gray-500" />
-                          )}
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            shareArticle(article);
-                          }}
-                          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                        >
-                          <FaShareAlt className="text-green-500" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setCurrentArticleIndex(globalIndex);
-                            startSpeech(article);
-                          }}
-                          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                        >
-                          <FaVolumeUp className="text-blue-500" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </div>
-            );
-          })}
+            </div>
+          </div>
         </div>
       </>
     );

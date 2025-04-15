@@ -203,7 +203,7 @@ const Footer = () => {
             { name: "Finance", icon: "📈", href: "/finance" },
             { name: "World News", icon: "🌍", href: "/" },
             { name: "Education", icon: "📚", href: "/education" },
-            { name: "Environment", icon: "🌱", href: "/environment" },
+            { name: "Financial Calculator", icon: "🌱", href: "/financial-calculators" },
           ].map((category, index) => (
             <Link
               key={index}
