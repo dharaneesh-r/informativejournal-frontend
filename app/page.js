@@ -102,7 +102,11 @@ export default function FeaturedPosts({ userId }) {
       name: "Business",
       icon: <FaChartLine className="mr-2" />,
     },
-    { id: "finance", name: "Finance", icon: <FaGlobeAmericas className="mr-2" /> },
+    {
+      id: "finance",
+      name: "Finance",
+      icon: <FaGlobeAmericas className="mr-2" />,
+    },
   ];
 
   // Check for mobile view and setup smooth scrolling
@@ -519,6 +523,49 @@ export default function FeaturedPosts({ userId }) {
     );
   };
 
+  // Render the Indices trading view widget
+
+  const indicesTradingViewWidget = () => {
+    return (
+      <div className="bg-white rounded-xl shadow-md p-4 mb-6">
+        <div className="flex items-center mb-3">
+          <FaChartLine className="text-blue-600 mr-2" />
+          <h3 className="font-bold text-lg">Indices Overview</h3>
+        </div>
+        <div className="h-64">
+          {/* TradingView Widget */}
+          <iframe
+            src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=en#%7B%22symbol%22%3A%22NASDAQ%3ANDX%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22dateRange%22%3A%2212M%22%2C%22colorTheme%22%3A%22light%22%2C%22trendLineColor%22%3A%22%2360a5fa%22%2C%22gridLineColor%22%3A%22%23e5e7eb%22%2C%22fontColor%22%3A%22%236b7280%22%2C%22underLineColor%22%3A%22%23d1d5db%22%2C%22isTransparent%22%3Afalse%2C%22autosize%22%3Atrue%2C%22largeChartUrl%22%3A%22%22%7D"
+            style={{ width: "100%", height: "100%", border: "none" }}
+            allowTransparency={true}
+            frameBorder="0"
+            scrolling="no"
+          ></iframe>
+        </div>
+        <div className="h-64 mt-10">
+          {/* TradingView Widget */}
+          <iframe
+            src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=en#%7B%22symbol%22%3A%22BSE%3ASENSEX%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22dateRange%22%3A%2212M%22%2C%22colorTheme%22%3A%22light%22%2C%22trendLineColor%22%3A%22%2360a5fa%22%2C%22gridLineColor%22%3A%22%23e5e7eb%22%2C%22fontColor%22%3A%22%236b7280%22%2C%22underLineColor%22%3A%22%23d1d5db%22%2C%22isTransparent%22%3Afalse%2C%22autosize%22%3Atrue%2C%22largeChartUrl%22%3A%22%22%7D"
+            style={{ width: "100%", height: "100%", border: "none" }}
+            allowTransparency={true}
+            frameBorder="0"
+            scrolling="no"
+          ></iframe>
+        </div>
+        <div className="h-64 mt-10">
+          {/* TradingView Widget */}
+          <iframe
+            src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=en#%7B%22symbol%22%3A%22NASDAQ%3ANDX%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22dateRange%22%3A%2212M%22%2C%22colorTheme%22%3A%22light%22%2C%22trendLineColor%22%3A%22%2360a5fa%22%2C%22gridLineColor%22%3A%22%23e5e7eb%22%2C%22fontColor%22%3A%22%236b7280%22%2C%22underLineColor%22%3A%22%23d1d5db%22%2C%22isTransparent%22%3Afalse%2C%22autosize%22%3Atrue%2C%22largeChartUrl%22%3A%22%22%7D"
+            style={{ width: "100%", height: "100%", border: "none" }}
+            allowTransparency={true}
+            frameBorder="0"
+            scrolling="no"
+          ></iframe>
+        </div>
+      </div>
+    );
+  };
+
   // Render articles with hero placement
   const renderArticles = () => {
     if (filteredArticles.length === 0) {
@@ -559,9 +606,6 @@ export default function FeaturedPosts({ userId }) {
             </div>
           </div>
         </div>
-
-        {/* Market Data */}
-        {/* {renderMarketTicker()} */}
 
         {/* Hero Article */}
         {heroArticle &&
@@ -611,7 +655,7 @@ export default function FeaturedPosts({ userId }) {
                         <div className="flex items-center">
                           <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden mr-3">
                             <Image
-                              src="/default-avatar.png"
+                              src="https://img.freepik.com/free-vector/illustration-businessman_53876-5856.jpg?t=st=1744822743~exp=1744826343~hmac=e13fee51ff5620ea045d4495b0c3be6a134bac15eb1162d874fe9bf198c9b32b&w=900"
                               alt="Author"
                               width={40}
                               height={40}
@@ -766,7 +810,7 @@ export default function FeaturedPosts({ userId }) {
                           <div className="flex items-center">
                             <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden mr-2">
                               <Image
-                                src="/default-avatar.png"
+                                src="https://img.freepik.com/free-vector/illustration-businessman_53876-5856.jpg?t=st=1744822743~exp=1744826343~hmac=e13fee51ff5620ea045d4495b0c3be6a134bac15eb1162d874fe9bf198c9b32b&w=900"
                                 alt="Author"
                                 width={32}
                                 height={32}
@@ -929,9 +973,9 @@ export default function FeaturedPosts({ userId }) {
 
           {/* Right Column - Sidebar */}
           <div className="lg:col-span-1 space-y-6">
-
             {/* Market Widget */}
             {renderTradingViewWidget()}
+            {indicesTradingViewWidget()}
 
             {/* Trending Now Widget */}
             <div className="bg-white rounded-xl shadow-md p-4">
@@ -940,7 +984,7 @@ export default function FeaturedPosts({ userId }) {
                 <h3 className="font-bold text-lg">Trending Now</h3>
               </div>
               <div className="space-y-4">
-                {articles.slice(0, 3).map((article) => (
+                {articles.slice(10, 20).map((article) => (
                   <Link
                     key={article._id}
                     href={`/${article.category}/${article.slug}`}

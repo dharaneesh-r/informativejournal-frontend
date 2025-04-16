@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 
 const StockDashboard = () => {
   const [activeTab, setActiveTab] = useState("indices");
@@ -10,6 +10,7 @@ const StockDashboard = () => {
     updatedAt: new Date().toLocaleTimeString(),
   });
   const [newsItems, setNewsItems] = useState([]);
+  const widgetsInitialized = useRef(false);
 
   useEffect(() => {
     if (document.getElementById("tradingview-widget-script")) return;
@@ -24,6 +25,7 @@ const StockDashboard = () => {
         initializeWidgets();
         // Simulate receiving market sentiment data
         simulateMarketData();
+        widgetsInitialized.current = true;
       }
     };
 
@@ -33,8 +35,16 @@ const StockDashboard = () => {
       const script = document.getElementById("tradingview-widget-script");
       if (script) document.body.removeChild(script);
       cleanupWidgets();
+      widgetsInitialized.current = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (widgetsInitialized.current) {
+      cleanupWidgets();
+      initializeWidgets();
+    }
+  }, [selectedSymbol]);
 
   const initializeWidgets = () => {
     // Market Overview Widget

@@ -8,6 +8,7 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userEmail, setUserEmail] = useState("");
   const navbarRef = useRef(null);
@@ -15,6 +16,43 @@ const Navbar = () => {
   const logoRef = useRef(null);
   const languageDropdownRef = useRef(null);
   const authDropdownRef = useRef(null);
+  const categoriesDropdownRef = useRef(null);
+
+  // News categories data
+  const newsCategories = [
+    { name: "Technology", path: "/technology" },
+    { name: "Business", path: "/business" },
+    { name: "Finance", path: "/finance" },
+    { name: "Politics", path: "/politics" },
+    { name: "Health", path: "/health" },
+    { name: "Science", path: "/science" },
+    { name: "Sports", path: "/sports" },
+    { name: "Entertainment", path: "/entertainment" },
+    { name: "World", path: "/world" },
+    { name: "Environment", path: "/environment" },
+    { name: "Education", path: "/education" },
+    { name: "Stock Dashboard", path: "/stock-dashboard" },
+  ];
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (languageDropdownRef.current && !languageDropdownRef.current.contains(event.target)) {
+        setIsLanguageOpen(false);
+      }
+      if (authDropdownRef.current && !authDropdownRef.current.contains(event.target)) {
+        setIsAuthOpen(false);
+      }
+      if (categoriesDropdownRef.current && !categoriesDropdownRef.current.contains(event.target)) {
+        setIsCategoriesOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   // Add event listener for storage changes
   useEffect(() => {
@@ -39,7 +77,7 @@ const Navbar = () => {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("authChange", handleStorageChange);
     };
-  });
+  }, []);
 
   const handleLogin = () => {
     const email =
@@ -95,43 +133,57 @@ const Navbar = () => {
                   alt="Informative Journal"
                   className="mr-2"
                 />
-                Informative Journal
+                <span className="hidden sm:inline">Informative Journal</span>
+                <span className="sm:hidden">IJ</span>
               </a>
             </div>
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex space-x-8 items-center">
-            <div className="flex space-x-6">
-              <a
-                href="/technology"
-                className="nav-link text-white transition-colors duration-300 relative"
+          <div className="hidden md:flex space-x-4 items-center">
+            {/* Categories Dropdown */}
+            <div className="relative" ref={categoriesDropdownRef}>
+              <button
+                className="nav-link text-white transition-colors duration-300 flex items-center px-4 py-2 hover:bg-gray-800 rounded-lg"
+                onClick={() => setIsCategoriesOpen(!isCategoriesOpen)}
+                aria-expanded={isCategoriesOpen}
               >
-                Technology
-              </a>
-              <a
-                href="/stock-dashboard"
-                className="nav-link text-white transition-colors duration-300 relative"
-              >
-                Stock Dashboard
-              </a>
-              <a
-                href="/business"
-                className="nav-link text-white transition-colors duration-300 relative"
-              >
-                Business
-              </a>
-              <a
-                href="/finance"
-                className="nav-link text-white transition-colors duration-300 relative"
-              >
-                Finance
-              </a>
+                Categories
+                <svg
+                  className="w-4 h-4 ml-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+              {isCategoriesOpen && (
+                <div className="absolute top-12 left-0 bg-gray-800 shadow-xl rounded-lg w-64 p-2 backdrop-blur-md grid grid-cols-2 gap-2 z-50">
+                  {newsCategories.map((category) => (
+                    <a
+                      key={category.name}
+                      href={category.path}
+                      className="block px-4 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-300 text-sm"
+                      onClick={() => setIsCategoriesOpen(false)}
+                    >
+                      {category.name}
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
 
-            <div className="relative">
+            {/* Language Dropdown */}
+            <div className="relative" ref={languageDropdownRef}>
               <button
-                className="language-button nav-link text-white transition-colors duration-300 flex items-center relative"
+                className="nav-link text-white transition-colors duration-300 flex items-center px-4 py-2 hover:bg-gray-800 rounded-lg"
                 onClick={() => setIsLanguageOpen(!isLanguageOpen)}
                 aria-expanded={isLanguageOpen}
               >
@@ -152,14 +204,12 @@ const Navbar = () => {
                 </svg>
               </button>
               {isLanguageOpen && (
-                <div
-                  ref={languageDropdownRef}
-                  className="absolute top-10 left-0 bg-gray-800 shadow-lg rounded-lg w-48 p-2 backdrop-blur-md"
-                >
+                <div className="absolute top-12 left-0 bg-gray-800 shadow-lg rounded-lg w-48 p-2 backdrop-blur-md z-50">
                   <a
                     key="en"
                     href="/en"
                     className="block px-4 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-300"
+                    onClick={() => setIsLanguageOpen(false)}
                   >
                     English
                   </a>
@@ -167,6 +217,7 @@ const Navbar = () => {
                     key="es"
                     href="/es"
                     className="block px-4 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-300"
+                    onClick={() => setIsLanguageOpen(false)}
                   >
                     Spanish
                   </a>
@@ -174,6 +225,7 @@ const Navbar = () => {
                     key="fr"
                     href="/fr"
                     className="block px-4 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-300"
+                    onClick={() => setIsLanguageOpen(false)}
                   >
                     French
                   </a>
@@ -181,6 +233,7 @@ const Navbar = () => {
                     key="de"
                     href="/de"
                     className="block px-4 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-300"
+                    onClick={() => setIsLanguageOpen(false)}
                   >
                     German
                   </a>
@@ -188,9 +241,10 @@ const Navbar = () => {
               )}
             </div>
 
-            <div className="relative">
+            {/* Auth Dropdown */}
+            <div className="relative" ref={authDropdownRef}>
               <button
-                className="auth-button nav-link text-white transition-colors duration-300 flex items-center relative"
+                className="nav-link text-white transition-colors duration-300 flex items-center px-4 py-2 hover:bg-gray-800 rounded-lg"
                 onClick={() => setIsAuthOpen(!isAuthOpen)}
                 aria-expanded={isAuthOpen}
               >
@@ -199,7 +253,9 @@ const Navbar = () => {
                     <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium mr-2">
                       {userEmail ? userEmail.charAt(0).toUpperCase() : "U"}
                     </div>
-                    <span className="max-w-xs truncate">{userEmail}</span>
+                    <span className="max-w-xs truncate hidden lg:inline">
+                      {userEmail}
+                    </span>
                   </>
                 ) : (
                   "Account"
@@ -220,16 +276,14 @@ const Navbar = () => {
                 </svg>
               </button>
               {isAuthOpen && (
-                <div
-                  ref={authDropdownRef}
-                  className="absolute top-10 right-0 bg-gray-800 shadow-lg rounded-lg w-48 p-2 backdrop-blur-md"
-                >
+                <div className="absolute top-12 right-0 bg-gray-800 shadow-lg rounded-lg w-48 p-2 backdrop-blur-md z-50">
                   {isLoggedIn ? (
                     <>
                       <a
                         key="Admin"
                         href="/admin-manager"
                         className="block px-4 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-300"
+                        onClick={() => setIsAuthOpen(false)}
                       >
                         Admin
                       </a>
@@ -247,7 +301,10 @@ const Navbar = () => {
                         key="login"
                         href="/login"
                         className="block px-4 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-300"
-                        onClick={handleLogin}
+                        onClick={() => {
+                          handleLogin();
+                          setIsAuthOpen(false);
+                        }}
                       >
                         Login
                       </a>
@@ -255,6 +312,7 @@ const Navbar = () => {
                         key="register"
                         href="/register"
                         className="block px-4 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-300"
+                        onClick={() => setIsAuthOpen(false)}
                       >
                         Register
                       </a>
@@ -266,10 +324,10 @@ const Navbar = () => {
           </div>
 
           {/* Mobile Menu Button */}
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="text-white hover:text-blue-200 focus:outline-none"
+              className="text-white hover:text-blue-200 focus:outline-none p-2"
               aria-label="Toggle mobile menu"
             >
               <svg
@@ -298,40 +356,75 @@ const Navbar = () => {
         {isMobileMenuOpen && (
           <div
             ref={mobileMenuRef}
-            className="md:hidden bg-gray-800 shadow-lg rounded-lg mt-2 backdrop-blur-md"
+            className="md:hidden bg-gray-800 shadow-lg rounded-lg mt-2 backdrop-blur-md overflow-hidden"
           >
             <div className="px-2 pt-2 pb-3 space-y-1">
-              <a
-                href="/technology"
-                className="block px-4 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-300"
-              >
-                Technology
-              </a>
-              <a
-                href="/sports"
-                className="block px-4 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-300"
-              >
-                Sports
-              </a>
-              <a
-                href="/business"
-                className="block px-4 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-300"
-              >
-                Business
-              </a>
-              <a
-                href="/finance"
-                className="block px-4 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-300"
-              >
-                Finance
-              </a>
+              {/* Mobile Categories Dropdown */}
+              <div className="relative">
+                <button
+                  className="flex justify-between items-center w-full px-4 py-2 text-gray-200 hover:bg-gray-700 rounded-md"
+                  onClick={() => setIsCategoriesOpen(!isCategoriesOpen)}
+                >
+                  <span>Categories</span>
+                  <svg
+                    className={`w-4 h-4 transition-transform duration-200 ${
+                      isCategoriesOpen ? "transform rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+                {isCategoriesOpen && (
+                  <div className="pl-4 grid grid-cols-2 gap-1 mt-1">
+                    {newsCategories.map((category) => (
+                      <a
+                        key={category.name}
+                        href={category.path}
+                        className="block px-4 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-300 text-sm"
+                        onClick={() => {
+                          setIsCategoriesOpen(false);
+                          setIsMobileMenuOpen(false);
+                        }}
+                      >
+                        {category.name}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
 
-              <div
-                className="relative"
-                onClick={() => setIsLanguageOpen(!isLanguageOpen)}
-              >
-                <button className="block w-full text-left px-4 py-2 text-gray-200 hover:bg-gray-700">
-                  Language
+              {/* Mobile Language Dropdown */}
+              <div className="relative">
+                <button
+                  className="flex justify-between items-center w-full px-4 py-2 text-gray-200 hover:bg-gray-700 rounded-md"
+                  onClick={() => setIsLanguageOpen(!isLanguageOpen)}
+                >
+                  <span>Language</span>
+                  <svg
+                    className={`w-4 h-4 transition-transform duration-200 ${
+                      isLanguageOpen ? "transform rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
                 </button>
                 {isLanguageOpen && (
                   <div className="pl-4">
@@ -339,6 +432,10 @@ const Navbar = () => {
                       key="en"
                       href="/en"
                       className="block px-4 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-300"
+                      onClick={() => {
+                        setIsLanguageOpen(false);
+                        setIsMobileMenuOpen(false);
+                      }}
                     >
                       English
                     </a>
@@ -346,6 +443,10 @@ const Navbar = () => {
                       key="es"
                       href="/es"
                       className="block px-4 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-300"
+                      onClick={() => {
+                        setIsLanguageOpen(false);
+                        setIsMobileMenuOpen(false);
+                      }}
                     >
                       Spanish
                     </a>
@@ -353,6 +454,10 @@ const Navbar = () => {
                       key="fr"
                       href="/fr"
                       className="block px-4 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-300"
+                      onClick={() => {
+                        setIsLanguageOpen(false);
+                        setIsMobileMenuOpen(false);
+                      }}
                     >
                       French
                     </a>
@@ -360,6 +465,10 @@ const Navbar = () => {
                       key="de"
                       href="/de"
                       className="block px-4 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-300"
+                      onClick={() => {
+                        setIsLanguageOpen(false);
+                        setIsMobileMenuOpen(false);
+                      }}
                     >
                       German
                     </a>
@@ -367,20 +476,41 @@ const Navbar = () => {
                 )}
               </div>
 
-              <div
-                className="relative"
-                onClick={() => setIsAuthOpen(!isAuthOpen)}
-              >
-                <button className="block w-full text-left px-4 py-2 text-gray-200 hover:bg-gray-700">
+              {/* Mobile Auth Dropdown */}
+              <div className="relative">
+                <button
+                  className="flex justify-between items-center w-full px-4 py-2 text-gray-200 hover:bg-gray-700 rounded-md"
+                  onClick={() => setIsAuthOpen(!isAuthOpen)}
+                >
                   {isLoggedIn ? (
                     <>
-                      <div className="w-8 h-8 rounded-full bg-blue-600 display-flex items-center justify-center text-white font-medium mr-2 inline-block">
-                        {userEmail ? userEmail.charAt(0).toUpperCase() : "U"}
+                      <div className="flex items-center">
+                        <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-medium mr-2">
+                          {userEmail ? userEmail.charAt(0).toUpperCase() : "U"}
+                        </div>
+                        <span className="max-w-xs truncate">{userEmail}</span>
                       </div>
-                      <span className="max-w-xs truncate">{userEmail}</span>
                     </>
                   ) : (
-                    "Account"
+                    <>
+                      <span>Account</span>
+                      <svg
+                        className={`w-4 h-4 transition-transform duration-200 ${
+                          isAuthOpen ? "transform rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth="2"
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </>
                   )}
                 </button>
                 {isAuthOpen && (
@@ -388,15 +518,23 @@ const Navbar = () => {
                     {isLoggedIn ? (
                       <>
                         <a
-                          key="profile"
-                          href="/profile"
+                          key="Admin"
+                          href="/admin-manager"
                           className="block px-4 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-300"
+                          onClick={() => {
+                            setIsAuthOpen(false);
+                            setIsMobileMenuOpen(false);
+                          }}
                         >
-                          Profile
+                          Admin
                         </a>
                         <button
                           key="logout"
-                          onClick={handleLogout}
+                          onClick={() => {
+                            handleLogout();
+                            setIsAuthOpen(false);
+                            setIsMobileMenuOpen(false);
+                          }}
                           className="block w-full text-left px-4 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-300"
                         >
                           Logout
@@ -408,7 +546,11 @@ const Navbar = () => {
                           key="login"
                           href="/login"
                           className="block px-4 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-300"
-                          onClick={handleLogin}
+                          onClick={() => {
+                            handleLogin();
+                            setIsAuthOpen(false);
+                            setIsMobileMenuOpen(false);
+                          }}
                         >
                           Login
                         </a>
@@ -416,6 +558,10 @@ const Navbar = () => {
                           key="register"
                           href="/register"
                           className="block px-4 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-300"
+                          onClick={() => {
+                            setIsAuthOpen(false);
+                            setIsMobileMenuOpen(false);
+                          }}
                         >
                           Register
                         </a>
@@ -433,3 +579,4 @@ const Navbar = () => {
 };
 
 export default Navbar;
+
