@@ -21,6 +21,7 @@ import {
   FaRegThumbsDown,
 } from "react-icons/fa";
 import Loading from "@/app/loading";
+import AnimatedPoll from "@/components/AnimatedPoll";
 
 // Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
@@ -52,6 +53,7 @@ const ArticlePage = () => {
   const modalRef = useRef(null);
   const progressIntervalRef = useRef(null);
   const keypointsRef = useRef(null);
+  const pollRef = useRef(null);
 
   // Supported languages
   const languages = [
@@ -200,6 +202,20 @@ const ArticlePage = () => {
           scrollTrigger: {
             trigger: keypointsRef.current,
             start: "top 85%",
+          },
+          ease: "power2.out",
+        });
+      }
+
+      // Poll animation
+      if (pollRef.current) {
+        gsap.from(pollRef.current, {
+          opacity: 0,
+          y: 30,
+          duration: 0.8,
+          scrollTrigger: {
+            trigger: pollRef.current,
+            start: "top 75%",
           },
           ease: "power2.out",
         });
@@ -669,6 +685,17 @@ const ArticlePage = () => {
               </article>
             </div>
 
+            {/* Poll Section */}
+            <div
+              ref={pollRef}
+              className="my-12 bg-gray-50 p-6 rounded-xl border border-gray-200"
+            >
+              <h3 className="text-xl sm:text-2xl font-bold mb-6 text-gray-800">
+                What do you think about this article?
+              </h3>
+              <AnimatedPoll />
+            </div>
+
             {/* Comments Section */}
             {article.comments && article.comments.length > 0 && (
               <div
@@ -914,7 +941,7 @@ const ArticlePage = () => {
                     >
                       <button
                         onClick={() => selectLanguage(lang.code)}
-                        className={`w-full text-left px-3 sm:px-4 py-2 sm:py-3 hover:bg-blue-50 transition-colors flex justify-between items-center ${
+                        className={`w-full text-left px-3 sm:px-4 py-2 sm:py-3 hover:bg-blue-50 transition-colors ${
                           language === lang.code
                             ? "bg-blue-50 text-blue-600"
                             : "text-gray-700"
