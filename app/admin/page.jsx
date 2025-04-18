@@ -404,12 +404,24 @@ const ArticlePostForm = () => {
                 <option value="science">Science</option>
                 <option value="health">Health & Wellness</option>
                 <option value="business">Business</option>
+                <option value="startup">Startup</option>
                 <option value="entertainment">Entertainment</option>
                 <option value="sports">Sports</option>
                 <option value="politics">Politics</option>
                 <option value="finance">Finance</option>
+                <option value="mutualfund">Mutual Funds</option>
+                <option value="stockmarket">Stock Market</option>
+                <option value="cryptocurrency">Cryptocurrency</option>
+                <option value="commodities">Commodities</option>
                 <option value="economics">Economics</option>
                 <option value="education">Education</option>
+                <option value="environment">Environment</option>
+                <option value="world">World</option>
+                <option value="india">India</option>
+                <option value="us">US</option>
+                <option value="russia">Russia</option>
+                <option value="china">China</option>
+                <option value="singapore">Singapore</option>
               </select>
               {validationErrors.category && (
                 <p className="text-red-600 text-xs mt-1">
