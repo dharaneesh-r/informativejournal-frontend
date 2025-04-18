@@ -214,7 +214,7 @@ const Navbar = () => {
                 className="mr-2"
               />
               <span className="hidden sm:inline">Informative Journal</span>
-              <span className="sm:hidden">IJ</span>
+              <span className="sm:hidden">Informative Journal</span>
             </a>
           </div>
 
