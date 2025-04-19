@@ -562,6 +562,16 @@ export default function FeaturedPosts({ userId }) {
             scrolling="no"
           ></iframe>
         </div>
+        <div className="w-full h-[400px] md:h-[500px] lg:h-[600px] mt-10 rounded-lg overflow-hidden">
+          <iframe
+            src="https://s.tradingview.com/embed-widget/timeline/?locale=en#%7B%22colorTheme%22%3A%22light%22%2C%22isTransparent%22%3Afalse%2C%22displayMode%22%3A%22regular%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22utm_source%22%3A%22example.com%22%2C%22utm_medium%22%3A%22widget%22%2C%22utm_campaign%22%3A%22timeline%22%7D"
+            className="w-full h-full border-0"
+            allowTransparency="true"
+            frameBorder="0"
+            scrolling="no"
+            loading="lazy"
+          ></iframe>
+        </div>
       </div>
     );
   };
