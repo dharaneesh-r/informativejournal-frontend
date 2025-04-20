@@ -171,7 +171,7 @@ const Footer = () => {
         {/* Newsletter Section */}
         <div ref={newsletterRef} className="text-center mb-12">
           <h2 className="text-3xl font-bold mb-4">
-            Stay Updated with Informative Journal
+            Stay Updated with Newwss
           </h2>
           <p className="text-gray-400 mb-6">
             Subscribe to our newsletter for the latest news and updates.
@@ -263,7 +263,7 @@ const Footer = () => {
 
         {/* Copyright and Privacy Policy Section */}
         <div ref={copyrightRef} className="text-center text-gray-400 text-sm">
-          &copy; {new Date().getFullYear()} Informative Journal. All rights
+          &copy; {new Date().getFullYear()} Newwss. All rights
           reserved. |{" "}
           <Link
             href="/privacy-policy"

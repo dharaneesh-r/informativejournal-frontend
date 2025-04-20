@@ -211,11 +211,11 @@ const Navbar = () => {
                 src={logo}
                 width={40}
                 height={40}
-                alt="Informative Journal"
+                alt="Newwss"
                 className="mr-2"
               />
-              <span className="hidden sm:inline">Informative Journal</span>
-              <span className="sm:hidden">Informative Journal</span>
+              <span className="hidden sm:inline">Newwss</span>
+              <span className="sm:hidden">Newwss</span>
             </a>
           </div>
 
