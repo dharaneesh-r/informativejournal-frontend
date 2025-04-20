@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://informativejournal-backend.vercel.app/sitemap.xml/
