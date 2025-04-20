@@ -29,6 +29,7 @@ const Navbar = () => {
     { name: "Finance", path: "/finance" },
     { name: "Mutual Funds", path: "/mutualfund" },
     { name: "Stock Market", path: "/stockmarket" },
+    { name: "Stock Dashboard", path: "/stock-dashboard"},
     { name: "Cryptocurrency", path: "/cryptocurrency" },
     { name: "Commodities", path: "/commodities" },
     { name: "Economics", path: "/economics" },
