@@ -97,12 +97,12 @@ const PrivacyPolicyPage = () => {
             <strong>Website</strong> refers to Informative Journal, accessible
             from{" "}
             <a
-              href="http://informativejournal.vercel.app"
+              href="http://newwss.vercel.app"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-500 hover:underline"
             >
-              http://informativejournal.vercel.app
+              http://newwss.vercel.app
             </a>
             .
           </li>
