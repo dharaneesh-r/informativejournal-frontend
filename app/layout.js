@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Informative Journal",
+  title: "Newwss",
   description:
     "A News Website with AI Driven Platform with Gamfication and Rewards",
   icons: {
@@ -25,11 +25,11 @@ export const metadata = {
   },
   // Open Graph metadata
   openGraph: {
-    title: "Informative Journal",
+    title: "Newwss",
     description:
       "A News Website with AI Driven Platform with Gamfication and Rewards",
-    url: "informativejournal.vercel.app",
-    siteName: "Informative Journal",
+    url: "newwss.vercel.app",
+    siteName: "Newwss",
     images: [
       {
         url: "/logo.png",
