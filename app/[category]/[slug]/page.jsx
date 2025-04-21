@@ -452,6 +452,7 @@ const ArticlePage = () => {
       <Head>
         <title>{article?.title || "Article"} | Newwss</title>
         <meta name="description" content={article?.description || ""} />
+        <meta name="robots" content="index, follow" />
         <meta property="og:title" content={article?.title || "Article"} />
         <meta property="og:description" content={article?.description || ""} />
         <meta property="og:image" content={article?.image || ""} />

@@ -523,6 +523,7 @@ export default function CategoryPage() {
             name="twitter:image"
             content={heroArticle?.image || "/news-image.jpg"}
           />
+          <meta name="robots" content="index, follow" />
           <meta name="monetag" content="8c5ff2a76e2ab74d7db479e998e307a5" />
           <script
             src="https://kulroakonsu.net/88/tag.min.js"

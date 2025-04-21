@@ -604,6 +604,7 @@ export default function FeaturedPosts({ userId }) {
             async
             data-cfasync="false"
           ></script>
+          <meta name="robots" content="index, follow" />
           <meta
             name="description"
             content={
