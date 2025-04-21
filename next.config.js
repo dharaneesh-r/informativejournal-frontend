@@ -45,7 +45,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "informativejournal.com",
+        hostname: "newwss.com",
         pathname: "/**",
       },
       {
@@ -54,6 +54,17 @@ const nextConfig = {
         pathname: "/**",
       },
     ],
+  },
+
+  // Add the rewrites configuration for sitemap
+  async rewrites() {
+    return [
+      {
+        source: "/sitemap.xml",
+        destination:
+          "https://informativejournal-backend.vercel.app/sitemap.xml",
+      },
+    ];
   },
 };
 
