@@ -500,10 +500,7 @@ export default function CategoryPage() {
               "news"
             }, latest news, breaking news`}
           />
-          <meta
-            name="author"
-            content={heroArticle?.author || "Newwss"}
-          />
+          <meta name="author" content={heroArticle?.author || "Newwss"} />
 
           {/* Open Graph tags for social media */}
           <meta property="og:title" content={heroArticle?.title} />
@@ -526,6 +523,13 @@ export default function CategoryPage() {
             name="twitter:image"
             content={heroArticle?.image || "/news-image.jpg"}
           />
+          <meta name="monetag" content="8c5ff2a76e2ab74d7db479e998e307a5" />
+          <script
+            src="https://kulroakonsu.net/88/tag.min.js"
+            data-zone="143597"
+            async
+            data-cfasync="false"
+          ></script>
         </Head>
         {/* Latest Articles Marquee */}
         <div className="col-span-1 md:col-span-3 bg-gray-100 p-2 mb-6 rounded overflow-hidden">

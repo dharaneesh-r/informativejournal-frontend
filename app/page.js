@@ -596,9 +596,14 @@ export default function FeaturedPosts({ userId }) {
     return (
       <>
         <Head>
-          <title>
-            {heroArticle?.title || "Newwss"}
-          </title>
+          <title>{heroArticle?.title || "Newwss"}</title>
+          <meta name="monetag" content="8c5ff2a76e2ab74d7db479e998e307a5" />
+          <script
+            src="https://kulroakonsu.net/88/tag.min.js"
+            data-zone="143597"
+            async
+            data-cfasync="false"
+          ></script>
           <meta
             name="description"
             content={
@@ -615,10 +620,7 @@ export default function FeaturedPosts({ userId }) {
               "news"
             }, latest news, breaking news`}
           />
-          <meta
-            name="author"
-            content={heroArticle?.author || "Newwss"}
-          />
+          <meta name="author" content={heroArticle?.author || "Newwss"} />
 
           {/* Open Graph tags for social media */}
           <meta property="og:title" content={heroArticle?.title} />

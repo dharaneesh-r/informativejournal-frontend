@@ -459,6 +459,13 @@ const ArticlePage = () => {
         <meta name="twitter:title" content={article?.title || "Article"} />
         <meta name="twitter:description" content={article?.description || ""} />
         <meta name="twitter:image" content={article?.image || ""} />
+        <meta name="monetag" content="8c5ff2a76e2ab74d7db479e998e307a5" />
+        <script
+          src="https://kulroakonsu.net/88/tag.min.js"
+          data-zone="143597"
+          async
+          data-cfasync="false"
+        ></script>
       </Head>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 md:py-8 relative bg-white min-h-screen">
