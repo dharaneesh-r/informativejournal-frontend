@@ -74,6 +74,7 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <head>
         <meta name="monetag" content="8c5ff2a76e2ab74d7db479e998e307a5" />
+        <script src="https://kulroakonsu.net/88/tag.min.js" data-zone="143597" async data-cfasync="false"></script>
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
