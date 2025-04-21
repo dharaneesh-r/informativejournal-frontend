@@ -1,16 +1,19 @@
-export async function sitemapURL({ res }) {
-    const baseUrl = "https://informativejournal-backend.vercel.app/sitemap.xml";
-    const response = await fetch(baseUrl);
-    const xml = await response.text(); 
-  
-    res.setHeader("Content-Type", "application/xml");
-    res.write(xml);
-    res.end();
-  
-    return { props: {} };
+import axios from "axios";
+
+export default async function handler(req, res) {
+  const baseUrl = "https://informativejournal-backend.vercel.app/sitemap.xml";
+
+  try {
+    const response = await axios.get(baseUrl, {
+      headers: {
+        'Accept': 'application/xml'
+      },
+      responseType: 'text'
+    });
+
+    res.setHeader('Content-Type', 'application/xml');
+    res.send(response.data);
+  } catch (error) {
+    console.error("Failed to fetch sitemap:", error);
   }
-  
-  export default function Sitemap() {
-    return null; 
-  }
-  
+}

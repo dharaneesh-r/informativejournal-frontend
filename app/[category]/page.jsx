@@ -26,11 +26,13 @@ import {
   FaChevronDown,
   FaCircle,
 } from "react-icons/fa";
+import Head from "next/head";
 
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
 export default function CategoryPage() {
   // State management
+  const baseURL = "https://informativejournal-backend.vercel.app/articles";
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -155,9 +157,7 @@ export default function CategoryPage() {
   useEffect(() => {
     const fetchArticles = async () => {
       try {
-        const response = await axios.get(
-          `https://informativejournal-backend.vercel.app/articles/${category}`
-        );
+        const response = await axios.get(`${baseURL}/${category}`);
         if (response.data.status === "success") {
           // Sort articles by date in descending order (newest first)
           const sortedArticles = response.data.data.sort((a, b) => {
@@ -482,6 +482,51 @@ export default function CategoryPage() {
 
     return (
       <>
+        <Head>
+          <title>{heroArticle?.title | "Newwss"}</title>
+          <meta
+            name="description"
+            content={
+              heroArticle?.description ||
+              "Get the latest news, articles, and updates from around the world."
+            }
+          />
+          <meta
+            name="keywords"
+            content={`${
+              (heroArticle?.category &&
+                heroArticle?.title &&
+                heroArticle?.description) ||
+              "news"
+            }, latest news, breaking news`}
+          />
+          <meta
+            name="author"
+            content={heroArticle?.author || "Newwss"}
+          />
+
+          {/* Open Graph tags for social media */}
+          <meta property="og:title" content={heroArticle?.title} />
+          <meta property="og:description" content={heroArticle?.description} />
+          <meta
+            property="og:image"
+            content={heroArticle?.image || "/news-image.jpg"}
+          />
+          <meta
+            property="og:url"
+            content={`https://www.newwss.com/${heroArticle?.category}/${heroArticle?.slug}`}
+          />
+          <meta property="og:type" content="article" />
+
+          {/* Twitter Card tags */}
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:title" content={heroArticle?.title} />
+          <meta name="twitter:description" content={heroArticle?.description} />
+          <meta
+            name="twitter:image"
+            content={heroArticle?.image || "/news-image.jpg"}
+          />
+        </Head>
         {/* Latest Articles Marquee */}
         <div className="col-span-1 md:col-span-3 bg-gray-100 p-2 mb-6 rounded overflow-hidden">
           <div className="flex items-center">

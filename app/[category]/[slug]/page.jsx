@@ -450,11 +450,15 @@ const ArticlePage = () => {
   return (
     <>
       <Head>
-        <title>{article?.title || "Article"} | Informative Journal</title>
+        <title>{article?.title || "Article"} | Newwss</title>
         <meta name="description" content={article?.description || ""} />
         <meta property="og:title" content={article?.title || "Article"} />
         <meta property="og:description" content={article?.description || ""} />
         <meta property="og:image" content={article?.image || ""} />
+        <meta property="og:url" content={window.location.href} />
+        <meta name="twitter:title" content={article?.title || "Article"} />
+        <meta name="twitter:description" content={article?.description || ""} />
+        <meta name="twitter:image" content={article?.image || ""} />
       </Head>
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 md:py-8 relative bg-white min-h-screen">
