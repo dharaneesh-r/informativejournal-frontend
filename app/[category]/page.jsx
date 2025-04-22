@@ -524,13 +524,7 @@ export default function CategoryPage() {
             content={heroArticle?.image || "/news-image.jpg"}
           />
           <meta name="robots" content="index, follow" />
-          <meta name="monetag" content="8c5ff2a76e2ab74d7db479e998e307a5" />
-          <script
-            src="https://kulroakonsu.net/88/tag.min.js"
-            data-zone="143597"
-            async
-            data-cfasync="false"
-          ></script>
+          <meta name="google-adsense-account" content="ca-pub-7599014130116297" />
         </Head>
         {/* Latest Articles Marquee */}
         <div className="col-span-1 md:col-span-3 bg-gray-100 p-2 mb-6 rounded overflow-hidden">
