@@ -803,8 +803,13 @@ export default function FeaturedPosts({ userId }) {
                   </Link>
                 </div>
               </div>
-              <div className="col-span-1 md:col-span-3 fade-in relative hero-article mb-8">
-                <AdsterraAd />
+              <div className="col-span-1 md:col-span-3 fade-in relative hero-article mb-8 flex flex-row gap-4">
+                {[...Array(4)].map((_, index) => (
+                  <div key={index}>
+                    <AdsterraAd />
+                    <AdsterraAd />
+                  </div>
+                ))}
               </div>
             </>
           )}
@@ -946,7 +951,7 @@ export default function FeaturedPosts({ userId }) {
                         </div>
                       </Link>
                     </div>
-                    <div className="bg-white rounded-xl shadow-md overflow-hidden fade-in relative transition-transform">
+                    <div className="bg-white rounded-xl shadow-md overflow-hidden fade-in relative transition-transform flex ">
                       <AdsterraAd />
                     </div>
                   </>
@@ -1050,9 +1055,6 @@ export default function FeaturedPosts({ userId }) {
                         </div>
                       </Link>
                     </div>
-                    <div>
-                      <AdsterraAd />
-                    </div>
                   </>
                 );
               })}
@@ -1064,8 +1066,19 @@ export default function FeaturedPosts({ userId }) {
             {/* Market Widget */}
             {renderTradingViewWidget()}
             {indicesTradingViewWidget()}
-            <div>
-              <AdsterraAd />
+            <div className="bg-white rounded-xl shadow-md p-4 flex flex-col">
+              {[...Array(1)].map((_, index) => (
+                <div key={index}>
+                  <AdsterraAd />
+                  <AdsterraAd />
+                  <AdsterraAd />
+                  <AdsterraAd />
+                  <AdsterraAd />
+                  <AdsterraAd />
+                  <AdsterraAd />
+                  <AdsterraAd />
+                </div>
+              ))}
             </div>
             {/* Trending Now Widget */}
             <div className="bg-white rounded-xl shadow-md p-4">
@@ -1102,13 +1115,19 @@ export default function FeaturedPosts({ userId }) {
                 ))}
               </div>
             </div>
-            <div className="bg-white rounded-xl shadow-md p-4">
-              <AdsterraAd />
-              <AdsterraAd />
-              <AdsterraAd />
-              <AdsterraAd />
-              <AdsterraAd />
-              <AdsterraAd />
+            <div className="bg-white rounded-xl shadow-md p-4 flex flex-col">
+              {[...Array(1)].map((_, index) => (
+                <div key={index}>
+                  <AdsterraAd />
+                  <AdsterraAd />
+                  <AdsterraAd />
+                  <AdsterraAd />
+                  <AdsterraAd />
+                  <AdsterraAd />
+                  <AdsterraAd />
+                  <AdsterraAd />
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -1415,6 +1434,23 @@ export default function FeaturedPosts({ userId }) {
           </div>
         </div>
       )}
+      {/* ADSTERRA AD */}
+      <div className="flex flex-row gap-4">
+        {[...Array(4)].map((_, index) => (
+          <div key={index}>
+            <AdsterraAd />
+            <AdsterraAd />
+            <AdsterraAd />
+            <AdsterraAd />
+            <AdsterraAd />
+            <AdsterraAd />
+            <AdsterraAd />
+            <AdsterraAd />
+            <AdsterraAd />
+            <AdsterraAd />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
