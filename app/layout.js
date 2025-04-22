@@ -18,11 +18,11 @@ const geistMono = Geist_Mono({
 const baseUrl = "https://www.newwss.com/";
 
 export const metadata = {
-  title: "Newwss ",
+  title: "Newwss – Breaking News, Finance, Politics, Sports & World Headlines ",
   viewport: "width=device-width, initial-scale=1",
   logo: `${baseUrl}/logo.png`,
   description:
-    "A News Website with AI-Driven Platform with Gamification and Rewards",
+    "Stay updated with Newwss – your trusted source for breaking news, finance updates, political headlines, sports scores, world affairs, and trending stories. Fresh content, daily.",
   keywords: [
     "AI News",
     "Gamification",
@@ -44,9 +44,9 @@ export const metadata = {
     apple: `${baseUrl}/logo.png`,
   },
   openGraph: {
-    title: "Newwss",
+    title: "Newwss – Breaking News, Finance, Politics, Sports & World Headlines",
     description:
-      "A News Website with AI-Driven Platform with Gamification and Rewards",
+      "Stay updated with Newwss – your trusted source for breaking news, finance updates, political headlines, sports scores, world affairs, and trending stories. Fresh content, daily.",
     url: baseUrl,
     siteName: "Newwss",
     images: [
@@ -61,9 +61,9 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Newwss",
+    title: "Newwss – Breaking News, Finance, Politics, Sports & World Headlines",
     description:
-      "Stay updated with AI-curated news and earn rewards while reading.",
+      "Stay updated with Newwss – your trusted source for breaking news, finance updates, political headlines, sports scores, world affairs, and trending stories. Fresh content, daily.",
     images: [`${baseUrl}/logo.png`],
     site: "@newwss",
   },
