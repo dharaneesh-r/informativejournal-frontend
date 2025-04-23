@@ -1436,8 +1436,7 @@ export default function FeaturedPosts({ userId }) {
       )}
       {/* ADSTERRA AD */}
       <div className="flex flex-row gap-4">
-        {[...Array(4)].map((_, index) => (
-          <div key={index}>
+          <div>
             <AdsterraAd />
             <AdsterraAd />
             <AdsterraAd />
@@ -1449,7 +1448,6 @@ export default function FeaturedPosts({ userId }) {
             <AdsterraAd />
             <AdsterraAd />
           </div>
-        ))}
       </div>
     </div>
   );
