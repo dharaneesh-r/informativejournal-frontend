@@ -1067,8 +1067,7 @@ export default function FeaturedPosts({ userId }) {
             {renderTradingViewWidget()}
             {indicesTradingViewWidget()}
             <div className="bg-white rounded-xl shadow-md p-4 flex flex-col">
-              {[...Array(1)].map((_, index) => (
-                <div key={index}>
+                <div>
                   <AdsterraAd />
                   <AdsterraAd />
                   <AdsterraAd />
@@ -1078,7 +1077,6 @@ export default function FeaturedPosts({ userId }) {
                   <AdsterraAd />
                   <AdsterraAd />
                 </div>
-              ))}
             </div>
             {/* Trending Now Widget */}
             <div className="bg-white rounded-xl shadow-md p-4">
