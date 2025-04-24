@@ -22,6 +22,8 @@ import {
 } from "react-icons/fa";
 import Loading from "@/app/loading";
 import AnimatedPoll from "@/components/AnimatedPoll";
+import AdBanner from "@/components/BannerAds";
+import AdsterraAd from "@/components/AdsterraAds";
 
 // Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
@@ -449,6 +451,9 @@ const ArticlePage = () => {
 
   return (
     <>
+      <div>
+        <AdBanner />
+      </div>
       <Head>
         <title>{article?.title || "Article"} | Newwss</title>
         <meta name="description" content={article?.description || ""} />
@@ -463,193 +468,230 @@ const ArticlePage = () => {
         <meta name="google-adsense-account" content="ca-pub-7599014130116297" />
       </Head>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 py-6 md:py-8 relative bg-white min-h-screen">
-        {article && (
-          <>
-            {/* Article Header */}
-            <div ref={headerRef} className="mb-8">
-              <span className="inline-block px-3 py-1 mb-4 text-sm font-semibold text-blue-600 bg-blue-100 rounded-full">
-                {article.category}
-              </span>
+      <div className="flex flex-col lg:flex-row max-w-7xl mx-auto px-4 sm:px-6 py-6 md:py-8 bg-white min-h-screen">
+        {/* Left Sidebar - Ads */}
+        <div className="hidden lg:block lg:w-1/6 xl:w-1/5 pr-4 sticky top-0 h-screen overflow-y-auto pt-8">
+          <div className="space-y-4">
+            <AdBanner />
+            <AdsterraAd />
+            <AdBanner />
+            <AdsterraAd />
+          </div>
+        </div>
 
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 leading-tight text-gray-900">
-                {article.title}
-              </h1>
-
-              <p className="text-lg sm:text-xl text-gray-600 mb-6">
-                {article.description}
-              </p>
-
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-                <div className="flex items-center space-x-3 sm:space-x-4">
-                  <div className="flex-shrink-0">
-                    <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-gray-300 flex items-center justify-center">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-5 w-5 sm:h-6 sm:w-6 text-gray-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                        />
-                      </svg>
-                    </div>
+        {/* Main Content */}
+        <main className="w-full lg:w-4/6 xl:w-3/5 px-0 lg:px-4 relative">
+          {article && (
+            <>
+              {/* Article Header */}
+              <div ref={headerRef} className="mb-8">
+                <span className="inline-block px-3 py-1 mb-4 text-sm font-semibold text-blue-600 bg-blue-100 rounded-full">
+                  {article.category}
+                </span>
+                <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 leading-tight text-gray-900">
+                  {article.title}
+                </h1>
+                <p className="text-lg sm:text-xl text-gray-600 mb-6">
+                  {article.description}
+                </p>
+                <div className="flex flex-row gap-5 mb-4">
+                  <div>
+                    <AdsterraAd />
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {article.author || "Unknown Author"}
-                    </p>
-                    <div className="flex flex-wrap gap-x-2 text-xs sm:text-sm text-gray-500">
-                      <time dateTime={article.createdAt}>
-                        {new Date(article.createdAt).toLocaleDateString(
-                          "en-US",
-                          {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          }
-                        )}
-                      </time>
-                      <span>•</span>
-                      <span>5 min read</span>
+                    <AdsterraAd />
+                  </div>
+                  <div>
+                    <AdsterraAd />
+                  </div>
+                  <div>
+                    <AdsterraAd />
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
+                  <div className="flex items-center space-x-3 sm:space-x-4">
+                    <div className="flex-shrink-0">
+                      <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-gray-300 flex items-center justify-center">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 sm:h-6 sm:w-6 text-gray-500"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {article.author || "Unknown Author"}
+                      </p>
+                      <div className="flex flex-wrap gap-x-2 text-xs sm:text-sm text-gray-500">
+                        <time dateTime={article.createdAt}>
+                          {new Date(article.createdAt).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            }
+                          )}
+                        </time>
+                        <span>•</span>
+                        <span>5 min read</span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Like/Dislike Buttons */}
-                <div className="flex items-center space-x-2 self-end sm:self-auto">
-                  <button
-                    onClick={() => handleReaction("like")}
-                    className={`flex items-center space-x-1 px-3 py-1 rounded-full transition-colors ${
-                      userReaction === "like"
-                        ? "bg-green-100 text-green-700"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                    aria-label="Like this article"
-                  >
-                    {userReaction === "like" ? (
-                      <FaThumbsUp className="text-green-600" />
-                    ) : (
-                      <FaRegThumbsUp />
-                    )}
-                    <span className="text-xs sm:text-sm">Like</span>
-                  </button>
-                  <button
-                    onClick={() => handleReaction("dislike")}
-                    className={`flex items-center space-x-1 px-3 py-1 rounded-full transition-colors ${
-                      userReaction === "dislike"
-                        ? "bg-red-100 text-red-700"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                    aria-label="Dislike this article"
-                  >
-                    {userReaction === "dislike" ? (
-                      <FaThumbsDown className="text-red-600" />
-                    ) : (
-                      <FaRegThumbsDown />
-                    )}
-                    <span className="text-xs sm:text-sm">Dislike</span>
-                  </button>
-                </div>
-              </div>
-
-              {article.image && (
-                <div
-                  ref={(el) => (imageRefs.current[0] = el)}
-                  className="relative w-full h-48 sm:h-64 md:h-80 lg:h-96 rounded-xl overflow-hidden mb-6 sm:mb-8"
-                >
-                  <Image
-                    src={article.image}
-                    alt={article.title || "Article image"}
-                    fill
-                    className="object-cover"
-                    priority
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 800px"
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Article Content Sections */}
-            <div ref={contentRef} className="mb-12">
-              {article.content?.length > 1 && (
-                <div className="mb-4 sm:mb-6 overflow-x-auto">
-                  <div className="flex space-x-2 pb-2 w-max min-w-full">
-                    {article.content.map((section, index) => (
-                      <button
-                        key={section._id || index}
-                        onClick={() => handleSectionChange(index)}
-                        className={`px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
-                          activeSection === index
-                            ? "bg-blue-600 text-white shadow-md"
-                            : "bg-gray-100 text-gray-700 hover:bg-gray-200 shadow-sm"
-                        } rounded-full`}
-                      >
-                        {section.title}
-                      </button>
-                    ))}
+                  {/* Like/Dislike Buttons */}
+                  <div className="flex items-center space-x-2 self-end sm:self-auto">
+                    <button
+                      onClick={() => handleReaction("like")}
+                      className={`flex items-center space-x-1 px-3 py-1 rounded-full transition-colors ${
+                        userReaction === "like"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                      aria-label="Like this article"
+                    >
+                      {userReaction === "like" ? (
+                        <FaThumbsUp className="text-green-600" />
+                      ) : (
+                        <FaRegThumbsUp />
+                      )}
+                      <span className="text-xs sm:text-sm">Like</span>
+                    </button>
+                    <button
+                      onClick={() => handleReaction("dislike")}
+                      className={`flex items-center space-x-1 px-3 py-1 rounded-full transition-colors ${
+                        userReaction === "dislike"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                      aria-label="Dislike this article"
+                    >
+                      {userReaction === "dislike" ? (
+                        <FaThumbsDown className="text-red-600" />
+                      ) : (
+                        <FaRegThumbsDown />
+                      )}
+                      <span className="text-xs sm:text-sm">Dislike</span>
+                    </button>
                   </div>
                 </div>
-              )}
 
-              <article
-                ref={(el) => (sectionRefs.current[activeSection] = el)}
-                className="prose prose-sm sm:prose-base lg:prose-lg max-w-none"
-              >
-                {article.content?.[activeSection]?.image && (
+                {article.image && (
                   <div
-                    ref={(el) => (imageRefs.current[1] = el)}
-                    className="relative w-full h-48 sm:h-64 md:h-80 rounded-lg overflow-hidden mb-4 sm:mb-6"
+                    ref={(el) => (imageRefs.current[0] = el)}
+                    className="relative w-full h-48 sm:h-64 md:h-80 lg:h-96 rounded-xl overflow-hidden mb-6 sm:mb-8"
                   >
                     <Image
-                      src={article.content[activeSection].image}
-                      alt={
-                        article.content[activeSection].title || "Section image"
-                      }
+                      src={article.image}
+                      alt={article.title || "Article image"}
                       fill
                       className="object-cover"
-                      sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 800px"
+                      priority
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 800px"
                     />
                   </div>
                 )}
-
-                {article.content?.[activeSection]?.title && (
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4 text-gray-800">
-                    {article.content[activeSection].title}
-                  </h2>
+              </div>
+              {/* Article Content Sections */}
+              <div ref={contentRef} className="mb-12">
+                {article.content?.length > 1 && (
+                  <div className="mb-4 sm:mb-6 overflow-x-auto">
+                    <div className="flex space-x-2 pb-2 w-max min-w-full">
+                      {article.content.map((section, index) => (
+                        <button
+                          key={section._id || index}
+                          onClick={() => handleSectionChange(index)}
+                          className={`px-3 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-medium whitespace-nowrap transition-colors ${
+                            activeSection === index
+                              ? "bg-blue-600 text-white shadow-md"
+                              : "bg-gray-100 text-gray-700 hover:bg-gray-200 shadow-sm"
+                          } rounded-full`}
+                        >
+                          {section.title}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 )}
 
-                {/* Key Points Section */}
-                {article.content?.[activeSection]?.keypoints &&
-                  article.content[activeSection].keypoints[0]?.points?.length >
-                    0 && (
+                <article
+                  ref={(el) => (sectionRefs.current[activeSection] = el)}
+                  className="prose prose-sm sm:prose-base lg:prose-lg max-w-none"
+                >
+                  {article.content?.[activeSection]?.image && (
                     <div
-                      ref={keypointsRef}
-                      className="bg-blue-50 border border-blue-100 rounded-xl p-3 sm:p-4 md:p-6 mb-4 sm:mb-6"
+                      ref={(el) => (imageRefs.current[1] = el)}
+                      className="relative w-full h-48 sm:h-64 md:h-80 rounded-lg overflow-hidden mb-4 sm:mb-6"
                     >
-                      <h3 className="text-base sm:text-lg md:text-xl font-semibold text-blue-800 mb-2 sm:mb-3 flex items-center">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-4 w-4 sm:h-5 sm:w-5 mr-2"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path
-                            fillRule="evenodd"
-                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z"
-                            clipRule="evenodd"
-                          />
-                        </svg>
-                        Key Points
-                      </h3>
-                      <ul className="space-y-1.5 sm:space-y-2 md:space-y-3">
-                        {article.content[activeSection].keypoints[0].points.map(
-                          (point, index) => (
+                      <Image
+                        src={article.content[activeSection].image}
+                        alt={
+                          article.content[activeSection].title ||
+                          "Section image"
+                        }
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 800px"
+                      />
+                    </div>
+                  )}
+
+                  {article.content?.[activeSection]?.title && (
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold mb-3 sm:mb-4 text-gray-800">
+                      {article.content[activeSection].title}
+                    </h2>
+                  )}
+                  {/* Key Points Section */}
+                  <div className="flex flex-row gap-5 mb-4">
+                    <div>
+                      <AdsterraAd />
+                    </div>
+                    <div>
+                      <AdsterraAd />
+                    </div>
+                    <div>
+                      <AdsterraAd />
+                    </div>
+                    <div>
+                      <AdsterraAd />
+                    </div>
+                  </div>
+                  {article.content?.[activeSection]?.keypoints &&
+                    article.content[activeSection].keypoints[0]?.points
+                      ?.length > 0 && (
+                      <div
+                        ref={keypointsRef}
+                        className="bg-blue-50 border border-blue-100 rounded-xl p-3 sm:p-4 md:p-6 mb-4 sm:mb-6"
+                      >
+                        <h3 className="text-base sm:text-lg md:text-xl font-semibold text-blue-800 mb-2 sm:mb-3 flex items-center">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-4 w-4 sm:h-5 sm:w-5 mr-2"
+                            viewBox="0 0 20 20"
+                            fill="currentColor"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                          Key Points
+                        </h3>
+                        <ul className="space-y-1.5 sm:space-y-2 md:space-y-3">
+                          {article.content[
+                            activeSection
+                          ].keypoints[0].points.map((point, index) => (
                             <li
                               key={index}
                               className="flex items-start text-xs sm:text-sm md:text-base text-gray-700"
@@ -669,96 +711,136 @@ const ArticlePage = () => {
                               </span>
                               <span>{point}</span>
                             </li>
-                          )
-                        )}
-                      </ul>
-                    </div>
-                  )}
-
-                <div className="space-y-3 sm:space-y-4 text-gray-700">
-                  {article.content?.[activeSection]?.content &&
-                    article.content[activeSection].content
-                      .split("\n")
-                      .map((paragraph, i) => (
-                        <p
-                          key={i}
-                          className="leading-relaxed text-sm sm:text-base"
-                        >
-                          {paragraph}
-                        </p>
-                      ))}
-                </div>
-              </article>
-            </div>
-
-            {/* Poll Section */}
-            <div
-              ref={pollRef}
-              className="my-12 bg-gray-50 p-6 rounded-xl border border-gray-200"
-            >
-              <h3 className="text-xl sm:text-2xl font-bold mb-6 text-gray-800">
-                What do you think about this article?
-              </h3>
-              <AnimatedPoll />
-            </div>
-
-            {/* Comments Section */}
-            {article.comments && article.comments.length > 0 && (
-              <div
-                ref={(el) =>
-                  (sectionRefs.current[article.content?.length || 0] = el)
-                }
-                className="mb-8 sm:mb-12"
-              >
-                <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-800">
-                  Comments
-                </h3>
-                <div className="space-y-3 sm:space-y-4">
-                  {article.comments.map((comment) => (
-                    <div
-                      key={comment._id || comment.text}
-                      className="border-b border-gray-200 pb-3 sm:pb-4"
-                    >
-                      <div className="flex items-start space-x-2 sm:space-x-3">
-                        <div className="flex-shrink-0">
-                          <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-full bg-gray-300 flex items-center justify-center">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                              />
-                            </svg>
-                          </div>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
-                            <h4 className="text-xs sm:text-sm font-medium text-gray-900 truncate">
-                              {comment.author || "Anonymous"}
-                            </h4>
-                            <span className="text-xs text-gray-500">
-                              {new Date(comment.createdAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                          <p className="mt-1 text-xs sm:text-sm text-gray-700">
-                            {comment.text}
-                          </p>
-                        </div>
+                          ))}
+                        </ul>
                       </div>
-                    </div>
-                  ))}
+                    )}
+
+                  <div className="space-y-3 sm:space-y-4 text-gray-700">
+                    {article.content?.[activeSection]?.content &&
+                      article.content[activeSection].content
+                        .split("\n")
+                        .map((paragraph, i) => (
+                          <p
+                            key={i}
+                            className="leading-relaxed text-sm sm:text-base"
+                          >
+                            {paragraph}
+                          </p>
+                        ))}
+                  </div>
+                </article>
+              </div>
+
+              {/* Poll Section */}
+              <div
+                ref={pollRef}
+                className="my-12 bg-gray-50 p-6 rounded-xl border border-gray-200"
+              >
+                <h3 className="text-xl sm:text-2xl font-bold mb-6 text-gray-800">
+                  What do you think about this article?
+                </h3>
+                <AnimatedPoll />
+              </div>
+              <div className="flex flex-row gap-5 mb-8">
+                <div>
+                  <AdBanner />
+                </div>
+                <div>
+                  <AdsterraAd />
+                </div>
+                <div>
+                  <AdsterraAd />
+                </div>
+                <div>
+                  <AdBanner />
+                </div>
+                <div>
+                  <AdsterraAd />
+                </div>
+                <div>
+                  <AdBanner />
+                </div>
+                <div>
+                  <AdsterraAd />
+                </div>
+                <div>
+                  <AdBanner />
+                </div>
+                <div>
+                  <AdBanner />
                 </div>
               </div>
-            )}
-          </>
-        )}
+              {/* Comments Section */}
+              {article.comments && article.comments.length > 0 && (
+                <div
+                  ref={(el) =>
+                    (sectionRefs.current[article.content?.length || 0] = el)
+                  }
+                  className="mb-8 sm:mb-12"
+                >
+                  <h3 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gray-800">
+                    Comments
+                  </h3>
+                  <div className="space-y-3 sm:space-y-4">
+                    {article.comments.map((comment) => (
+                      <div
+                        key={comment._id || comment.text}
+                        className="border-b border-gray-200 pb-3 sm:pb-4"
+                      >
+                        <div className="flex items-start space-x-2 sm:space-x-3">
+                          <div className="flex-shrink-0">
+                            <div className="h-7 w-7 sm:h-9 sm:w-9 rounded-full bg-gray-300 flex items-center justify-center">
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="h-4 w-4 sm:h-5 sm:w-5 text-gray-500"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                              <h4 className="text-xs sm:text-sm font-medium text-gray-900 truncate">
+                                {comment.author || "Anonymous"}
+                              </h4>
+                              <span className="text-xs text-gray-500">
+                                {new Date(
+                                  comment.createdAt
+                                ).toLocaleDateString()}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-xs sm:text-sm text-gray-700">
+                              {comment.text}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </main>
+
+        {/* Right Sidebar - Ads */}
+        <div className="hidden lg:block lg:w-1/6 xl:w-1/5 pl-4 sticky top-0 h-screen overflow-y-auto pt-8">
+          <div className="space-y-4">
+            <AdsterraAd />
+            <AdBanner />
+            <AdsterraAd />
+            <AdBanner />
+          </div>
+        </div>
 
         {/* Speech Controls - Mobile */}
         {isMobile && (
@@ -979,7 +1061,7 @@ const ArticlePage = () => {
             </div>
           </div>
         )}
-      </main>
+      </div>
     </>
   );
 };

@@ -2,6 +2,8 @@
 import { useEffect, useRef, useState } from "react";
 import gsap from "gsap";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import AdBanner from "@/components/BannerAds";
+import AdsterraAd from "@/components/AdsterraAds";
 
 export default function FinancialCalculators() {
   const [activeTab, setActiveTab] = useState("sip");
@@ -79,7 +81,7 @@ export default function FinancialCalculators() {
           value={value}
           onChange={onChange}
           step={step || 1}
-          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-3"
+          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer mt-3 accent-blue-600"
         />
       )}
     </div>
@@ -436,9 +438,6 @@ export default function FinancialCalculators() {
     );
   };
 
-  // Other calculator components (Compound Interest, Income Tax, Retirement, Inflation, FD/RD, Credit Card Payoff)
-  // Follow the same pattern as above with enhanced styling
-
   // Render active calculator
   const renderCalculator = () => {
     switch (activeTab) {
@@ -448,7 +447,6 @@ export default function FinancialCalculators() {
         return <LumpsumCalculator />;
       case "emi":
         return <EMICalculator />;
-      // Add cases for other calculators
       default:
         return <SIPCalculator />;
     }
@@ -467,37 +465,49 @@ export default function FinancialCalculators() {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      {/* Top Banner Ad */}
+      <div className="mb-8">
+        <div className="w-full max-w-5xl mx-auto">
+          <div className="relative rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <AdBanner />
+            <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded">
+              Ad
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        <h1 className="text-4xl font-bold text-gray-900 mb-3">
           Financial Calculators
         </h1>
-        <p className="text-gray-600">
-          Plan your finances with our comprehensive calculator suite
+        <p className="text-gray-600 max-w-2xl mx-auto">
+          Plan your financial future with our comprehensive suite of calculators, designed to help you make informed decisions.
         </p>
       </div>
 
       <div className="relative mb-8">
         <button
           onClick={() => scrollTabs("left")}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-md hover:bg-gray-50 transition"
+          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-3 shadow-md hover:bg-gray-50 transition hover:scale-105"
         >
-          <FiChevronLeft className="w-5 h-5 text-gray-600" />
+          <FiChevronLeft className="w-6 h-6 text-gray-600" />
         </button>
 
         <div
           ref={tabsRef}
           className="flex overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory"
         >
-          <div className="flex space-x-2 px-6">
+          <div className="flex space-x-3 px-8">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-5 py-2.5 rounded-full font-medium whitespace-nowrap transition-all duration-300 snap-start ${
+                className={`px-6 py-3 rounded-full font-medium whitespace-nowrap transition-all duration-300 snap-start text-sm ${
                   activeTab === tab.id
-                    ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-md"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:shadow-sm"
                 }`}
               >
                 {tab.label}
@@ -508,17 +518,46 @@ export default function FinancialCalculators() {
 
         <button
           onClick={() => scrollTabs("right")}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-2 shadow-md hover:bg-gray-50 transition"
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full p-3 shadow-md hover:bg-gray-50 transition hover:scale-105"
         >
-          <FiChevronRight className="w-5 h-5 text-gray-600" />
+          <FiChevronRight className="w-6 h-6 text-gray-600" />
         </button>
       </div>
 
-      <div
-        ref={calculatorRef}
-        className="bg-white rounded-2xl shadow-lg p-6 md:p-8 border border-gray-100"
-      >
-        {renderCalculator()}
+      <div className="flex flex-col md:flex-row gap-8">
+        {/* Calculator Section */}
+        <div className="flex-1">
+          <div
+            ref={calculatorRef}
+            className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100"
+          >
+            {renderCalculator()}
+          </div>
+        </div>
+
+        {/* Sidebar Ad */}
+        <div className="w-full md:w-80">
+          <div className="sticky top-8">
+            <div className="relative rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+              <AdsterraAd />
+              <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded">
+                Ad
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Banner Ad */}
+      <div className="mt-8">
+        <div className="w-full max-w-5xl mx-auto">
+          <div className="relative rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <AdBanner />
+            <div className="absolute top-2 right-2 bg-blue-500 text-white text-xs font-semibold px-2 py-1 rounded">
+              Ad
+            </div>
+          </div>
+        </div>
       </div>
 
       <style jsx>{`
@@ -541,6 +580,23 @@ export default function FinancialCalculators() {
         }
         .animate-fade-in {
           animation: fadeIn 0.5s ease-out;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+          appearance: none;
+          width: 16px;
+          height: 16px;
+          background: #3b82f6;
+          border-radius: 50%;
+          cursor: pointer;
+          box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
+        }
+        input[type="range"]::-moz-range-thumb {
+          width: 16px;
+          height: 16px;
+          background: #3b82f6;
+          border-radius: 50%;
+          cursor: pointer;
+          box-shadow: 0 0 4px rgba(0, 0, 0, 0.2);
         }
       `}</style>
     </div>

@@ -30,6 +30,7 @@ import {
 } from "react-icons/fa";
 import Head from "next/head";
 import AdsterraAd from "@/components/AdsterraAds";
+import AdBanner from "@/components/BannerAds";
 
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
@@ -544,9 +545,7 @@ export default function FeaturedPosts({ userId }) {
           ></iframe>
         </div>
         <div className="h-64 mt-10">
-          <AdsterraAd />
-          <AdsterraAd />
-          <AdsterraAd />
+          <AdBanner />
         </div>
         <div className="h-64 mt-10">
           {/* TradingView Widget */}
@@ -559,9 +558,7 @@ export default function FeaturedPosts({ userId }) {
           ></iframe>
         </div>
         <div className="h-64 mt-10">
-          <AdsterraAd />
-          <AdsterraAd />
-          <AdsterraAd />
+          <AdBanner />
         </div>
         <div className="h-64 mt-10">
           {/* TradingView Widget */}
@@ -574,9 +571,7 @@ export default function FeaturedPosts({ userId }) {
           ></iframe>
         </div>
         <div className="h-64 mt-10">
-          <AdsterraAd />
-          <AdsterraAd />
-          <AdsterraAd />
+          <AdBanner />
         </div>
         <div className="w-full h-[400px] md:h-[500px] lg:h-[600px] mt-10 rounded-lg overflow-hidden">
           <iframe
@@ -807,7 +802,7 @@ export default function FeaturedPosts({ userId }) {
                 {[...Array(4)].map((_, index) => (
                   <div key={index}>
                     <AdsterraAd />
-                    <AdsterraAd />
+                    <AdBanner />
                   </div>
                 ))}
               </div>
@@ -951,9 +946,6 @@ export default function FeaturedPosts({ userId }) {
                         </div>
                       </Link>
                     </div>
-                    <div className="bg-white rounded-xl shadow-md overflow-hidden fade-in relative transition-transform flex ">
-                      <AdsterraAd />
-                    </div>
                   </>
                 );
               })}
@@ -1067,16 +1059,9 @@ export default function FeaturedPosts({ userId }) {
             {renderTradingViewWidget()}
             {indicesTradingViewWidget()}
             <div className="bg-white rounded-xl shadow-md p-4 flex flex-col">
-                <div>
-                  <AdsterraAd />
-                  <AdsterraAd />
-                  <AdsterraAd />
-                  <AdsterraAd />
-                  <AdsterraAd />
-                  <AdsterraAd />
-                  <AdsterraAd />
-                  <AdsterraAd />
-                </div>
+              <div>
+                <AdsterraAd />
+              </div>
             </div>
             {/* Trending Now Widget */}
             <div className="bg-white rounded-xl shadow-md p-4">
@@ -1114,18 +1099,16 @@ export default function FeaturedPosts({ userId }) {
               </div>
             </div>
             <div className="bg-white rounded-xl shadow-md p-4 flex flex-col">
-              {[...Array(1)].map((_, index) => (
-                <div key={index}>
-                  <AdsterraAd />
-                  <AdsterraAd />
-                  <AdsterraAd />
-                  <AdsterraAd />
-                  <AdsterraAd />
-                  <AdsterraAd />
-                  <AdsterraAd />
-                  <AdsterraAd />
-                </div>
-              ))}
+              <div>
+                <AdsterraAd />
+                <AdBanner />
+                <AdsterraAd />
+                <AdBanner />
+                <AdsterraAd />
+                <AdBanner />
+                <AdsterraAd />
+                <AdBanner />
+              </div>
             </div>
           </div>
         </div>
@@ -1434,18 +1417,15 @@ export default function FeaturedPosts({ userId }) {
       )}
       {/* ADSTERRA AD */}
       <div className="flex flex-row gap-4">
-          <div>
-            <AdsterraAd />
-            <AdsterraAd />
-            <AdsterraAd />
-            <AdsterraAd />
-            <AdsterraAd />
-            <AdsterraAd />
-            <AdsterraAd />
-            <AdsterraAd />
-            <AdsterraAd />
-            <AdsterraAd />
-          </div>
+        <div>
+          <AdBanner />
+          <AdsterraAd />
+          <AdsterraAd />
+          <AdBanner />
+          <AdsterraAd />
+          <AdBanner />
+          <AdBanner />
+        </div>
       </div>
     </div>
   );

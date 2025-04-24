@@ -8,6 +8,8 @@ import Loading from "../loading";
 import Link from "next/link";
 import Image from "next/image";
 import GamificationDashboard from "../../components/GamificationDashboard";
+import AdBanner from "@/components/BannerAds";
+import AdsterraAd from "@/components/AdsterraAds";
 import {
   FaPlay,
   FaStop,
@@ -255,22 +257,6 @@ export default function CategoryPage() {
   // GSAP animations
   useEffect(() => {
     if (articles.length === 0) return;
-
-    // Article animations
-    // gsap.utils.toArray(".fade-in").forEach((element, i) => {
-    //   gsap.from(element, {
-    //     opacity: 0,
-    //     y: 50,
-    //     duration: 0.8,
-    //     ease: "power2.out",
-    //     scrollTrigger: {
-    //       trigger: element,
-    //       start: "top 90%",
-    //       toggleActions: "play none none none",
-    //     },
-    //     delay: i * 0.1,
-    //   });
-    // });
 
     // Smooth scroll setup
     if (containerRef.current) {
@@ -526,6 +512,12 @@ export default function CategoryPage() {
           <meta name="robots" content="index, follow" />
           <meta name="google-adsense-account" content="ca-pub-7599014130116297" />
         </Head>
+        
+        {/* Top Ad Banner */}
+        <div className="col-span-1 md:col-span-3 mb-6">
+          <AdBanner />
+        </div>
+
         {/* Latest Articles Marquee */}
         <div className="col-span-1 md:col-span-3 bg-gray-100 p-2 mb-6 rounded overflow-hidden">
           <div className="flex items-center">
@@ -641,6 +633,11 @@ export default function CategoryPage() {
             </div>
           )}
 
+        {/* Ad after hero article */}
+        <div className="col-span-1 md:col-span-3 mb-8">
+          <AdsterraAd />
+        </div>
+
         {/* Secondary Featured Articles */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           {regularArticles.slice(0, 3).map((article, index) => {
@@ -732,6 +729,14 @@ export default function CategoryPage() {
           })}
         </div>
 
+        {/* Mid-content Ad */}
+        <div className="col-span-1 md:col-span-3 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <AdBanner />
+            <AdsterraAd />
+          </div>
+        </div>
+
         {/* More News Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {regularArticles.slice(3).map((article, index) => {
@@ -821,6 +826,15 @@ export default function CategoryPage() {
               </div>
             );
           })}
+        </div>
+
+        {/* Bottom Ad */}
+        <div className="col-span-1 md:col-span-3 mt-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <AdsterraAd />
+            <AdBanner />
+            <AdsterraAd />
+          </div>
         </div>
       </>
     );
@@ -1128,4 +1142,3 @@ export default function CategoryPage() {
     </div>
   );
 }
-

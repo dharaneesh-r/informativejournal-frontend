@@ -81,7 +81,7 @@ const AnimatedPoll = ({ articleId }) => {
 
       // Submit vote to backend
       const response = await fetch(
-        `https://informativejournal-backend.vercel.app/polls/${poll._id}/vote`,
+        `https://informativejournal-backend.vercel.app/polls/${articleId}/vote`,
         {
           method: 'POST',
           headers: {
