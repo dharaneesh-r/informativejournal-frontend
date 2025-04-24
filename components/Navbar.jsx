@@ -51,6 +51,11 @@ const Navbar = () => {
     // Other categories
     { name: "Education", path: "/education" },
     { name: "Environment", path: "/environment" },
+
+    // PAPER TRADING
+
+    { name: "Crypto Trading", path: "/crypto-games" },
+    { name: "Financial Calculators", path: "/financial-calculators" },
   ];
 
   // Group categories for a better dropdown organization
