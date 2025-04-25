@@ -176,6 +176,9 @@ const PrivacyPolicyPage = () => {
         </p>
       </section>
 
+      {/*EZOIC PRIVACY POLICY */}
+      <span id="ezoic-privacy-policy-embed"></span>
+
       {/* Contact Us */}
       <section className="mb-12">
         <h2 className="text-2xl font-bold mb-4">Contact Us</h2>
