@@ -31,6 +31,7 @@ import {
 import Head from "next/head";
 import AdsterraAd from "@/components/AdsterraAds";
 import AdBanner from "@/components/BannerAds";
+import NotFound from "./NotFound";
 
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
@@ -209,7 +210,7 @@ export default function FeaturedPosts({ userId }) {
         }
       } catch (err) {
         console.error("Error fetching articles:", err);
-        setError(<Loading />);
+        setError(<NotFound />);
       } finally {
         setLoading(false);
       }

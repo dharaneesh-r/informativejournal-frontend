@@ -29,6 +29,7 @@ import {
   FaCircle,
 } from "react-icons/fa";
 import Head from "next/head";
+import NotFound from "../NotFound";
 
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
@@ -175,7 +176,7 @@ export default function CategoryPage() {
         }
       } catch (err) {
         console.error("Error fetching articles:", err);
-        setError(<Loading />);
+        setError(<NotFound />);
       } finally {
         setLoading(false);
       }

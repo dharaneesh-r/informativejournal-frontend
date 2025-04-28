@@ -3,7 +3,7 @@ import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { SpeedInsights } from "@vercel/speed-insights/next";
-import { Analytics } from "@vercel/analytics/react"
+import { Analytics } from "@vercel/analytics/react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,7 +44,8 @@ export const metadata = {
     apple: `${baseUrl}/logo.png`,
   },
   openGraph: {
-    title: "Newwss – Breaking News, Finance, Politics, Sports & World Headlines",
+    title:
+      "Newwss – Breaking News, Finance, Politics, Sports & World Headlines",
     description:
       "Stay updated with Newwss – your trusted source for breaking news, finance updates, political headlines, sports scores, world affairs, and trending stories. Fresh content, daily.",
     url: baseUrl,
@@ -61,21 +62,22 @@ export const metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Newwss – Breaking News, Finance, Politics, Sports & World Headlines",
+    title:
+      "Newwss – Breaking News, Finance, Politics, Sports & World Headlines",
     description:
       "Stay updated with Newwss – your trusted source for breaking news, finance updates, political headlines, sports scores, world affairs, and trending stories. Fresh content, daily.",
     images: [`${baseUrl}/logo.png`],
     site: "@newwss",
   },
   themeColor: "#ffffff",
+  other: {
+    "google-adsense-account": "ca-pub-7599014130116297",
+  },
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <head>
-      <meta name="google-adsense-account" content="ca-pub-7599014130116297" />
-      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
