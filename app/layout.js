@@ -71,7 +71,7 @@ export const metadata = {
   },
   themeColor: "#ffffff",
   other: {
-    "google-adsense-account": "ca-pub-7599014130116297",
+    "google-adsense-account": "ca-pub-9375940519845683",
   },
 };
 
