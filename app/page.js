@@ -517,7 +517,7 @@ export default function FeaturedPosts({ userId }) {
           <iframe
             src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=en#%7B%22symbol%22%3A%22NASDAQ%3AAAPL%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22dateRange%22%3A%2212M%22%2C%22colorTheme%22%3A%22light%22%2C%22trendLineColor%22%3A%22%2360a5fa%22%2C%22gridLineColor%22%3A%22%23e5e7eb%22%2C%22fontColor%22%3A%22%236b7280%22%2C%22underLineColor%22%3A%22%23d1d5db%22%2C%22isTransparent%22%3Afalse%2C%22autosize%22%3Atrue%2C%22largeChartUrl%22%3A%22%22%7D"
             style={{ width: "100%", height: "100%", border: "none" }}
-            allowTransparency={true}
+            allowtransparency="true"
             frameBorder="0"
             scrolling="no"
           ></iframe>
@@ -540,7 +540,7 @@ export default function FeaturedPosts({ userId }) {
           <iframe
             src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=en#%7B%22symbol%22%3A%22NASDAQ%3ANDX%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22dateRange%22%3A%2212M%22%2C%22colorTheme%22%3A%22light%22%2C%22trendLineColor%22%3A%22%2360a5fa%22%2C%22gridLineColor%22%3A%22%23e5e7eb%22%2C%22fontColor%22%3A%22%236b7280%22%2C%22underLineColor%22%3A%22%23d1d5db%22%2C%22isTransparent%22%3Afalse%2C%22autosize%22%3Atrue%2C%22largeChartUrl%22%3A%22%22%7D"
             style={{ width: "100%", height: "100%", border: "none" }}
-            allowTransparency={true}
+            allowtransparency="true"
             frameBorder="0"
             scrolling="no"
           ></iframe>
@@ -553,7 +553,7 @@ export default function FeaturedPosts({ userId }) {
           <iframe
             src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=en#%7B%22symbol%22%3A%22BSE%3ASENSEX%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22dateRange%22%3A%2212M%22%2C%22colorTheme%22%3A%22light%22%2C%22trendLineColor%22%3A%22%2360a5fa%22%2C%22gridLineColor%22%3A%22%23e5e7eb%22%2C%22fontColor%22%3A%22%236b7280%22%2C%22underLineColor%22%3A%22%23d1d5db%22%2C%22isTransparent%22%3Afalse%2C%22autosize%22%3Atrue%2C%22largeChartUrl%22%3A%22%22%7D"
             style={{ width: "100%", height: "100%", border: "none" }}
-            allowTransparency={true}
+            allowtransparency="true"
             frameBorder="0"
             scrolling="no"
           ></iframe>
@@ -566,7 +566,7 @@ export default function FeaturedPosts({ userId }) {
           <iframe
             src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=en#%7B%22symbol%22%3A%22NASDAQ%3ANDX%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22dateRange%22%3A%2212M%22%2C%22colorTheme%22%3A%22light%22%2C%22trendLineColor%22%3A%22%2360a5fa%22%2C%22gridLineColor%22%3A%22%23e5e7eb%22%2C%22fontColor%22%3A%22%236b7280%22%2C%22underLineColor%22%3A%22%23d1d5db%22%2C%22isTransparent%22%3Afalse%2C%22autosize%22%3Atrue%2C%22largeChartUrl%22%3A%22%22%7D"
             style={{ width: "100%", height: "100%", border: "none" }}
-            allowTransparency={true}
+            allowtransparency="true"
             frameBorder="0"
             scrolling="no"
           ></iframe>
@@ -578,7 +578,7 @@ export default function FeaturedPosts({ userId }) {
           <iframe
             src="https://s.tradingview.com/embed-widget/timeline/?locale=en#%7B%22colorTheme%22%3A%22light%22%2C%22isTransparent%22%3Afalse%2C%22displayMode%22%3A%22regular%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22utm_source%22%3A%22example.com%22%2C%22utm_medium%22%3A%22widget%22%2C%22utm_campaign%22%3A%22timeline%22%7D"
             className="w-full h-full border-0"
-            allowTransparency="true"
+            allowtransparency="true"
             frameBorder="0"
             scrolling="no"
             loading="lazy"
