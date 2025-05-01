@@ -488,7 +488,7 @@ const Navbar = () => {
                       </a>
                       <a
                         href="/register"
-                        className="block px-3 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-200 display-flex items-center"
+                        className="block flex px-3 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-200 display-flex items-center"
                         onClick={() => setIsAuthOpen(false)}
                       >
                         <svg

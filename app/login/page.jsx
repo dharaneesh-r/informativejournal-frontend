@@ -25,14 +25,6 @@ const LoginPage = () => {
     if (token) {
       router.push("/");
     }
-
-    // GSAP Animations
-    gsap.from(containerRef.current, {
-      opacity: 0,
-      y: 50,
-      duration: 1,
-      ease: "power2.out",
-    });
   }, [router]);
 
   const handleChange = (e) => {
