@@ -54,7 +54,7 @@ const Navbar = () => {
 
     // PAPER TRADING
 
-    { name: "Crypto Trading", path: "/crypto-games" },
+    { name: "Crypto Paper Trading", path: "/crypto-games" },
     { name: "Financial Calculators", path: "/financial-calculators" },
   ];
 
