@@ -6,7 +6,7 @@ export const metadata = {
   description:
     "Join our crypto trading platform to trade Bitcoin, Ethereum, and other cryptocurrencies in real-time. Access live charts, market insights, and instant trades. Get started today on Newwss.",
   keywords:
-    "crypto trading platform, trade bitcoin, trade ethereum, cryptocurrency market, crypto trading, bitcoin prices, real-time crypto trading, buy and sell crypto, crypto charts",
+    "crypto trading platform, trade bitcoin, trade ethereum, cryptocurrency market, crypto trading, bitcoin prices, real-time crypto trading, buy and sell crypto, crypto charts, Newwss, Cryptocurrency Paper Trading",
   author: "Newwss",
   openGraph: {
     title: "Crypto Trading Platform | Trade Bitcoin, Ethereum & More | Newwss",
