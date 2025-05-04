@@ -5,6 +5,7 @@ import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
 import { FiEdit, FiTrash2, FiPlus, FiLogOut } from "react-icons/fi";
 
+
 const AdminManager = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -118,7 +119,7 @@ const AdminManager = () => {
         }
       );
       setArticles(response.data.data);
-      console.log(response.data.data)
+      console.log(response.data.data);
     } catch (error) {
       Swal.fire({
         icon: "error",
@@ -172,7 +173,11 @@ const AdminManager = () => {
 
   // Navigate to create page
   const handleCreate = () => {
-    router.push("/admin");
+    router.push("/admin-manager/admin");
+  };
+
+  const handleCreateKeywordArticle = () => {
+    router.push("/admin-manager/keyword-articles-form");
   };
 
   if (!isAuthenticated) {
@@ -227,10 +232,16 @@ const AdminManager = () => {
           <h1 className="text-2xl font-bold">Article Management</h1>
           <div className="flex gap-2 w-full sm:w-auto">
             <button
+              onClick={handleCreateKeywordArticle}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 w-full sm:w-auto justify-center"
+            >
+              <FiPlus /> Create Keyword Article
+            </button>
+            <button
               onClick={handleCreate}
               className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 w-full sm:w-auto justify-center"
             >
-              <FiPlus /> Create New
+              <FiPlus /> Create News Article
             </button>
             <button
               onClick={logout}
