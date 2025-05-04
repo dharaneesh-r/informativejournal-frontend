@@ -223,11 +223,6 @@ const ArticlePostForm = () => {
       if (!block.title.trim()) {
         errors[`content-${index}-title`] = "Section title is required";
       }
-      if (!block.image.trim()) {
-        errors[`content-${index}-image`] = "Section image is required";
-      } else if (!isValidUrl(block.image)) {
-        errors[`content-${index}-image`] = "Please enter a valid URL";
-      }
       if (block.video && !isValidUrl(block.video)) {
         errors[`content-${index}-video`] = "Please enter a valid URL";
       }
