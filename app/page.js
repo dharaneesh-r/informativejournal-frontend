@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 import { useEffect, useState, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger, ScrollToPlugin } from "gsap/all";
@@ -201,7 +202,7 @@ export default function FeaturedPosts({ userId }) {
             return new Date(b.createdAt) - new Date(a.createdAt);
           });
           // Only get the latest 50 articles
-          setArticles(sortedArticles.slice(0, 50));
+          setArticles(sortedArticles.slice(0, 30));
           // Set first article as hero article
           if (sortedArticles.length > 0) {
             setHeroArticle(sortedArticles[0]);
@@ -981,7 +982,7 @@ export default function FeaturedPosts({ userId }) {
             </div>
 
             {/* More News Section */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {regularArticles.slice(2).map((article, index) => {
                 const globalIndex = filteredArticles.findIndex(
                   (a) => a._id === article._id
@@ -994,89 +995,119 @@ export default function FeaturedPosts({ userId }) {
                   (speechState === "playing" || speechState === "paused");
                 const isLatest = isLatestArticle(article);
 
+                // Determine if this is a "featured" article (every 3rd article starting from index 1)
+                const isFeatured = (index + 1) % 3 === 2;
+
                 return (
-                  <>
-                    <div
-                      key={article._id}
-                      ref={(el) => (articleRefs.current[globalIndex] = el)}
-                      className={`bg-white rounded-lg shadow-sm overflow-hidden fade-in relative transition-transform hover:-translate-y-1 ${
-                        isCurrentArticle ? "ring-2 ring-blue-500" : ""
-                      }`}
+                  <div
+                    key={article._id}
+                    ref={(el) => (articleRefs.current[globalIndex] = el)}
+                    className={`bg-white rounded-lg shadow-sm overflow-hidden fade-in relative transition-transform hover:-translate-y-1 ${
+                      isCurrentArticle ? "ring-2 ring-blue-500" : ""
+                    } ${isFeatured ? "md:col-span-2" : ""}`}
+                  >
+                    <Link
+                      href={`/${article.category}/${article.slug}`}
+                      className="h-full flex flex-col"
                     >
-                      <Link href={`/${article.category}/${article.slug}`}>
-                        <div className="h-40 relative">
-                          {isLatest && (
-                            <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center z-10">
-                              <FaCircle className="text-xs mr-1 animate-pulse" />{" "}
-                              LIVE
-                            </div>
-                          )}
-                          <Image
-                            src={article.image || "/news-image.jpg"}
-                            alt={article.title}
-                            className="object-cover"
-                            fill
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          />
-                        </div>
-                        <div className="p-4">
-                          <h3 className="text-lg font-semibold mb-2 line-clamp-2 hover:text-blue-600 transition-colors">
-                            {article.title}
-                          </h3>
-                          <p className="text-sm text-gray-600 mb-3 line-clamp-3">
-                            {article.description}
+                      <div
+                        className={`relative aspect-video flex-none ${
+                          isFeatured ? "md:aspect-[3/2]" : "md:aspect-[4/3]"
+                        }`}
+                      >
+                        {isLatest && (
+                          <div className="absolute top-2 right-2 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center z-10">
+                            <FaCircle className="text-xs mr-1 animate-pulse" />{" "}
+                            LIVE
+                          </div>
+                        )}
+                        <Image
+                          src={article.image || "/news-image.jpg"}
+                          alt={article.title}
+                          className="object-cover"
+                          fill
+                          sizes={
+                            isFeatured
+                              ? "(max-width: 768px) 100vw, (max-width: 1200px) 66vw, 50vw"
+                              : "(max-width: 768px) 100vw, (max-width: 1200px) 33vw, 25vw"
+                          }
+                        />
+                      </div>
+                      <div
+                        className={`p-4 flex flex-col flex-grow ${
+                          isFeatured ? "md:p-6" : ""
+                        }`}
+                      >
+                        <h3
+                          className={`${
+                            isFeatured
+                              ? "text-xl font-bold"
+                              : "text-lg font-semibold"
+                          } mb-2 line-clamp-2 hover:text-blue-600 transition-colors`}
+                        >
+                          {article.title}
+                        </h3>
+                        <p
+                          className={`${
+                            isFeatured ? "text-base" : "text-sm text-gray-600"
+                          } mb-3 line-clamp-3 flex-grow`}
+                        >
+                          {article.description}
+                        </p>
+                        <div className="flex items-center justify-between mt-auto">
+                          <p
+                            className={`${
+                              isFeatured ? "text-sm" : "text-xs"
+                            } text-gray-500`}
+                          >
+                            {new Date(article.createdAt).toLocaleDateString()}
                           </p>
-                          <div className="flex items-center justify-between">
-                            <p className="text-xs text-gray-500">
-                              {new Date(article.createdAt).toLocaleDateString()}
-                            </p>
-                            <div className="flex gap-2">
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  toggleSaveArticle(article);
-                                }}
-                                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                                aria-label={
-                                  isSaved ? "Unsave article" : "Save article"
-                                }
-                              >
-                                {isSaved ? (
-                                  <FaBookmark className="text-blue-600" />
-                                ) : (
-                                  <FaRegBookmark className="text-gray-500 hover:text-blue-600" />
-                                )}
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  shareArticle(article);
-                                }}
-                                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                                aria-label="Share article"
-                              >
-                                <FaShareAlt className="text-green-500 hover:text-green-600" />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setCurrentArticleIndex(globalIndex);
-                                  startSpeech(article);
-                                }}
-                                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                                aria-label="Listen to article"
-                              >
-                                <FaVolumeUp className="text-blue-500 hover:text-blue-600" />
-                              </button>
-                            </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleSaveArticle(article);
+                              }}
+                              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                              aria-label={
+                                isSaved ? "Unsave article" : "Save article"
+                              }
+                            >
+                              {isSaved ? (
+                                <FaBookmark className="text-blue-600" />
+                              ) : (
+                                <FaRegBookmark className="text-gray-500 hover:text-blue-600" />
+                              )}
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                shareArticle(article);
+                              }}
+                              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                              aria-label="Share article"
+                            >
+                              <FaShareAlt className="text-green-500 hover:text-green-600" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setCurrentArticleIndex(globalIndex);
+                                startSpeech(article);
+                              }}
+                              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                              aria-label="Listen to article"
+                            >
+                              <FaVolumeUp className="text-blue-500 hover:text-blue-600" />
+                            </button>
                           </div>
                         </div>
-                      </Link>
-                    </div>
-                  </>
+                      </div>
+                    </Link>
+                  </div>
                 );
               })}
             </div>
@@ -1241,7 +1272,7 @@ export default function FeaturedPosts({ userId }) {
                         {article.title}
                       </h4>
                       <p className="text-xs text-gray-500 mt-1">
-                        {article.author || "Unknown"}
+                        {article.author || "Dharaneesh"}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
                         {new Date(article.createdAt).toLocaleDateString()}
