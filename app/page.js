@@ -1130,7 +1130,7 @@ export default function FeaturedPosts({ userId }) {
                 <h3 className="font-bold text-lg">Trending Now</h3>
               </div>
               <div className="space-y-4">
-                {articles.slice(10, 20).map((article) => (
+                {articles.slice(10, 50).map((article) => (
                   <Link
                     key={article._id}
                     href={`/${article.category}/${article.slug}`}

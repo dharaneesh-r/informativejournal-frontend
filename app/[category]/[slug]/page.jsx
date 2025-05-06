@@ -265,7 +265,7 @@ const ArticlePage = () => {
     const fetchRandomArticles = async () => {
       try {
         const response = await axios.get(
-          "http://informativejournal-backend.vercel.app/articles"
+          "https://informativejournal-backend.vercel.app/articles"
         );
         const allArticles = response.data.data;
         console.log(allArticles);
@@ -994,7 +994,7 @@ const ArticlePage = () => {
         {/* Related Articles Section */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
           <h3 className="text-2xl sm:text-3xl font-bold mb-8 text-gray-800 text-center">
-            Read More Newwss.com
+            Read More newwss.com
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {moreArticles.map((item) => (
