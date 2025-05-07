@@ -314,7 +314,7 @@ const ArticlePostForm = () => {
       });
 
       // Redirect to admin panel
-      router.push("/admin");
+      router.push("/admin-manager/admin");
     } catch (err) {
       let errorMessage = "Failed to publish article. Please try again.";
 

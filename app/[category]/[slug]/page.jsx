@@ -27,6 +27,7 @@ import {
 import Loading from "@/app/loading";
 import AnimatedPoll from "@/components/AnimatedPoll";
 import NotFound from "@/app/NotFound";
+import Link from "next/link";
 
 // Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
@@ -139,7 +140,7 @@ const ArticlePage = () => {
           setError("Article not found");
         }
       } catch (err) {
-        setError(<NotFound />);
+        setError(<Loading />);
       } finally {
         setLoading(false);
       }
@@ -281,7 +282,7 @@ const ArticlePage = () => {
         setMoreArticles(selected);
         setLoading(false);
       } catch (error) {
-        setLoading(<NotFound />);
+        setLoading(<Loading />);
       }
     };
 
@@ -998,36 +999,35 @@ const ArticlePage = () => {
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {moreArticles.map((item) => (
-              <div
-                key={item._id}
-                className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow"
-              >
-                <div className="relative h-48 sm:h-56 w-full">
-                  <Image
-                    src={item?.image}
-                    alt="Related article"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div className="p-4 sm:p-6">
-                  <span className="inline-block px-2 py-1 text-xs font-semibold text-blue-600 bg-blue-100 rounded-full mb-2">
-                    {item?.category}
-                  </span>
-                  <h4 className="text-lg sm:text-xl font-bold mb-2 text-gray-800 line-clamp-2">
-                    {item?.title}
-                  </h4>
-                  <p className="text-sm sm:text-base text-gray-600 mb-4 line-clamp-2">
-                    {item?.description}
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <span className="text-xs text-gray-500">3 min read</span>
-                    <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
-                      Read More
-                    </button>
+              <Link href={`/${item.category}/${item.slug}`} key={item._id}>
+                <div className="bg-white rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+                  <div className="relative h-48 sm:h-56 w-full">
+                    <Image
+                      src={item?.image}
+                      alt="Related article"
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="p-4 sm:p-6">
+                    <span className="inline-block px-2 py-1 text-xs font-semibold text-blue-600 bg-blue-100 rounded-full mb-2">
+                      {item?.category}
+                    </span>
+                    <h4 className="text-lg sm:text-xl font-bold mb-2 text-gray-800 line-clamp-2">
+                      {item?.title}
+                    </h4>
+                    <p className="text-sm sm:text-base text-gray-600 mb-4 line-clamp-2">
+                      {item?.description}
+                    </p>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs text-gray-500">3 min read</span>
+                      <button className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                        Read More
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
