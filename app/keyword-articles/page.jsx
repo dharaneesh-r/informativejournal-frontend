@@ -98,7 +98,7 @@ const KeywordArticle = () => {
           </h3>
           {leftColumnArticles.map((article, index) => (
             <Link
-              href={`/${article.category}/${article.slug}`}
+              href={`/keyword-articles/${article.category}/${article.slug}`}
               key={article._id}
             >
               <div className="group cursor-pointer hover:bg-gray-50 p-3 rounded-lg transition">
@@ -129,7 +129,7 @@ const KeywordArticle = () => {
         {/* Center Column - Main Article */}
         <div className="w-full lg:w-2/4">
           <div className="bg-white rounded-xl shadow-md overflow-hidden">
-            <Link href={`/${mainArticle.category}/${mainArticle.slug}`}>
+            <Link href={`/keyword-articles/${mainArticle.category}/${mainArticle.slug}`}>
               <div className="relative h-64 sm:h-80 md:h-96">
                 <Image
                   src={mainArticle.image || "/placeholder-image.jpg"}
