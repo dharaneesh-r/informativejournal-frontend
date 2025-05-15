@@ -1,21 +1,24 @@
 "use client";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import Loading from "../loading";
+import { useParams } from "next/navigation";
 import Image from "next/image";
 import { Clock, User, Tag, ChevronRight } from "lucide-react";
-import Link from "next/link";
+import Loading from "@/app/loading";
 
-const KeywordArticle = () => {
+const KeywordCategoryArticle = () => {
   const [keywordArticles, setKeywordArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const API_URL = "https://informativejournal-backend.vercel.app";
+  const { category } = useParams();
 
   const fetchKeywordArticles = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/keyword-articles`);
+      const response = await axios.get(
+        `${API_URL}/keyword-articles/${category}`
+      );
       setKeywordArticles(response.data.data || []);
     } catch (err) {
       console.error("Error fetching keyword articles:", err);
@@ -26,8 +29,10 @@ const KeywordArticle = () => {
   };
 
   useEffect(() => {
-    fetchKeywordArticles();
-  }, []);
+    if (category) {
+      fetchKeywordArticles();
+    }
+  }, [category]);
 
   if (loading) {
     return (
@@ -51,7 +56,7 @@ const KeywordArticle = () => {
     );
   }
 
-  if (!keywordArticles.length) {
+  if (!keywordArticles?.length) {
     return (
       <div className="text-center text-gray-500 p-8 bg-gray-50 rounded-lg">
         <p className="text-xl">No keyword articles found.</p>
@@ -61,18 +66,21 @@ const KeywordArticle = () => {
 
   // Format date
   const formatDate = (dateString) => {
+    if (!dateString) return "Recent";
     const options = { year: "numeric", month: "long", day: "numeric" };
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
   // Truncate text with ellipsis
   const truncateText = (text, maxLength) => {
-    if (!text || text.length <= maxLength) return text;
+    if (!text) return "";
+    if (text.length <= maxLength) return text;
     return text.slice(0, maxLength) + "...";
   };
 
   // Shuffle array function
   const shuffleArray = (array) => {
+    if (!array) return [];
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -83,7 +91,7 @@ const KeywordArticle = () => {
 
   // Randomly select articles
   const shuffledArticles = shuffleArray(keywordArticles);
-  const mainArticle = shuffledArticles[0];
+  const mainArticle = shuffledArticles[0] || {};
   const leftColumnArticles = shuffledArticles.slice(1, 4);
   const rightColumnArticles = shuffledArticles.slice(4, 7);
 
@@ -97,94 +105,83 @@ const KeywordArticle = () => {
             Recent Terminologies
           </h3>
           {leftColumnArticles.map((article, index) => (
-            <Link
-              href={`/${article.category}/${article.slug}`}
-              key={article._id}
+            <div
+              key={`left-${article?._id || index}`}
+              className="group cursor-pointer hover:bg-gray-50 p-3 rounded-lg transition"
             >
-              <div className="group cursor-pointer hover:bg-gray-50 p-3 rounded-lg transition">
-                <div className="relative h-40 mb-3 overflow-hidden rounded-lg">
-                  <Image
-                    src={article.image || "/placeholder-image.jpg"}
-                    alt={article.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition duration-300"
-                  />
-                </div>
-                <h4 className="font-medium text-lg group-hover:text-blue-600 transition mb-1">
-                  {truncateText(article.title, 60)}
-                </h4>
-                <div className="flex items-center text-gray-500 text-sm">
-                  <Clock size={14} className="mr-1" />
-                  <span>
-                    {article.createdAt
-                      ? formatDate(article.createdAt)
-                      : "Recent"}
-                  </span>
-                </div>
+              <div className="relative h-40 mb-3 overflow-hidden rounded-lg">
+                <Image
+                  src={article?.image || "/placeholder-image.jpg"}
+                  alt={article?.title || "Article image"}
+                  fill
+                  className="object-cover group-hover:scale-105 transition duration-300"
+                />
               </div>
-            </Link>
+              <h4 className="font-medium text-lg group-hover:text-blue-600 transition mb-1">
+                {truncateText(article?.title, 60)}
+              </h4>
+              <div className="flex items-center text-gray-500 text-sm">
+                <Clock size={14} className="mr-1" />
+                <span>{formatDate(article?.createdAt)}</span>
+              </div>
+            </div>
           ))}
         </div>
 
         {/* Center Column - Main Article */}
         <div className="w-full lg:w-2/4">
           <div className="bg-white rounded-xl shadow-md overflow-hidden">
-            <Link href={`/${mainArticle.category}/${mainArticle.slug}`}>
-              <div className="relative h-64 sm:h-80 md:h-96">
-                <Image
-                  src={mainArticle.image || "/placeholder-image.jpg"}
-                  alt={mainArticle.title}
-                  fill
-                  className="object-cover"
-                  priority
-                />
-              </div>
-              <div className="p-6">
-                <div className="flex items-center space-x-4 mb-4">
-                  <div className="flex items-center text-gray-600">
-                    <User size={16} className="mr-1" />
-                    <span>{mainArticle.author || "Dharaneesh R"}</span>
-                  </div>
-                  <div className="flex items-center text-gray-600">
-                    <Clock size={16} className="mr-1" />
-                    <span>
-                      {mainArticle.createdAt
-                        ? formatDate(mainArticle.createdAt)
-                        : "Recent"}
-                    </span>
-                  </div>
+            <div className="relative h-64 sm:h-80 md:h-96">
+              <Image
+                src={mainArticle?.image || "/placeholder-image.jpg"}
+                alt={mainArticle?.title || "Main article"}
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
+
+            <div className="p-6">
+              <div className="flex items-center space-x-4 mb-4">
+                <div className="flex items-center text-gray-600">
+                  <User size={16} className="mr-1" />
+                  <span>{mainArticle?.author || "Dharaneesh R"}</span>
                 </div>
-
-                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
-                  {mainArticle.title}
-                </h1>
-
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {mainArticle.keywords?.slice(0, 3).map((keyword, idx) => (
-                    <span
-                      key={idx}
-                      className="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full flex items-center"
-                    >
-                      <Tag size={12} className="mr-1" />
-                      {keyword}
-                    </span>
-                  )) || (
-                    <span className="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full flex items-center">
-                      <Tag size={12} className="mr-1" />
-                      Featured
-                    </span>
-                  )}
+                <div className="flex items-center text-gray-600">
+                  <Clock size={16} className="mr-1" />
+                  <span>{formatDate(mainArticle?.createdAt)}</span>
                 </div>
-
-                <p className="text-gray-700 leading-relaxed mb-6">
-                  {mainArticle.description}
-                </p>
-
-                <button className="flex items-center text-blue-600 hover:text-blue-800 transition font-medium">
-                  Read Full Article <ChevronRight size={16} className="ml-1" />
-                </button>
               </div>
-            </Link>
+
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">
+                {mainArticle?.title}
+              </h1>
+
+              <div className="flex flex-wrap gap-2 mb-4">
+                {mainArticle?.keywords?.slice(0, 3).map((keyword, idx) => (
+                  <span
+                    key={idx}
+                    className="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full flex items-center"
+                  >
+                    <Tag size={12} className="mr-1" />
+                    {keyword}
+                  </span>
+                )) || (
+                  <span className="bg-blue-100 text-blue-800 text-xs px-3 py-1 rounded-full flex items-center">
+                    <Tag size={12} className="mr-1" />
+                    Featured
+                  </span>
+                )}
+              </div>
+
+              <p className="text-gray-700 leading-relaxed mb-6">
+                {mainArticle?.description}
+              </p>
+
+              <button className="flex items-center text-blue-600 hover:text-blue-800 transition font-medium">
+                Read Full Article <ChevronRight size={16} className="ml-1" />
+              </button>
+            </div>
           </div>
         </div>
 
@@ -196,25 +193,23 @@ const KeywordArticle = () => {
           </h3>
           {rightColumnArticles.map((article, index) => (
             <div
-              key={`right-${article._id || index}`}
+              key={`right-${article?._id || index}`}
               className="group cursor-pointer hover:bg-gray-50 p-3 rounded-lg transition"
             >
               <div className="relative h-40 mb-3 overflow-hidden rounded-lg">
                 <Image
-                  src={article.image || "/placeholder-image.jpg"}
-                  alt={article.title}
+                  src={article?.image || "/placeholder-image.jpg"}
+                  alt={article?.title || "Article image"}
                   fill
                   className="object-cover group-hover:scale-105 transition duration-300"
                 />
               </div>
               <h4 className="font-medium text-lg group-hover:text-blue-600 transition mb-1">
-                {truncateText(article.title, 60)}
+                {truncateText(article?.title, 60)}
               </h4>
               <div className="flex items-center text-gray-500 text-sm">
                 <Clock size={14} className="mr-1" />
-                <span>
-                  {article.createdAt ? formatDate(article.createdAt) : "Recent"}
-                </span>
+                <span>{formatDate(article?.createdAt)}</span>
               </div>
             </div>
           ))}
@@ -251,4 +246,4 @@ const KeywordArticle = () => {
   );
 };
 
-export default KeywordArticle;
+export default KeywordCategoryArticle;

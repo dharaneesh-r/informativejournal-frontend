@@ -282,10 +282,10 @@ const KeywordArticleForm = () => {
                   required
                 >
                   <option value="">Select a category</option>
-                  <option value="technology">Technology</option>
-                  <option value="health">Health</option>
-                  <option value="business">Business</option>
-                  <option value="education">Education</option>
+                  <option value="finance">Finance</option>
+                  <option value="accounting">Accouting</option>
+                  <option value="cryptocurrency">Cryptocurrency</option>
+                  <option value="mutualfunds">Stock Market</option>
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                   <FiChevronDown className="h-4 w-4" />

@@ -69,7 +69,6 @@ export const metadata = {
     images: [`${baseUrl}/logo.png`],
     site: "@newwss",
   },
-  themeColor: "#ffffff",
   other: {
     "google-site-verification": "9375940519845683",
     "google-adsense-account": "ca-pub-9375940519845683",
