@@ -29,7 +29,7 @@ const Navbar = () => {
     { name: "Finance", path: "/finance" },
     { name: "Mutual Funds", path: "/mutualfund" },
     { name: "Stock Market", path: "/stockmarket" },
-    { name: "Stock Dashboard", path: "/stock-dashboard"},
+    { name: "Stock Dashboard", path: "/stock-dashboard" },
     { name: "Cryptocurrency", path: "/cryptocurrency" },
     { name: "Commodities", path: "/commodities" },
     { name: "Economics", path: "/economics" },
@@ -53,7 +53,6 @@ const Navbar = () => {
     { name: "Environment", path: "/environment" },
 
     // PAPER TRADING
-
     { name: "Crypto Paper Trading", path: "/crypto-games" },
     { name: "Financial Calculators", path: "/financial-calculators" },
   ];
@@ -65,6 +64,150 @@ const Navbar = () => {
     "Health & Lifestyle": newsCategories.slice(10, 13),
     "Politics & World": newsCategories.slice(13, 20),
     Other: newsCategories.slice(20),
+  };
+
+  // Languages data with regions
+  const languageGroups = {
+    "Finance": [
+      {
+        name: "Financial Terms",
+        path: "/keyword-articles",
+        terms: [
+          "Blue Chip",
+          "Growth Stocks",
+          "Value Stocks",
+          "Dividend Stocks",
+        ],
+      },
+      {
+        name: "Finance",
+        path: "/keyword-articles/finance",
+        terms: [
+          "Treasuries",
+          "Corporate Bonds",
+          "Municipal Bonds",
+          "Junk Bonds",
+        ],
+      },
+      {
+        name: "Mutual Funds",
+        path: "/mutual-funds",
+        terms: ["Index Funds", "ETF", "Sector Funds", "Target-Date Funds"],
+      },
+      {
+        name: "Derivatives",
+        path: "/derivatives",
+        terms: ["Options", "Futures", "Swaps", "CFDs"],
+      },
+    ],
+    "Market Concepts": [
+      {
+        name: "Market Trends",
+        path: "/trends",
+        terms: ["Bull Market", "Bear Market", "Correction", "Bubble"],
+      },
+      {
+        name: "Trading Strategies",
+        path: "/strategies",
+        terms: [
+          "Day Trading",
+          "Swing Trading",
+          "Value Investing",
+          "Technical Analysis",
+        ],
+      },
+      {
+        name: "Economic Indicators",
+        path: "/indicators",
+        terms: ["GDP", "Inflation", "Unemployment Rate", "CPI"],
+      },
+      {
+        name: "Risk Management",
+        path: "/risk",
+        terms: ["Diversification", "Hedging", "Stop-Loss", "Asset Allocation"],
+      },
+    ],
+    "Corporate Finance": [
+      {
+        name: "Financial Statements",
+        path: "/statements",
+        terms: ["Balance Sheet", "Income Statement", "Cash Flow", "EBITDA"],
+      },
+      {
+        name: "Valuation",
+        path: "/valuation",
+        terms: ["P/E Ratio", "DCF", "Market Cap", "Book Value"],
+      },
+      {
+        name: "Corporate Actions",
+        path: "/corporate-actions",
+        terms: ["IPO", "M&A", "Stock Split", "Dividend"],
+      },
+      {
+        name: "Capital Structure",
+        path: "/capital-structure",
+        terms: ["Equity", "Debt", "Leverage", "Working Capital"],
+      },
+    ],
+    "Personal Finance": [
+      {
+        name: "Retirement",
+        path: "/retirement",
+        terms: ["401(k)", "IRA", "Roth IRA", "Annuities"],
+      },
+      {
+        name: "Taxation",
+        path: "/taxation",
+        terms: [
+          "Capital Gains",
+          "Tax-Loss Harvesting",
+          "Deductions",
+          "Tax Brackets",
+        ],
+      },
+      {
+        name: "Banking",
+        path: "/banking",
+        terms: ["APY", "CDs", "Money Market", "Compound Interest"],
+      },
+      {
+        name: "Credit",
+        path: "/credit",
+        terms: ["Credit Score", "APR", "Debt-to-Income", "FICO"],
+      },
+    ],
+    "Emerging Trends": [
+      {
+        name: "Cryptocurrency",
+        path: "/crypto",
+        terms: ["Bitcoin", "Blockchain", "DeFi", "NFTs"],
+      },
+      {
+        name: "ESG Investing",
+        path: "/esg",
+        terms: [
+          "Sustainable Investing",
+          "Carbon Credits",
+          "Impact Investing",
+          "Corporate Governance",
+        ],
+      },
+      {
+        name: "FinTech",
+        path: "/fintech",
+        terms: [
+          "Digital Banking",
+          "Robo-Advisors",
+          "Payment Apps",
+          "InsurTech",
+        ],
+      },
+      {
+        name: "Global Markets",
+        path: "/global",
+        terms: ["Emerging Markets", "Forex", "Commodities", "ADR"],
+      },
+    ],
   };
 
   // Close dropdowns when clicking outside
@@ -286,7 +429,7 @@ const Navbar = () => {
               )}
             </div>
 
-            {/* Language Dropdown */}
+            {/* Language Dropdown - UPDATED to match Categories style */}
             <div className="relative" ref={languageDropdownRef}>
               <button
                 className="px-3 py-2 text-white rounded-md hover:bg-gray-800 transition-colors duration-200 flex items-center"
@@ -297,7 +440,7 @@ const Navbar = () => {
                 }}
                 aria-expanded={isLanguageOpen}
               >
-                Language
+                Terminologies
                 <svg
                   className={`w-4 h-4 ml-1 transition-transform duration-200 ${
                     isLanguageOpen ? "transform rotate-180" : ""
@@ -316,17 +459,37 @@ const Navbar = () => {
                 </svg>
               </button>
               {isLanguageOpen && (
-                <div className="absolute top-full right-0 bg-gray-800 rounded-lg shadow-xl w-48 p-2 mt-1 border border-gray-700 z-50">
-                  {["English", "Spanish", "French", "German"].map((lang, i) => (
-                    <a
-                      key={lang}
-                      href={`/${lang.toLowerCase().substring(0, 2)}`}
-                      className="block px-3 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-200"
-                      onClick={() => setIsLanguageOpen(false)}
-                    >
-                      {lang}
-                    </a>
-                  ))}
+                <div className="fixed left-0 right-0 top-16 bg-gray-800 shadow-xl p-4 border-t border-gray-700 z-50">
+                  <div className="container mx-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {Object.entries(languageGroups).map(
+                        ([groupName, languages]) => (
+                          <div key={groupName} className="mb-4">
+                            <h3 className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">
+                              {groupName}
+                            </h3>
+                            <div className="space-y-1">
+                              {languages.map((language) => (
+                                <a
+                                  key={language.name}
+                                  href={language.path}
+                                  className="block px-3 py-2 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-200 text-sm"
+                                  onClick={() => setIsLanguageOpen(false)}
+                                >
+                                  <span className="flex justify-between">
+                                    <span>{language.name}</span>
+                                    <span className="text-gray-400 text-xs">
+                                      {language.country}
+                                    </span>
+                                  </span>
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -621,7 +784,7 @@ const Navbar = () => {
               )}
             </div>
 
-            {/* Language Section */}
+            {/* Language Section - UPDATED to match Categories style*/}
             <div className="mb-4">
               <button
                 className="flex justify-between items-center w-full p-4 text-white bg-gray-800 rounded-lg mb-1"
@@ -646,20 +809,36 @@ const Navbar = () => {
                 </svg>
               </button>
               {isLanguageOpen && (
-                <div className="p-2 bg-gray-800 rounded-lg">
-                  {["English", "Spanish", "French", "German"].map((lang) => (
-                    <a
-                      key={lang}
-                      href={`/${lang.toLowerCase().substring(0, 2)}`}
-                      className="block p-3 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-200"
-                      onClick={() => {
-                        setIsLanguageOpen(false);
-                        setIsMobileMenuOpen(false);
-                      }}
-                    >
-                      {lang}
-                    </a>
-                  ))}
+                <div className="bg-gray-800 rounded-lg overflow-hidden">
+                  {Object.entries(languageGroups).map(
+                    ([groupName, languages]) => (
+                      <div key={groupName} className="mb-2">
+                        <h3 className="text-gray-400 text-xs font-semibold uppercase tracking-wider px-4 py-2 border-t border-gray-700">
+                          {groupName}
+                        </h3>
+                        <div className="grid grid-cols-2 gap-1 px-2">
+                          {languages.map((language) => (
+                            <a
+                              key={language.name}
+                              href={language.path}
+                              className="block p-3 text-gray-200 hover:bg-gray-700 hover:text-white rounded-md transition-colors duration-200"
+                              onClick={() => {
+                                setIsLanguageOpen(false);
+                                setIsMobileMenuOpen(false);
+                              }}
+                            >
+                              <span className="flex flex-col">
+                                <span>{language.name}</span>
+                                <span className="text-gray-400 text-xs">
+                                  {language.country}
+                                </span>
+                              </span>
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  )}
                 </div>
               )}
             </div>
