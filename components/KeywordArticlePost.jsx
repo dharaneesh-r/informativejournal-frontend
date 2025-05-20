@@ -12,8 +12,7 @@ const KeywordArticleForm = () => {
     slug: "",
     image: "",
     description: "",
-    content: [{ title: "", description: "", image: "" }],
-    contentSchema: [""],
+    content: [{ title: "", description: "", image: "", contentSchema: [""] }],
     keypoints: [{ points: [""] }],
     seokeywords: [],
   });
@@ -62,27 +61,26 @@ const KeywordArticleForm = () => {
   };
 
   // Handle content schema changes
-  const handleContentSchemaChange = (index, e) => {
+  const handleContentSchemaChange = (contentIndex, schemaIndex, e) => {
     const { value } = e.target;
-    const updatedSchema = [...formData.contentSchema];
-    updatedSchema[index] = value;
-    setFormData((prev) => ({ ...prev, contentSchema: updatedSchema }));
+    const updatedContent = [...formData.content];
+    updatedContent[contentIndex].contentSchema[schemaIndex] = value;
+    setFormData((prev) => ({ ...prev, content: updatedContent }));
   };
 
   // Add new content schema point
-  const addSchemaPoint = () => {
-    setFormData((prev) => ({
-      ...prev,
-      contentSchema: [...prev.contentSchema, ""],
-    }));
+  const addSchemaPoint = (contentIndex) => {
+    const updatedContent = [...formData.content];
+    updatedContent[contentIndex].contentSchema.push("");
+    setFormData((prev) => ({ ...prev, content: updatedContent }));
   };
 
   // Remove content schema point
-  const removeSchemaPoint = (index) => {
-    if (formData.contentSchema.length > 1) {
-      const updatedSchema = [...formData.contentSchema];
-      updatedSchema.splice(index, 1);
-      setFormData((prev) => ({ ...prev, contentSchema: updatedSchema }));
+  const removeSchemaPoint = (contentIndex, schemaIndex) => {
+    const updatedContent = [...formData.content];
+    if (updatedContent[contentIndex].contentSchema.length > 1) {
+      updatedContent[contentIndex].contentSchema.splice(schemaIndex, 1);
+      setFormData((prev) => ({ ...prev, content: updatedContent }));
     }
   };
 
@@ -107,7 +105,10 @@ const KeywordArticleForm = () => {
   const addContentSection = () => {
     setFormData((prev) => ({
       ...prev,
-      content: [...prev.content, { title: "", description: "", image: "" }],
+      content: [
+        ...prev.content,
+        { title: "", description: "", image: "", contentSchema: [""] },
+      ],
     }));
     setExpandedSections([...expandedSections, true]);
   };
@@ -495,131 +496,140 @@ const KeywordArticleForm = () => {
               </div>
 
               {expandedSections[index] && (
-                <div className="p-4 space-y-4">
-                  <div>
-                    <label
-                      htmlFor={`content-title-${index}`}
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Section Title*
-                    </label>
-                    <input
-                      type="text"
-                      id={`content-title-${index}`}
-                      name="title"
-                      value={section.title}
-                      onChange={(e) => handleContentChange(index, e)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Enter section title"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor={`content-description-${index}`}
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Section Description*
-                    </label>
-                    <textarea
-                      id={`content-description-${index}`}
-                      name="description"
-                      value={section.description}
-                      onChange={(e) => handleContentChange(index, e)}
-                      rows="4"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                      placeholder="Enter section content"
-                      required
-                    ></textarea>
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor={`content-image-${index}`}
-                      className="block text-sm font-medium text-gray-700 mb-1"
-                    >
-                      Section Image URL
-                    </label>
-                    <div className="flex">
+                <>
+                  <div className="p-4 space-y-4">
+                    <div>
+                      <label
+                        htmlFor={`content-title-${index}`}
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Section Title*
+                      </label>
                       <input
-                        type="url"
-                        id={`content-image-${index}`}
-                        name="image"
-                        value={section.image}
+                        type="text"
+                        id={`content-title-${index}`}
+                        name="title"
+                        value={section.title}
                         onChange={(e) => handleContentChange(index, e)}
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        placeholder="https://example.com/image.jpg"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Enter section title"
+                        required
                       />
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor={`content-description-${index}`}
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Section Description*
+                      </label>
+                      <textarea
+                        id={`content-description-${index}`}
+                        name="description"
+                        value={section.description}
+                        onChange={(e) => handleContentChange(index, e)}
+                        rows="4"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                        placeholder="Enter section content"
+                        required
+                      ></textarea>
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor={`content-image-${index}`}
+                        className="block text-sm font-medium text-gray-700 mb-1"
+                      >
+                        Section Image URL
+                      </label>
+                      <div className="flex">
+                        <input
+                          type="url"
+                          id={`content-image-${index}`}
+                          name="image"
+                          value={section.image}
+                          onChange={(e) => handleContentChange(index, e)}
+                          className="flex-1 px-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                          placeholder="https://example.com/image.jpg"
+                        />
+                        {section.image && (
+                          <div className="flex items-center justify-center px-3 border-t border-b border-r border-gray-300 bg-gray-100 rounded-r-md">
+                            <img
+                              src={section.image}
+                              alt="Preview"
+                              className="h-8 w-8 object-cover rounded"
+                              onError={(e) => (e.target.style.display = "none")}
+                            />
+                          </div>
+                        )}
+                      </div>
                       {section.image && (
-                        <div className="flex items-center justify-center px-3 border-t border-b border-r border-gray-300 bg-gray-100 rounded-r-md">
-                          <img
-                            src={section.image}
-                            alt="Preview"
-                            className="h-8 w-8 object-cover rounded"
-                            onError={(e) => (e.target.style.display = "none")}
-                          />
-                        </div>
+                        <p className="mt-1 text-xs text-gray-500">
+                          Image preview
+                        </p>
                       )}
                     </div>
-                    {section.image && (
-                      <p className="mt-1 text-xs text-gray-500">
-                        Image preview
-                      </p>
-                    )}
                   </div>
-                </div>
+                  <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                    <div className="flex justify-between items-center">
+                      <h2 className="text-xl font-semibold text-gray-700">
+                        Content Schema
+                      </h2>
+                      <button
+                        type="button"
+                        onClick={() => addSchemaPoint(index)}
+                        className="flex items-center px-3 py-1 bg-indigo-100 text-indigo-600 rounded-md hover:bg-indigo-200 transition-colors"
+                      >
+                        <FiPlus className="mr-1" /> Add Schema Point
+                      </button>
+                    </div>
+
+                    <div className="space-y-2">
+                      {section.contentSchema.map((point, schemaIndex) => (
+                        <div
+                          key={schemaIndex}
+                          className="flex items-center space-x-2"
+                        >
+                          <div className="flex-shrink-0 w-5 h-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
+                            {schemaIndex + 1}
+                          </div>
+                          <input
+                            type="text"
+                            value={point}
+                            onChange={(e) =>
+                              handleContentSchemaChange(index, schemaIndex, e)
+                            }
+                            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                            placeholder={`Enter schema point ${
+                              schemaIndex + 1
+                            }`}
+                          />
+                          {section.contentSchema.length > 1 && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                removeSchemaPoint(index, schemaIndex)
+                              }
+                              className="p-1 text-red-500 hover:text-red-700 rounded-full hover:bg-red-100"
+                              title="Remove schema point"
+                            >
+                              <FiTrash2 />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Define the structure and organization of your article
+                      content
+                    </p>
+                  </div>
+                </>
               )}
             </div>
           ))}
         </div>
-
-        {/* Content Schema */}
-        <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-gray-700">
-              Content Schema
-            </h2>
-            <button
-              type="button"
-              onClick={addSchemaPoint}
-              className="flex items-center px-3 py-1 bg-indigo-100 text-indigo-600 rounded-md hover:bg-indigo-200 transition-colors"
-            >
-              <FiPlus className="mr-1" /> Add Schema Point
-            </button>
-          </div>
-
-          <div className="space-y-2">
-            {formData.contentSchema.map((point, index) => (
-              <div key={index} className="flex items-center space-x-2">
-                <div className="flex-shrink-0 w-5 h-5 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
-                  {index + 1}
-                </div>
-                <input
-                  type="text"
-                  value={point}
-                  onChange={(e) => handleContentSchemaChange(index, e)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder={`Enter schema point ${index + 1}`}
-                />
-                {formData.contentSchema.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => removeSchemaPoint(index)}
-                    className="p-1 text-red-500 hover:text-red-700 rounded-full hover:bg-red-100"
-                    title="Remove schema point"
-                  >
-                    <FiTrash2 />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-          <p className="mt-1 text-xs text-gray-500">
-            Define the structure and organization of your article content
-          </p>
-        </div>
-
         {/* Key Points */}
         <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
           <div className="flex justify-between items-center">
@@ -711,7 +721,7 @@ const KeywordArticleForm = () => {
                   <path
                     className="opacity-75"
                     fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm25.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
                 Creating Article...

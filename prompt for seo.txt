@@ -1,0 +1,12 @@
+THIS ONE IS FOR NEWS WEBSITE PROMPT 
+
+Generate a comprehensive, SEO-optimized news article based on the headline “TITLE HEADING” The article should begin with a keyword-rich, compelling headline followed by an engaging introduction that captures the essence of the development. The body content must be factually accurate, well-structured, and include relevant background information, details of the refinancing deal, its connection to Tata Sons, and any implications for the group or broader industry. Incorporate relevant financial data, expert quotes (real or realistic), and supporting statistics to strengthen credibility. Maintain a natural, informative tone suitable for a financial news audience. Use concise paragraphs with subheadings to enhance web readability, and format the content for easy scanning by readers. Conclude with a summary that highlights the impact of the deal and outlines any potential future developments. Finally, include a suggested meta description between 150–160 characters that is optimized for search engines and summarizes the news clearly.
+
+====================================================================================================
+
+
+THIS ONE IS FOR KEYWORDS ARTICLE PROMPT
+
+Create authoritative, SEO-optimized content for [FINANCIAL TERM] that ranks in the top search results by defining the concept clearly, incorporating high-value keywords (like "[TERM] definition," "[TERM] examples," "how [TERM] works," "[TERM] for beginners"), structuring content with strategic H2/H3 headings, addressing the top 5 most-searched questions about this topic, providing actionable examples relevant to both individuals and businesses, citing current statistics and trends, maintaining a 9th-grade reading level with short paragraphs, and including internal linking opportunities to related financial concepts. Ensure the content is 1200-1500 words, satisfies search intent for both informational and commercial queries, outperforms competitor content on depth and clarity, and concludes with valuable next steps that encourage reader engagement.
+
+=========================================================================================================
