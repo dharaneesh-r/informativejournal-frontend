@@ -1112,7 +1112,7 @@ export default function FeaturedPosts({ userId }) {
           </div>
 
           {/* Right Column - Sidebar */}
-          <div className="lg:col-span-1 space-y-6">
+          <div className="lg:col-span-1 space-y-6 h-screen sticky top-20 overflow-auto pb-6 pr-1">
             {/* Market Widget */}
             {renderTradingViewWidget()}
             {indicesTradingViewWidget()}
