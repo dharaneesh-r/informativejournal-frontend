@@ -1182,8 +1182,8 @@ export default function FeaturedPosts({ userId }) {
 
   if (error) {
     return (
-      <div className="flex justify-center items-center h-screen text-red-500 text-xl">
-        {error}
+      <div>
+        <NotFound />
       </div>
     );
   }

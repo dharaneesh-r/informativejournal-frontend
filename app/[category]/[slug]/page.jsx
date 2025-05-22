@@ -137,10 +137,10 @@ const ArticlePage = () => {
         if (response.data?.status === "success") {
           setArticle(response.data.data);
         } else {
-          setError("Article not found");
+          setError(<Loading />);
         }
       } catch (err) {
-        setError(<Loading />);
+        setError(<NotFound />);
       } finally {
         setLoading(false);
       }
@@ -521,34 +521,16 @@ const ArticlePage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-white">
-        <div className="text-center max-w-md p-6 bg-white rounded-xl shadow-lg">
-          <h1 className="text-2xl font-bold text-red-500 mb-4">{error}</h1>
-          <button
-            onClick={() => (window.location.href = "/")}
-            className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all shadow-md"
-          >
-            Back to Home
-          </button>
-        </div>
-      </div>
+     <div>
+      <NotFound />
+     </div>
     );
   }
 
   if (!article) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-white">
-        <div className="text-center max-w-md p-6 bg-white rounded-xl shadow-lg">
-          <h1 className="text-2xl font-bold text-gray-800">
-            Article not found
-          </h1>
-          <button
-            onClick={() => (window.location.href = "/")}
-            className="mt-4 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-lg hover:from-blue-700 hover:to-blue-600 transition-all shadow-md"
-          >
-            Back to Home
-          </button>
-        </div>
+      <div className="min-h-screen place-content-center flex items-center justify-center">
+        <Loading />
       </div>
     );
   }

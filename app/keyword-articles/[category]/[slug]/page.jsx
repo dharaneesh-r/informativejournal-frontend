@@ -21,6 +21,8 @@ import {
 import { toast, Toaster } from "react-hot-toast";
 import Image from "next/image";
 import Link from "next/link";
+import NotFound from "@/app/NotFound";
+import Loading from "@/app/loading";
 
 export default function ArticlePage() {
   const params = useParams();
@@ -220,86 +222,24 @@ export default function ArticlePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex flex-col items-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading article...</p>
-        </div>
+      <div>
+        <Loading />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-red-50 border-l-4 border-red-500 text-red-700 p-6 rounded-lg shadow-md max-w-2xl">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg
-                className="h-6 w-6 text-red-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-lg font-medium">Error loading article</h3>
-              <p className="mt-2">{error}</p>
-              <button
-                onClick={() => router.push("/")}
-                className="mt-4 bg-red-100 hover:bg-red-200 text-red-700 py-2 px-4 rounded-md transition duration-200"
-              >
-                Return to Home
-              </button>
-            </div>
-          </div>
-        </div>
+      <div>
+        <NotFound />
       </div>
     );
   }
 
   if (!article) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="bg-yellow-50 border-l-4 border-yellow-500 text-yellow-700 p-6 rounded-lg shadow-md max-w-2xl">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg
-                className="h-6 w-6 text-yellow-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-lg font-medium">Article not found</h3>
-              <p className="mt-2">
-                The article you're looking for doesn't exist or has been
-                removed.
-              </p>
-              <button
-                onClick={() => router.push("/")}
-                className="mt-4 bg-yellow-100 hover:bg-yellow-200 text-yellow-700 py-2 px-4 rounded-md transition duration-200"
-              >
-                Return to Home
-              </button>
-            </div>
-          </div>
-        </div>
+      <div>
+        <NotFound />
       </div>
     );
   }
