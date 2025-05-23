@@ -28,6 +28,7 @@ import Loading from "@/app/loading";
 import AnimatedPoll from "@/components/AnimatedPoll";
 import NotFound from "@/app/NotFound";
 import Link from "next/link";
+import GTag from "@/components/Gtag";
 
 // Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
@@ -539,6 +540,7 @@ const ArticlePage = () => {
     <>
       <Head>
         <title>{article?.title || "Article"} | Newwss</title>
+        <GTag />
         <meta name="description" content={article?.description || ""} />
         <meta name="robots" content="index, follow" />
         <meta property="og:title" content={article?.title || "Article"} />

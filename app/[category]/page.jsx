@@ -30,6 +30,7 @@ import {
 } from "react-icons/fa";
 import Head from "next/head";
 import NotFound from "../NotFound";
+import GTag from "@/components/Gtag";
 
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
@@ -471,6 +472,7 @@ export default function CategoryPage() {
       <>
         <Head>
           <title>{heroArticle?.title | "Newwss"}</title>
+          <GTag />
           <meta
             name="description"
             content={

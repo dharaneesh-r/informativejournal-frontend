@@ -33,6 +33,7 @@ import Head from "next/head";
 import AdsterraAd from "@/components/AdsterraAds";
 import AdBanner from "@/components/BannerAds";
 import NotFound from "./NotFound";
+import GTag from "@/components/Gtag";
 
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
@@ -680,6 +681,7 @@ export default function FeaturedPosts({ userId }) {
             name="twitter:image"
             content={heroArticle?.image || "/news-image.jpg"}
           />
+          <GTag />
         </Head>
         {/* Latest Articles Marquee */}
         <div className="col-span-1 shadow-xl md:col-span-3  text-black p-2 mb-6 rounded overflow-hidden">

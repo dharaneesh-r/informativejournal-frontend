@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
-import Script from "next/script";
+import GTag from "@/components/Gtag";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -80,19 +80,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <head>
-        {/* ✅ Google Analytics 4 via gtag.js */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-DG0801N414"
-          strategy="afterInteractive"
-        />
-        <Script id="google-analytics" strategy="afterInteractive">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-DG0801N414');
-          `}
-        </Script>
+        <GTag />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
