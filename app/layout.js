@@ -4,6 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/react";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -20,7 +21,7 @@ const baseUrl = "https://www.newwss.com/";
 export const metadata = {
   title: "Newwss – Breaking News, Finance, Politics, Sports & World Headlines ",
   viewport: "width=device-width, initial-scale=1",
-  logo: `${baseUrl}/logo.png`,
+  logo: "../public/logo.png",
   description:
     "Stay updated with Newwss – your trusted source for breaking news, finance updates, political headlines, sports scores, world affairs, and trending stories. Fresh content, daily.",
   keywords: [
@@ -78,6 +79,21 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        {/* ✅ Google Analytics 4 via gtag.js */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-DG0801N414"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-DG0801N414');
+          `}
+        </Script>
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
