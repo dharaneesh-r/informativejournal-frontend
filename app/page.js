@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import gsap from "gsap";
 import { ScrollTrigger, ScrollToPlugin } from "gsap/all";
 import axios from "axios";
@@ -39,9 +39,9 @@ gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
 export default function FeaturedPosts({ userId }) {
   const baseURL = "https://informativejournal-backend.vercel.app/articles";
-  // State management
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [heroArticle, setHeroArticle] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -56,16 +56,15 @@ export default function FeaturedPosts({ userId }) {
   const [latestArticles, setLatestArticles] = useState([]);
   const [activeTab, setActiveTab] = useState("all");
   const [marketData, setMarketData] = useState(null);
-
-  // Speech state
   const [speechState, setSpeechState] = useState("idle");
   const [language, setLanguage] = useState("en-US");
   const [speechProgress, setSpeechProgress] = useState(0);
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [showLanguageModal, setShowLanguageModal] = useState(false);
   const [currentArticleIndex, setCurrentArticleIndex] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [lastArticleId, setLastArticleId] = useState(null);
 
-  // Refs
   const searchBarRef = useRef(null);
   const voiceButtonRef = useRef(null);
   const fabMenuRef = useRef(null);
@@ -75,6 +74,7 @@ export default function FeaturedPosts({ userId }) {
   const modalRef = useRef(null);
   const articleRefs = useRef([]);
   const containerRef = useRef(null);
+  const observer = useRef();
   const speechRef = useRef({
     utterance: null,
     startTime: 0,
@@ -85,7 +85,6 @@ export default function FeaturedPosts({ userId }) {
   const progressIntervalRef = useRef(null);
   const marqueeRef = useRef(null);
 
-  // Supported languages
   const languages = [
     { code: "en-US", name: "English", flag: "🇺🇸" },
     { code: "es-ES", name: "Spanish", flag: "🇪🇸" },
@@ -101,7 +100,6 @@ export default function FeaturedPosts({ userId }) {
     { code: "ko-KR", name: "Korean", flag: "🇰🇷" },
   ];
 
-  // Categories for filtering
   const categories = [
     { id: "all", name: "All News", icon: <FaNewspaper className="mr-2" /> },
     {
@@ -116,7 +114,193 @@ export default function FeaturedPosts({ userId }) {
     },
   ];
 
-  // Check for mobile view and setup smooth scrolling
+  // Add this state to prevent multiple simultaneous requests
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const lastArticleIdRef = useRef(null);
+  const fetchedIdsRef = useRef(new Set()); // Track fetched IDs to prevent duplicates
+
+  const fetchArticles = useCallback(
+    async (loadMore = false) => {
+      // Prevent multiple simultaneous requests
+      if (isFetchingMore && loadMore) {
+        console.log("Already fetching, skipping request");
+        return;
+      }
+
+      try {
+        if (loadMore) {
+          setIsFetchingMore(true);
+          setLoadingMore(true);
+        } else {
+          setLoading(true);
+          // Reset for fresh fetch
+          fetchedIdsRef.current.clear();
+          lastArticleIdRef.current = null;
+        }
+
+        let url = `${baseURL}?limit=25`;
+        if (loadMore && lastArticleIdRef.current) {
+          url += `&lastId=${encodeURIComponent(lastArticleIdRef.current)}`;
+        }
+
+        console.log(`Using lastArticleId: ${lastArticleIdRef.current}`);
+        console.log(`Current fetched IDs count: ${fetchedIdsRef.current.size}`);
+
+        const response = await axios.get(url);
+
+        if (
+          response.data.status === "success" &&
+          Array.isArray(response.data.data)
+        ) {
+          const newArticles = response.data.data;
+
+          // Filter out duplicates
+          const uniqueNewArticles = newArticles.filter((article) => {
+            if (!article._id) return false;
+            if (fetchedIdsRef.current.has(article._id)) {
+              console.warn(`Duplicate article filtered: ${article._id}`);
+              return false;
+            }
+            fetchedIdsRef.current.add(article._id);
+            return true;
+          });
+
+          console.log(
+            `Original articles: ${newArticles.length}, Unique articles: ${uniqueNewArticles.length}`
+          );
+
+          if (uniqueNewArticles.length === 0 && loadMore) {
+            console.log("No new unique articles, stopping pagination");
+            setHasMore(false);
+            return;
+          }
+
+          if (loadMore) {
+            setArticles((prev) => {
+              // Double-check for duplicates in existing articles
+              const existingIds = new Set(prev.map((article) => article._id));
+              const finalUniqueArticles = uniqueNewArticles.filter(
+                (article) => !existingIds.has(article._id)
+              );
+              console.log(
+                `Final unique articles to add: ${finalUniqueArticles.length}`
+              );
+              return [...prev, ...finalUniqueArticles];
+            });
+          } else {
+            setArticles(uniqueNewArticles);
+            if (uniqueNewArticles.length > 0) {
+              setHeroArticle(uniqueNewArticles[0]);
+            }
+            setLatestArticles(uniqueNewArticles.slice(0, 10));
+          }
+
+          // Update hasMore based on actual unique articles received
+          setHasMore(uniqueNewArticles.length === 25);
+
+          // Update lastArticleId with the last unique article
+          if (uniqueNewArticles.length > 0) {
+            const newLastId =
+              uniqueNewArticles[uniqueNewArticles.length - 1]._id;
+            lastArticleIdRef.current = newLastId;
+            setLastArticleId(newLastId);
+            console.log("New Last Article ID:", newLastId);
+          } else if (loadMore) {
+            // No new unique articles, stop pagination
+            setHasMore(false);
+          }
+        } else {
+          console.warn("No more articles or invalid response:", response.data);
+          setHasMore(false);
+        }
+      } catch (err) {
+        console.error("Error fetching articles:", err);
+        setError(<NotFound />);
+        setHasMore(false); // Stop trying to fetch more on error
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+        setIsFetchingMore(false);
+      }
+    },
+    [baseURL]
+  );
+
+  const lastArticleRef = useCallback(
+    (node) => {
+      // Prevent observer from triggering while already fetching
+      if (loading || loadingMore || !hasMore || isFetchingMore) {
+        console.log("Observer blocked:", {
+          loading,
+          loadingMore,
+          hasMore,
+          isFetchingMore,
+        });
+        return;
+      }
+
+      if (observer.current) observer.current.disconnect();
+
+      observer.current = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting && hasMore && !isFetchingMore) {
+            console.log("Observer triggered, fetching more articles");
+            fetchArticles(true);
+          }
+        },
+        {
+          threshold: 0.1,
+          rootMargin: "100px",
+        }
+      );
+
+      if (node) observer.current.observe(node);
+    },
+    [loading, loadingMore, hasMore, isFetchingMore, fetchArticles]
+  );
+  const debouncedFetchMore = useCallback(
+    debounce(() => {
+      if (hasMore && !isFetchingMore && !loading && !loadingMore) {
+        fetchArticles(true);
+      }
+    }, 300),
+    [hasMore, isFetchingMore, loading, loadingMore, fetchArticles]
+  );
+
+  const lastArticleRefDebounced = useCallback(
+    (node) => {
+      if (loading || loadingMore || !hasMore || isFetchingMore) return;
+      if (observer.current) observer.current.disconnect();
+
+      observer.current = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting && hasMore && !isFetchingMore) {
+            console.log("Observer triggered (debounced)");
+            debouncedFetchMore();
+          }
+        },
+        {
+          threshold: 0.1,
+          rootMargin: "100px",
+        }
+      );
+
+      if (node) observer.current.observe(node);
+    },
+    [loading, loadingMore, hasMore, isFetchingMore, debouncedFetchMore]
+  );
+  function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  }
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768);
@@ -124,30 +308,29 @@ export default function FeaturedPosts({ userId }) {
     checkMobile();
     window.addEventListener("resize", checkMobile);
 
-    // Setup smooth scrolling
     gsap.config({
       nullTargetWarn: false,
     });
 
+    fetchArticles();
+
+    const interval = setInterval(() => fetchArticles(false), 30000);
     return () => {
       window.removeEventListener("resize", checkMobile);
       ScrollTrigger.getAll().forEach((instance) => instance.kill());
+      clearInterval(interval);
+      if (observer.current) observer.current.disconnect();
     };
-  }, []);
+  }, [fetchArticles]);
 
-  // Check Web Speech API support
   useEffect(() => {
     if (typeof window !== "undefined") {
-      if ("webkitSpeechRecognition" in window) {
-        setIsSpeechSupported(true);
-      }
-      if (!("speechSynthesis" in window)) {
-        console.warn("Text-to-speech not supported");
-      }
+      setIsSpeechSupported(
+        "webkitSpeechRecognition" in window && "speechSynthesis" in window
+      );
     }
   }, []);
 
-  // Fetch market data
   useEffect(() => {
     const fetchMarketData = async () => {
       try {
@@ -161,11 +344,36 @@ export default function FeaturedPosts({ userId }) {
     };
 
     fetchMarketData();
-    const interval = setInterval(fetchMarketData, 60000); // Update every minute
+    const interval = setInterval(fetchMarketData, 60000);
     return () => clearInterval(interval);
   }, []);
 
-  // Close modals when clicking outside
+  useEffect(() => {
+    if (marqueeRef.current && latestArticles.length > 0) {
+      const marqueeContent = marqueeRef.current;
+      const contentWidth = marqueeContent.scrollWidth;
+      const duration = contentWidth / 50;
+
+      gsap.fromTo(
+        marqueeContent,
+        { x: 0 },
+        {
+          x: -contentWidth,
+          duration: duration,
+          ease: "none",
+          repeat: -1,
+        }
+      );
+    }
+  }, [latestArticles]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = JSON.parse(localStorage.getItem("savedArticles")) || [];
+      setSavedArticles(saved);
+    }
+  }, []);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (modalRef.current && !modalRef.current.contains(event.target)) {
@@ -192,68 +400,24 @@ export default function FeaturedPosts({ userId }) {
     };
   }, [showSavedArticles, showGamification]);
 
-  // Fetch articles and sort by date (newest first)
   useEffect(() => {
-    const fetchArticles = async () => {
-      try {
-        const response = await axios.get(baseURL);
-        if (response.data.status === "success") {
-          // Sort articles by date in descending order (newest first)
-          const sortedArticles = response.data.data.sort((a, b) => {
-            return new Date(b.createdAt) - new Date(a.createdAt);
-          });
-          // Only get the latest 50 articles
-          setArticles(sortedArticles);
-          // Set first article as hero article
-          if (sortedArticles.length > 0) {
-            setHeroArticle(sortedArticles[0]);
-          }
-          // Set latest 10 articles for marquee
-          setLatestArticles(sortedArticles.slice(0, 10));
-        }
-      } catch (err) {
-        console.error("Error fetching articles:", err);
-        setError(<NotFound />);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchArticles();
-    // Poll for new articles every 30 seconds
-    const interval = setInterval(fetchArticles, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  // Animate marquee
-  useEffect(() => {
-    if (marqueeRef.current && latestArticles.length > 0) {
-      const marqueeContent = marqueeRef.current;
-      const contentWidth = marqueeContent.scrollWidth;
-      const duration = contentWidth / 50;
-
-      gsap.fromTo(
-        marqueeContent,
-        { x: 0 },
-        {
-          x: -contentWidth,
-          duration: duration,
-          ease: "none",
-          repeat: -1,
-        }
-      );
+    if (isListening && isSpeechSupported) {
+      const recognition = new window.webkitSpeechRecognition();
+      recognition.lang = language;
+      recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        setSearchQuery(transcript);
+        setIsListening(false);
+      };
+      recognition.onerror = (event) => {
+        console.error("Speech recognition error:", event.error);
+        setIsListening(false);
+      };
+      recognition.start();
+      return () => recognition.stop();
     }
-  }, [latestArticles]);
+  }, [isListening, language, isSpeechSupported]);
 
-  // Load saved articles
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const saved = JSON.parse(localStorage.getItem("savedArticles")) || [];
-      setSavedArticles(saved);
-    }
-  }, []);
-
-  // Save/remove article
   const toggleSaveArticle = (article) => {
     const isSaved = savedArticles.some((a) => a._id === article._id);
     let updatedSavedArticles;
@@ -272,7 +436,6 @@ export default function FeaturedPosts({ userId }) {
     }
   };
 
-  // Share article
   const shareArticle = (article) => {
     if (navigator.share) {
       navigator
@@ -283,7 +446,6 @@ export default function FeaturedPosts({ userId }) {
         })
         .catch((error) => console.log("Error sharing:", error));
     } else {
-      // Fallback for browsers that don't support Web Share API
       const shareUrl = `${window.location.origin}/${article.category}/${article.slug}`;
       navigator.clipboard
         .writeText(`${article.title}\n\n${shareUrl}`)
@@ -292,14 +454,12 @@ export default function FeaturedPosts({ userId }) {
     }
   };
 
-  // Check if article is among the last 3 posted
   const isLatestArticle = (article) => {
     if (articles.length < 3) return true;
     const latestThree = articles.slice(0, 3);
     return latestThree.some((a) => a._id === article._id);
   };
 
-  // Speech controls
   const toggleSpeech = () => {
     if (speechState === "idle") {
       startSpeech();
@@ -443,26 +603,6 @@ export default function FeaturedPosts({ userId }) {
     }
   };
 
-  // Voice search
-  useEffect(() => {
-    if (isListening && isSpeechSupported) {
-      const recognition = new window.webkitSpeechRecognition();
-      recognition.lang = language;
-      recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        setSearchQuery(transcript);
-        setIsListening(false);
-      };
-      recognition.onerror = (event) => {
-        console.error("Speech recognition error:", event.error);
-        setIsListening(false);
-      };
-      recognition.start();
-      return () => recognition.stop();
-    }
-  }, [isListening, language, isSpeechSupported]);
-
-  // Filter articles based on search and active tab
   const filteredArticles = articles.filter((article) => {
     const matchesSearch =
       article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -475,7 +615,6 @@ export default function FeaturedPosts({ userId }) {
     return matchesSearch && matchesCategory;
   });
 
-  // Render market ticker
   const renderMarketTicker = () => {
     if (!marketData) return null;
 
@@ -507,7 +646,6 @@ export default function FeaturedPosts({ userId }) {
     );
   };
 
-  // Render TradingView widget
   const renderTradingViewWidget = () => {
     return (
       <div className="bg-white rounded-xl shadow-md p-4 mb-6">
@@ -516,7 +654,6 @@ export default function FeaturedPosts({ userId }) {
           <h3 className="font-bold text-lg">Market Overview</h3>
         </div>
         <div className="h-64">
-          {/* TradingView Widget */}
           <iframe
             src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=en#%7B%22symbol%22%3A%22NASDAQ%3AAAPL%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22dateRange%22%3A%2212M%22%2C%22colorTheme%22%3A%22light%22%2C%22trendLineColor%22%3A%22%2360a5fa%22%2C%22gridLineColor%22%3A%22%23e5e7eb%22%2C%22fontColor%22%3A%22%236b7280%22%2C%22underLineColor%22%3A%22%23d1d5db%22%2C%22isTransparent%22%3Afalse%2C%22autosize%22%3Atrue%2C%22largeChartUrl%22%3A%22%22%7D"
             style={{ width: "100%", height: "100%", border: "none" }}
@@ -529,8 +666,6 @@ export default function FeaturedPosts({ userId }) {
     );
   };
 
-  // Render the Indices trading view widget
-
   const indicesTradingViewWidget = () => {
     return (
       <div className="bg-white rounded-xl shadow-md p-4 mb-6">
@@ -539,7 +674,6 @@ export default function FeaturedPosts({ userId }) {
           <h3 className="font-bold text-lg">Indices Overview</h3>
         </div>
         <div className="h-64">
-          {/* TradingView Widget */}
           <iframe
             src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=en#%7B%22symbol%22%3A%22NASDAQ%3ANDX%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22dateRange%22%3A%2212M%22%2C%22colorTheme%22%3A%22light%22%2C%22trendLineColor%22%3A%22%2360a5fa%22%2C%22gridLineColor%22%3A%22%23e5e7eb%22%2C%22fontColor%22%3A%22%236b7280%22%2C%22underLineColor%22%3A%22%23d1d5db%22%2C%22isTransparent%22%3Afalse%2C%22autosize%22%3Atrue%2C%22largeChartUrl%22%3A%22%22%7D"
             style={{ width: "100%", height: "100%", border: "none" }}
@@ -558,65 +692,12 @@ export default function FeaturedPosts({ userId }) {
           ></iframe>
         </div>
         <div className="h-64 mt-10">
-          <iframe
-            src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=en#%7B%22symbol%22%3A%22ASX%3AAXJO%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22dateRange%22%3A%2212M%22%2C%22colorTheme%22%3A%22light%22%2C%22trendLineColor%22%3A%22%2360a5fa%22%2C%22gridLineColor%22%3A%22%23e5e7eb%22%2C%22fontColor%22%3A%22%236b7280%22%2C%22underLineColor%22%3A%22%23d1d5db%22%2C%22isTransparent%22%3Afalse%2C%22autosize%22%3Atrue%2C%22largeChartUrl%22%3A%22%22%7D"
-            style={{ width: "100%", height: "100%", border: "none" }}
-            allowtransparency="true"
-            frameBorder="0"
-            scrolling="no"
-          ></iframe>
-        </div>
-        <div className="h-64 mt-10">
-          <iframe
-            src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=en#%7B%22symbol%22%3A%22INDEX%3ANKY%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22dateRange%22%3A%2212M%22%2C%22colorTheme%22%3A%22light%22%2C%22trendLineColor%22%3A%22%2360a5fa%22%2C%22gridLineColor%22%3A%22%23e5e7eb%22%2C%22fontColor%22%3A%22%236b7280%22%2C%22underLineColor%22%3A%22%23d1d5db%22%2C%22isTransparent%22%3Afalse%2C%22autosize%22%3Atrue%2C%22largeChartUrl%22%3A%22%22%7D"
-            style={{ width: "100%", height: "100%", border: "none" }}
-            allowtransparency="true"
-            frameBorder="0"
-            scrolling="no"
-          ></iframe>
-        </div>
-        <div className="h-64 mt-10">
           <AdBanner />
-        </div>
-        <div className="h-64 mt-10">
-          {/* TradingView Widget */}
-          <iframe
-            src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=en#%7B%22symbol%22%3A%22BSE%3ASENSEX%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22dateRange%22%3A%2212M%22%2C%22colorTheme%22%3A%22light%22%2C%22trendLineColor%22%3A%22%2360a5fa%22%2C%22gridLineColor%22%3A%22%23e5e7eb%22%2C%22fontColor%22%3A%22%236b7280%22%2C%22underLineColor%22%3A%22%23d1d5db%22%2C%22isTransparent%22%3Afalse%2C%22autosize%22%3Atrue%2C%22largeChartUrl%22%3A%22%22%7D"
-            style={{ width: "100%", height: "100%", border: "none" }}
-            allowtransparency="true"
-            frameBorder="0"
-            scrolling="no"
-          ></iframe>
-        </div>
-        <div className="h-64 mt-10">
-          <AdBanner />
-        </div>
-        <div className="h-64 mt-10">
-          {/* TradingView Widget */}
-          <iframe
-            src="https://s.tradingview.com/embed-widget/mini-symbol-overview/?locale=en#%7B%22symbol%22%3A%22NASDAQ%3ANDX%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22dateRange%22%3A%2212M%22%2C%22colorTheme%22%3A%22light%22%2C%22trendLineColor%22%3A%22%2360a5fa%22%2C%22gridLineColor%22%3A%22%23e5e7eb%22%2C%22fontColor%22%3A%22%236b7280%22%2C%22underLineColor%22%3A%22%23d1d5db%22%2C%22isTransparent%22%3Afalse%2C%22autosize%22%3Atrue%2C%22largeChartUrl%22%3A%22%22%7D"
-            style={{ width: "100%", height: "100%", border: "none" }}
-            allowtransparency="true"
-            frameBorder="0"
-            scrolling="no"
-          ></iframe>
-        </div>
-        <div className="h-64 mt-10">
-          <AdBanner />
-        </div>
-        <div className="w-full h-[400px] md:h-[500px] lg:h-[600px] mt-10 rounded-lg overflow-hidden">
-          <iframe
-            src="https://s.tradingview.com/embed-widget/timeline/?locale=en#%7B%22colorTheme%22%3A%22light%22%2C%22isTransparent%22%3Afalse%2C%22displayMode%22%3A%22regular%22%2C%22width%22%3A%22100%25%22%2C%22height%22%3A%22100%25%22%2C%22utm_source%22%3A%22example.com%22%2C%22utm_medium%22%3A%22widget%22%2C%22utm_campaign%22%3A%22timeline%22%7D"
-            className="w-full h-full border-0"
-            allowtransparency="true"
-            loading="lazy"
-          ></iframe>
         </div>
       </div>
     );
   };
 
-  // Render articles with hero placement
   const renderArticles = () => {
     if (filteredArticles.length === 0) {
       return (
@@ -628,7 +709,6 @@ export default function FeaturedPosts({ userId }) {
       );
     }
 
-    // Exclude hero article from regular articles
     const regularArticles = filteredArticles.filter(
       (article) => !heroArticle || article._id !== heroArticle._id
     );
@@ -659,8 +739,6 @@ export default function FeaturedPosts({ userId }) {
             }, latest news, breaking news`}
           />
           <meta name="author" content={heroArticle?.author || "Newwss"} />
-
-          {/* Open Graph tags for social media */}
           <meta property="og:title" content={heroArticle?.title} />
           <meta property="og:description" content={heroArticle?.description} />
           <meta
@@ -672,8 +750,6 @@ export default function FeaturedPosts({ userId }) {
             content={`https://www.newwss.com/${heroArticle?.category}/${heroArticle?.slug}`}
           />
           <meta property="og:type" content="article" />
-
-          {/* Twitter Card tags */}
           <meta name="twitter:card" content="summary_large_image" />
           <meta name="twitter:title" content={heroArticle?.title} />
           <meta name="twitter:description" content={heroArticle?.description} />
@@ -683,8 +759,7 @@ export default function FeaturedPosts({ userId }) {
           />
           <GTag />
         </Head>
-        {/* Latest Articles Marquee */}
-        <div className="col-span-1 shadow-xl md:col-span-3  text-black p-2 mb-6 rounded overflow-hidden">
+        <div className="col-span-1 shadow-xl md:col-span-3 text-black p-2 mb-6 rounded overflow-hidden">
           <div className="flex items-center">
             <div className="bg-red-600 text-white px-3 py-1 rounded-full font-bold flex items-center mr-3 whitespace-nowrap">
               <FaCircle className="text-xs mr-2 animate-pulse" /> BREAKING NEWS
@@ -705,7 +780,6 @@ export default function FeaturedPosts({ userId }) {
           </div>
         </div>
 
-        {/* Hero Article */}
         {heroArticle &&
           filteredArticles.some((a) => a._id === heroArticle._id) && (
             <>
@@ -828,22 +902,15 @@ export default function FeaturedPosts({ userId }) {
                   </Link>
                 </div>
               </div>
-              <div className="col-span-1 md:col-span-3 fade-in relative hero-article mb-8 flex flex-row gap-4">
-                {[...Array(4)].map((_, index) => (
-                  <div key={index}>
-                    <AdsterraAd />
-                    <AdBanner />
-                  </div>
-                ))}
+              <div className="col-span-1 md:col-span-3 fade-in relative hero-article mb-8">
+                <AdsterraAd key="hero-ad-1" />
+                <AdBanner key="hero-banner-1" />
               </div>
             </>
           )}
 
-        {/* Main Content Area */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Left Column - Articles */}
           <div className="lg:col-span-3">
-            {/* Category Tabs */}
             <div className="flex border-b border-gray-200 mb-6">
               {categories.map((category) => (
                 <button
@@ -861,7 +928,6 @@ export default function FeaturedPosts({ userId }) {
               ))}
             </div>
 
-            {/* Secondary Featured Articles */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
               {regularArticles.slice(0, 2).map((article, index) => {
                 const globalIndex = filteredArticles.findIndex(
@@ -876,112 +942,109 @@ export default function FeaturedPosts({ userId }) {
                 const isLatest = isLatestArticle(article);
 
                 return (
-                  <>
-                    <div
-                      key={article._id}
-                      ref={(el) => (articleRefs.current[globalIndex] = el)}
-                      className={`bg-white rounded-xl shadow-md overflow-hidden fade-in relative transition-transform hover:-translate-y-1 ${
-                        isCurrentArticle ? "ring-2 ring-blue-500" : ""
-                      }`}
-                    >
-                      <Link href={`/${article.category}/${article.slug}`}>
-                        <div className="h-48 relative">
-                          {isLatest && (
-                            <div className="absolute top-3 right-3 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center z-10">
-                              <FaCircle className="text-xs mr-1 animate-pulse" />{" "}
-                              LIVE
-                            </div>
-                          )}
-                          <Image
-                            src={article.image || "/news-image.jpg"}
-                            alt={article.title}
-                            className="object-cover"
-                            fill
-                            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          />
+                  <div
+                    key={article._id}
+                    ref={(el) => (articleRefs.current[globalIndex] = el)}
+                    className={`bg-white rounded-xl shadow-md overflow-hidden fade-in relative transition-transform hover:-translate-y-1 ${
+                      isCurrentArticle ? "ring-2 ring-blue-500" : ""
+                    }`}
+                  >
+                    <Link href={`/${article.category}/${article.slug}`}>
+                      <div className="h-48 relative">
+                        {isLatest && (
+                          <div className="absolute top-3 right-3 bg-red-600 text-white px-2 py-1 rounded-full text-xs font-bold flex items-center z-10">
+                            <FaCircle className="text-xs mr-1 animate-pulse" />{" "}
+                            LIVE
+                          </div>
+                        )}
+                        <Image
+                          src={article.image || "/news-image.jpg"}
+                          alt={article.title}
+                          className="object-cover"
+                          fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        />
+                      </div>
+                      <div className="p-5">
+                        <div className="flex justify-between items-start mb-2">
+                          <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
+                            {article.category}
+                          </span>
+                          <span className="text-xs text-gray-500">
+                            {new Date(article.createdAt).toLocaleDateString()}
+                          </span>
                         </div>
-                        <div className="p-5">
-                          <div className="flex justify-between items-start mb-2">
-                            <span className="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-0.5 rounded">
-                              {article.category}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              {new Date(article.createdAt).toLocaleDateString()}
+                        <h3 className="text-xl font-semibold mb-2 line-clamp-2 hover:text-blue-600 transition-colors">
+                          {article.title}
+                        </h3>
+                        <p className="text-gray-600 mb-4 line-clamp-3">
+                          {article.description}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center">
+                            <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden mr-2">
+                              <Image
+                                src="https://img.freepik.com/free-vector/illustration-businessman_53876-5856.jpg?t=st=1744822743~exp=1744826343~hmac=e13fee51ff5620ea045d4495b0c3be6a134bac15eb1162d874fe9bf198c9b32b&w=900"
+                                alt="Author"
+                                width={32}
+                                height={32}
+                                className="object-cover"
+                              />
+                            </div>
+                            <span className="text-sm text-gray-700">
+                              {article.author || "Staff Writer"}
                             </span>
                           </div>
-                          <h3 className="text-xl font-semibold mb-2 line-clamp-2 hover:text-blue-600 transition-colors">
-                            {article.title}
-                          </h3>
-                          <p className="text-gray-600 mb-4 line-clamp-3">
-                            {article.description}
-                          </p>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center">
-                              <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden mr-2">
-                                <Image
-                                  src="https://img.freepik.com/free-vector/illustration-businessman_53876-5856.jpg?t=st=1744822743~exp=1744826343~hmac=e13fee51ff5620ea045d4495b0c3be6a134bac15eb1162d874fe9bf198c9b32b&w=900"
-                                  alt="Author"
-                                  width={32}
-                                  height={32}
-                                  className="object-cover"
-                                />
-                              </div>
-                              <span className="text-sm text-gray-700">
-                                {article.author || "Staff Writer"}
-                              </span>
-                            </div>
-                            <div className="flex gap-2">
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  toggleSaveArticle(article);
-                                }}
-                                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                                aria-label={
-                                  isSaved ? "Unsave article" : "Save article"
-                                }
-                              >
-                                {isSaved ? (
-                                  <FaBookmark className="text-blue-600" />
-                                ) : (
-                                  <FaRegBookmark className="text-gray-500 hover:text-blue-600" />
-                                )}
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  shareArticle(article);
-                                }}
-                                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                                aria-label="Share article"
-                              >
-                                <FaShareAlt className="text-green-500 hover:text-green-600" />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  setCurrentArticleIndex(globalIndex);
-                                  startSpeech(article);
-                                }}
-                                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                                aria-label="Listen to article"
-                              >
-                                <FaVolumeUp className="text-blue-500 hover:text-blue-600" />
-                              </button>
-                            </div>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleSaveArticle(article);
+                              }}
+                              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                              aria-label={
+                                isSaved ? "Unsave article" : "Save article"
+                              }
+                            >
+                              {isSaved ? (
+                                <FaBookmark className="text-blue-600" />
+                              ) : (
+                                <FaRegBookmark className="text-gray-500 hover:text-blue-600" />
+                              )}
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                shareArticle(article);
+                              }}
+                              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                              aria-label="Share article"
+                            >
+                              <FaShareAlt className="text-green-500 hover:text-green-600" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setCurrentArticleIndex(globalIndex);
+                                startSpeech(article);
+                              }}
+                              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                              aria-label="Listen to article"
+                            >
+                              <FaVolumeUp className="text-blue-500 hover:text-blue-600" />
+                            </button>
                           </div>
                         </div>
-                      </Link>
-                    </div>
-                  </>
+                      </div>
+                    </Link>
+                  </div>
                 );
               })}
             </div>
 
-            {/* More News Section */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {regularArticles.slice(2).map((article, index) => {
                 const globalIndex = filteredArticles.findIndex(
@@ -994,14 +1057,16 @@ export default function FeaturedPosts({ userId }) {
                   globalIndex === currentArticleIndex &&
                   (speechState === "playing" || speechState === "paused");
                 const isLatest = isLatestArticle(article);
-
-                // Determine if this is a "featured" article (every 3rd article starting from index 1)
                 const isFeatured = (index + 1) % 3 === 2;
 
                 return (
                   <div
                     key={article._id}
-                    ref={(el) => (articleRefs.current[globalIndex] = el)}
+                    ref={
+                      index === regularArticles.length - 3
+                        ? lastArticleRef
+                        : null
+                    }
                     className={`bg-white rounded-lg shadow-sm overflow-hidden fade-in relative transition-transform hover:-translate-y-1 ${
                       isCurrentArticle ? "ring-2 ring-blue-500" : ""
                     } ${isFeatured ? "md:col-span-2" : ""}`}
@@ -1111,19 +1176,23 @@ export default function FeaturedPosts({ userId }) {
                 );
               })}
             </div>
+
+            {loadingMore && (
+              <div className="col-span-3 flex justify-center my-8">
+                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+              </div>
+            )}
+
+            {!loading && !hasMore && (
+              <div className="col-span-3 text-center py-8 text-gray-500">
+                You've reached the end of the articles.
+              </div>
+            )}
           </div>
 
-          {/* Right Column - Sidebar */}
           <div className="lg:col-span-1 space-y-6 h-screen sticky top-20 overflow-auto pb-6 pr-1">
-            {/* Market Widget */}
             {renderTradingViewWidget()}
             {indicesTradingViewWidget()}
-            <div className="bg-white rounded-xl shadow-md p-4 flex flex-col">
-              <div>
-                <AdsterraAd />
-              </div>
-            </div>
-            {/* Trending Now Widget */}
             <div className="bg-white rounded-xl shadow-md p-4">
               <div className="flex items-center mb-3">
                 <FaChartLine className="text-blue-600 mr-2" />
@@ -1154,19 +1223,12 @@ export default function FeaturedPosts({ userId }) {
                         </p>
                       </div>
                     </div>
-                    <AdsterraAd />
                   </Link>
                 ))}
               </div>
             </div>
             <div className="bg-white p-4 flex flex-col">
-              <div>
-                <AdsterraAd />
-                <AdsterraAd />
-                <AdsterraAd />
-                <AdsterraAd />
-                <AdsterraAd />
-              </div>
+              <AdsterraAd key="sidebar-ad-1" />
             </div>
           </div>
         </div>
@@ -1184,17 +1246,24 @@ export default function FeaturedPosts({ userId }) {
 
   if (error) {
     return (
-      <div>
+      <div className="flex flex-col items-center justify-center h-screen">
         <NotFound />
+        <button
+          onClick={() => {
+            setError(null);
+            fetchArticles();
+          }}
+          className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+        >
+          Retry
+        </button>
       </div>
     );
   }
 
   return (
     <div className="relative" ref={containerRef}>
-      {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
-        {/* Mobile Search Bar */}
         <div className="mb-6 md:hidden">
           <div className="flex items-center bg-white border rounded-full px-4 py-2 w-full">
             <FaSearch className="text-gray-500" />
@@ -1220,11 +1289,9 @@ export default function FeaturedPosts({ userId }) {
           </div>
         </div>
 
-        {/* Articles Grid */}
         <div className="grid grid-cols-1 gap-6">{renderArticles()}</div>
       </main>
 
-      {/* Saved Articles Panel */}
       <div
         ref={savedPanelRef}
         className={`fixed top-0 right-0 h-full w-full sm:w-96 bg-white shadow-xl z-50 p-4 overflow-y-auto transition-transform duration-300 ${
@@ -1292,7 +1359,6 @@ export default function FeaturedPosts({ userId }) {
         )}
       </div>
 
-      {/* Gamification Dashboard Panel */}
       <div
         ref={gamificationPanelRef}
         className={`fixed top-0 right-0 h-full w-full sm:w-96 bg-white shadow-xl z-50 p-4 overflow-y-auto transition-transform duration-300 ${
@@ -1313,7 +1379,6 @@ export default function FeaturedPosts({ userId }) {
         <GamificationDashboard userId={userId} />
       </div>
 
-      {/* Speech Progress Indicator */}
       {(speechState === "playing" || speechState === "paused") && (
         <div
           className={`fixed ${
@@ -1342,7 +1407,6 @@ export default function FeaturedPosts({ userId }) {
         </div>
       )}
 
-      {/* Floating Action Button */}
       <div className="fixed bottom-6 right-6 z-50">
         <div className="flex flex-col items-end gap-2">
           {isFabExpanded && (
@@ -1398,7 +1462,6 @@ export default function FeaturedPosts({ userId }) {
             </div>
           )}
 
-          {/* Main FAB Button */}
           <button
             ref={fabButtonRef}
             onClick={() => setIsFabExpanded(!isFabExpanded)}
@@ -1413,7 +1476,6 @@ export default function FeaturedPosts({ userId }) {
         </div>
       </div>
 
-      {/* Language Selection Modal */}
       {showLanguageModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div
@@ -1473,18 +1535,6 @@ export default function FeaturedPosts({ userId }) {
           </div>
         </div>
       )}
-      {/* ADSTERRA AD */}
-      <div className="flex flex-row gap-4">
-        <div>
-          <AdBanner />
-          <AdsterraAd />
-          <AdsterraAd />
-          <AdBanner />
-          <AdsterraAd />
-          <AdBanner />
-          <AdBanner />
-        </div>
-      </div>
     </div>
   );
 }
