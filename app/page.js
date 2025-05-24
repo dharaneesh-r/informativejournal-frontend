@@ -787,7 +787,7 @@ export default function FeaturedPosts({ userId }) {
                 key={`hero-${heroArticle._id}`}
                 className="col-span-1 md:col-span-3 fade-in relative hero-article mb-8"
               >
-                <div className="bg-gradient-to-br from-white to-gray-50 p-6 rounded-2xl shadow-lg">
+                <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-lg">
                   <Link href={`/${heroArticle.category}/${heroArticle.slug}`}>
                     <div className="flex flex-col lg:flex-row gap-8">
                       <div className="lg:w-2/3 h-96 relative rounded-xl overflow-hidden shadow-md">
