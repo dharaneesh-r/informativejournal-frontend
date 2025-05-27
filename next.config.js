@@ -64,6 +64,10 @@ const nextConfig = {
         destination:
           "https://informativejournal-backend.vercel.app/sitemap.xml",
       },
+      {
+        source: "/rss.xml",
+        destination: "https://informativejournal-backend.vercel.app/rss.xml",
+      },
     ];
   },
 };
