@@ -270,6 +270,10 @@ const Footer = () => {
             className="hover:text-blue-500 transition-colors duration-300"
           >
             Privacy Policy
+          </Link> | {" "}
+          <Link href="/aboutus"
+          className="hover:text-blue-500 transition-colors duration-300">
+            About Us
           </Link>
         </div>
       </div>

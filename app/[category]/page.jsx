@@ -577,7 +577,7 @@ export default function CategoryPage() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-gray-600">
-                            By {heroArticle.author || "Unknown"}
+                            By {heroArticle.author || "Dharaneesh R"}
                           </p>
                           <p className="text-sm text-gray-500">
                             {new Date(
@@ -939,7 +939,7 @@ export default function CategoryPage() {
                         {article.title}
                       </h4>
                       <p className="text-xs text-gray-500 mt-1">
-                        {article.author || "Unknown"}
+                        {article.author || "Dharaneesh R"}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
                         {new Date(article.createdAt).toLocaleDateString()}

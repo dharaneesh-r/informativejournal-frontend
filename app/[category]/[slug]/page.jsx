@@ -701,12 +701,12 @@ const ArticlePage = () => {
                   <div className="flex items-center space-x-4">
                     <div className="flex-shrink-0">
                       <div className="h-12 w-12 rounded-full bg-gradient-to-r from-blue-500 to-blue-400 flex items-center justify-center text-white font-bold">
-                        {article.author?.charAt(0)?.toUpperCase() || "A"}
+                        {article.author?.charAt(0)?.toUpperCase() || "D"}
                       </div>
                     </div>
                     <div>
                       <p className="text-lg font-medium text-gray-900">
-                        {article.author || "Unknown Author"}
+                        {article.author || "Dharaneesh R"}
                       </p>
                       <div className="flex items-center gap-2 text-sm text-gray-500">
                         <time dateTime={article.createdAt}>
@@ -930,7 +930,7 @@ const ArticlePage = () => {
                         <div className="flex items-start space-x-4">
                           <div className="flex-shrink-0">
                             <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-blue-400 flex items-center justify-center text-white font-bold">
-                              {comment.author?.charAt(0)?.toUpperCase() || "A"}
+                              {comment.author?.charAt(0)?.toUpperCase() || "D"}
                             </div>
                           </div>
                           <div className="flex-1 min-w-0">
