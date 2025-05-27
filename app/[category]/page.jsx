@@ -513,9 +513,12 @@ export default function CategoryPage() {
             content={heroArticle?.image || "/news-image.jpg"}
           />
           <meta name="robots" content="index, follow" />
-          <meta name="google-adsense-account" content="ca-pub-7599014130116297" />
+          <meta
+            name="google-adsense-account"
+            content="ca-pub-7599014130116297"
+          />
         </Head>
-        
+
         {/* Top Ad Banner */}
         <div className="col-span-1 md:col-span-3 mb-6">
           <AdBanner />
@@ -853,8 +856,8 @@ export default function CategoryPage() {
 
   if (error) {
     return (
-      <div className="flex justify-center items-center h-screen text-red-500 text-xl">
-        {error}
+      <div className="flex justify-center items-center h-auto text-red-500 text-xl">
+        <NotFound />
       </div>
     );
   }

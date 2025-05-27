@@ -1246,17 +1246,8 @@ export default function FeaturedPosts({ userId }) {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen">
+      <div className="flex flex-col items-center justify-center h-auto">
         <NotFound />
-        <button
-          onClick={() => {
-            setError(null);
-            fetchArticles();
-          }}
-          className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          Retry
-        </button>
       </div>
     );
   }
