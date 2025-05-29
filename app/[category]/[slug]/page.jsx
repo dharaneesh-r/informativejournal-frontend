@@ -323,6 +323,7 @@ const ArticlePage = () => {
   const handleShare = (platform) => {
     const url = window.location.href;
     const title = article?.title || "Check out this article";
+    const image = article?.image || "";
 
     switch (platform) {
       case "twitter":
@@ -550,7 +551,6 @@ const ArticlePage = () => {
         <meta name="twitter:title" content={article?.title || "Article"} />
         <meta name="twitter:description" content={article?.description || ""} />
         <meta name="twitter:image" content={article?.image || ""} />
-        <meta name="whatsapp:image" content={article?.image || ""} />
       </Head>
 
       <div className="bg-gradient-to-br from-blue-50 to-white min-h-screen">
