@@ -35,19 +35,20 @@ export async function generateMetadata({ params }) {
         url: `https://www.newwss.com/${category}`,
         siteName: "newwss.com",
         type: "website",
+        logo: "https://newwss.com/logo.png",
         images: [
           {
             url: "https://newwss.com/logo.png",
             width: 1200,
             height: 630,
-            alt: data.title || `${formattedCategory} category image`,
+            alt: `${formattedCategory} category image`,
           },
         ],
       },
       twitter: {
         card: "summary_large_image",
         title: `${formattedCategory} News`,
-        description: data.description || `Latest ${category} news and updates.`,
+        description: `Latest ${category} news and updates.`,
         images: ["https://newwss.com/logo.png"],
         site: "@newwss", 
       },
