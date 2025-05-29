@@ -550,6 +550,7 @@ const ArticlePage = () => {
         <meta name="twitter:title" content={article?.title || "Article"} />
         <meta name="twitter:description" content={article?.description || ""} />
         <meta name="twitter:image" content={article?.image || ""} />
+        <meta name="whatsapp:image" content={article?.image || ""} />
       </Head>
 
       <div className="bg-gradient-to-br from-blue-50 to-white min-h-screen">
