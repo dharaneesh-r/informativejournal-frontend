@@ -37,7 +37,7 @@ export async function generateMetadata({ params }) {
         type: "website",
         images: [
           {
-            url: data.image || "https://newwss.com/logo.png",
+            url: "https://newwss.com/logo.png",
             width: 1200,
             height: 630,
             alt: data.title || `${formattedCategory} category image`,
@@ -46,9 +46,9 @@ export async function generateMetadata({ params }) {
       },
       twitter: {
         card: "summary_large_image",
-        title: data.title || `${formattedCategory} News`,
+        title: `${formattedCategory} News`,
         description: data.description || `Latest ${category} news and updates.`,
-        images: [data.image || "https://newwss.com/logo.png"],
+        images: ["https://newwss.com/logo.png"],
         site: "@newwss", 
       },
       alternates: {
@@ -71,7 +71,7 @@ export async function generateMetadata({ params }) {
         url: `https://www.newwss.com/${category}`,
         images: [
           {
-            url: "https://newwss.com/default-og.jpg",
+            url: "https://newwss.com/logo.png",
             width: 1200,
             height: 630,
             alt: `${formattedCategory} news`,
@@ -82,7 +82,7 @@ export async function generateMetadata({ params }) {
         card: "summary_large_image",
         title: `${formattedCategory} News`,
         description: `Explore the latest ${category} news and updates.`,
-        images: ["https://newwss.com/default-og.jpg"],
+        images: ["https://newwss.com/logo.png"],
       },
     };
   }
