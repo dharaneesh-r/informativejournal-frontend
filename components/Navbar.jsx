@@ -55,6 +55,7 @@ const Navbar = () => {
     // PAPER TRADING
     { name: "Crypto Paper Trading", path: "/crypto-games" },
     { name: "Financial Calculators", path: "/financial-calculators" },
+    { name: "Fraud cases (IND)", path: "/fraudcases"}
   ];
 
   // Group categories for a better dropdown organization

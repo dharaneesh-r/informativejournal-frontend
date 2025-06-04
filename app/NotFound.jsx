@@ -18,7 +18,7 @@ export default function NotFound() {
           "https://informativejournal-backend.vercel.app/articles"
         );
         if (response.data?.status === "success") {
-          setArticles(response.data.data.slice(0, 10));
+          setArticles(response.data.data.slice(0, 30));
         }
         setIsLoading(false);
       } catch (err) {

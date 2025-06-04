@@ -417,6 +417,7 @@ const ArticlePostForm = () => {
                 <option value="russia">Russia</option>
                 <option value="china">China</option>
                 <option value="singapore">Singapore</option>
+                <option value="fraudcases">Fraud Cases</option>
               </select>
               {validationErrors.category && (
                 <p className="text-red-600 text-xs mt-1">
