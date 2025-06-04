@@ -61,7 +61,7 @@ export async function generateMetadata({ params }) {
       authors: article.author
         ? [{ name: "Dharaneesh R" }]
         : [{ name: "newwss.com" }],
-      creator: article.author || "Dharaneesh R",
+      creator: article.author || "Raman Singh",
       publisher: "newwss.com",
 
       // Open Graph metadata for social sharing
@@ -86,7 +86,7 @@ export async function generateMetadata({ params }) {
           publishedTime:
             article.publishedAt || article.created_at || article.date,
           modifiedTime: article.updatedAt || article.updated_at,
-          author: article.author || "Dharaneesh R",
+          author: article.author || "Raman Singh",
           section: formattedCategory,
           tags: article.tags || [category],
         },

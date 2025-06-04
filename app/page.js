@@ -837,7 +837,7 @@ export default function FeaturedPosts({ userId }) {
                             </div>
                             <div>
                               <p className="text-gray-800 font-medium">
-                                {heroArticle.author || "Dharaneesh R"}
+                                {heroArticle.author || "Raman Singh"}
                               </p>
                               <p className="text-sm text-gray-500">
                                 {Math.floor(Math.random() * 10) + 1} min read
@@ -992,7 +992,7 @@ export default function FeaturedPosts({ userId }) {
                               />
                             </div>
                             <span className="text-sm text-gray-700">
-                              {article.author || "Dharaneesh R"}
+                              {article.author || "Raman Singh"}
                             </span>
                           </div>
                           <div className="flex gap-2">
@@ -1328,7 +1328,7 @@ export default function FeaturedPosts({ userId }) {
                         {article.title}
                       </h4>
                       <p className="text-xs text-gray-500 mt-1">
-                        {article.author || "Dharaneesh"}
+                        {article.author || "Raman Singh"}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
                         {new Date(article.createdAt).toLocaleDateString()}
