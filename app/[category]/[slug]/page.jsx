@@ -59,7 +59,7 @@ export async function generateMetadata({ params }) {
       description: truncatedDescription,
       keywords: keywords.join(", "),
       authors: article.author
-        ? [{ name: "Dharaneesh R" }]
+        ? [{ name: "Raman Singh" }]
         : [{ name: "newwss.com" }],
       creator: article.author || "Raman Singh",
       publisher: "newwss.com",
