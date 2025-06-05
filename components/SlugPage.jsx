@@ -707,7 +707,7 @@ const SlugPage = () => {
                     </div>
                     <div>
                       <p className="text-lg font-medium text-gray-900">
-                        {article.author || "Dharaneesh R"}
+                        {article.author || "Raman Singh"}
                       </p>
                       <div className="flex items-center gap-2 text-sm text-gray-500">
                         <time dateTime={article.createdAt}>
