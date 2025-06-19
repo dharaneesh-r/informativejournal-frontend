@@ -139,7 +139,7 @@ export default function About() {
                   <div className="flex items-center p-3 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105">
                     <span className="text-lg mr-3">📞</span>
                     <a
-                      href="tel:+91**********"
+                      href="tel:+919566865145"
                       className="text-purple-600 hover:text-purple-800 font-medium"
                     >
                       +91 ***** *****
