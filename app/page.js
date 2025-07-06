@@ -992,7 +992,7 @@ export default function FeaturedPosts({ userId }) {
                               />
                             </div>
                             <span className="text-sm text-gray-700">
-                              {article.author || "Raman Singh"}
+                              {article.author || "Dharaneesh R"}
                             </span>
                           </div>
                           <div className="flex gap-2">
