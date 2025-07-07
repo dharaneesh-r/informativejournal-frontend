@@ -457,37 +457,81 @@ export default function ArticlePage() {
               </div>
 
               {/* Key Points */}
-              {article.keypoints && article.keypoints[0].points.length > 0 && (
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-8 mb-12 border-l-4 border-blue-500 shadow-sm">
-                  <h2 className="text-2xl font-bold text-blue-800 mb-6">
-                    Key Takeaways
-                  </h2>
-                  <ul className="space-y-4">
-                    {article.keypoints[0].points.map((point, index) => (
-                      <li key={index} className="flex items-start">
-                        <span className="flex-shrink-0 mt-1 mr-3 bg-blue-100 rounded-full p-1">
-                          <svg
-                            className="h-5 w-5 text-blue-600"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M5 13l4 4L19 7"
-                            />
-                          </svg>
-                        </span>
-                        <span className="text-gray-700 font-medium">
-                          {point}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
+              {/* Key Points */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-8 mb-12 border-l-4 border-blue-500 shadow-sm">
+                <h2 className="text-2xl font-bold text-blue-800 mb-6">
+                  Key Takeaways
+                </h2>
+                <ul className="space-y-4">
+                  <li className="flex items-start">
+                    <span className="flex-shrink-0 mt-1 mr-3 bg-blue-100 rounded-full p-1">
+                      <svg
+                        className="h-5 w-5 text-blue-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </span>
+                    <span className="text-gray-700 font-medium">
+                      Acquisition accounting is a set of formal guidelines
+                      describing how assets, liabilities, non-controlling
+                      interest and goodwill of an acquired company must be
+                      reported by the purchaser.
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="flex-shrink-0 mt-1 mr-3 bg-blue-100 rounded-full p-1">
+                      <svg
+                        className="h-5 w-5 text-blue-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </span>
+                    <span className="text-gray-700 font-medium">
+                      The fair market value of the acquired company is allocated
+                      between the net tangible and intangible assets portion of
+                      the balance sheet of the buyer. Any resulting difference
+                      is regarded as goodwill.
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="flex-shrink-0 mt-1 mr-3 bg-blue-100 rounded-full p-1">
+                      <svg
+                        className="h-5 w-5 text-blue-600"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </span>
+                    <span className="text-gray-700 font-medium">
+                      All business combinations must be treated as acquisitions
+                      for accounting purposes.
+                    </span>
+                  </li>
+                </ul>
+              </div>
 
               {/* Table of Contents */}
               <div className="bg-white rounded-xl p-6 mb-10 shadow-sm border border-gray-100">
