@@ -527,4 +527,4 @@ const AdminManager = () => {
   );
 };
 
-export default AdminManager;
+export default AdminManager; 
