@@ -13,57 +13,39 @@ const AdminManager = () => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // Valid admin credentials
-  const validCredentials = [
-    { email: "dharaneeshr0803@gmail.com", password: "Dhara@080304" },
-    { email: "marip45345@gmail.com", password: "Marip@45345" },
-  ];
-
-  // Check if credentials are valid
-  const isValidCredentials = (email, password) => {
-    return validCredentials.some(
-      (cred) => cred.email === email && cred.password === password
-    );
-  };
-
   // Check authentication on component mount
   useEffect(() => {
-    const token = localStorage.getItem("authToken");
-    const storedEmail = localStorage.getItem("adminEmail");
-    const storedPassword = localStorage.getItem("adminPassword");
+    const verifyAuth = async () => {
+      const token = localStorage.getItem("authToken");
+      if (!token) return;
 
-    if (
-      token &&
-      storedEmail &&
-      storedPassword &&
-      isValidCredentials(storedEmail, storedPassword)
-    ) {
-      verifyToken(token);
-    }
-  }, []);
+      try {
+        const response = await axios.get(
+          "https://informativejournal-backend.vercel.app/verify",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
 
-  // Verify JWT token
-  const verifyToken = async (token) => {
-    try {
-      const response = await axios.get(
-        "https://informativejournal-backend.vercel.app/verify",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        // Only allow specific admin emails
+        const allowedEmails = [
+          "dharaneeshr0803@gmail.com",
+          "marip45345@gmail.com",
+        ];
+
+        if (allowedEmails.includes(response.data.email)) {
+          setIsAuthenticated(true);
+          fetchArticles();
+        } else {
+          logout();
         }
-      );
-
-      if (validCredentials.some((cred) => cred.email === response.data.email)) {
-        setIsAuthenticated(true);
-        fetchArticles();
-      } else {
+      } catch (error) {
         logout();
       }
-    } catch (error) {
-      logout();
-    }
-  };
+    };
+
+    verifyAuth();
+  }, []);
 
   // Login function
   const handleLogin = async (e) => {
@@ -71,18 +53,14 @@ const AdminManager = () => {
     setLoading(true);
 
     try {
-      if (isValidCredentials(email, password)) {
-        const response = await axios.post(
-          "https://informativejournal-backend.vercel.app/login",
-          {
-            email,
-            password,
-          }
-        );
+      const response = await axios.post(
+        "https://informativejournal-backend.vercel.app/login",
+        { email, password }
+      );
 
+      // Verify the response contains a token and valid admin email
+      if (response.data.token) {
         localStorage.setItem("authToken", response.data.token);
-        localStorage.setItem("adminEmail", email);
-        localStorage.setItem("adminPassword", password);
         setIsAuthenticated(true);
         fetchArticles();
 
@@ -93,14 +71,15 @@ const AdminManager = () => {
           timer: 1500,
         });
       } else {
-        throw new Error("Invalid credentials");
+        throw new Error("Invalid response from server");
       }
     } catch (error) {
       Swal.fire({
         icon: "error",
         title: "Login Failed",
-        text: "Invalid email or password",
+        text: error.response?.data?.message || "Invalid email or password",
       });
+      logout();
     } finally {
       setLoading(false);
     }
@@ -109,8 +88,6 @@ const AdminManager = () => {
   // Logout function
   const logout = () => {
     localStorage.removeItem("authToken");
-    localStorage.removeItem("adminEmail");
-    localStorage.removeItem("adminPassword");
     setIsAuthenticated(false);
     setArticles([]);
   };
@@ -122,20 +99,16 @@ const AdminManager = () => {
       const token = localStorage.getItem("authToken");
       const response = await axios.get(
         "https://informativejournal-backend.vercel.app/articles",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setArticles(response.data.data);
-      console.log(response.data.data);
     } catch (error) {
       Swal.fire({
         icon: "error",
         title: "Failed to fetch articles",
         text: error.response?.data?.message || "Server error",
       });
+      logout();
     } finally {
       setLoading(false);
     }
@@ -157,11 +130,7 @@ const AdminManager = () => {
           const token = localStorage.getItem("authToken");
           await axios.delete(
             `https://informativejournal-backend.vercel.app/articles/${category}/${slug}`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
+            { headers: { Authorization: `Bearer ${token}` } }
           );
           Swal.fire("Deleted!", "Your article has been deleted.", "success");
           fetchArticles();
