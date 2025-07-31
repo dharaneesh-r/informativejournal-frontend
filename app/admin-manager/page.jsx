@@ -17,46 +17,96 @@ const AdminManager = () => {
   // Allowed admin emails
   const allowedEmails = ["dharaneeshr0803@gmail.com", "marip45345@gmail.com"];
 
+  // Helper function to decode JWT token
+  const decodeJWT = (token) => {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      return JSON.parse(jsonPayload);
+    } catch (error) {
+      console.error('Error decoding JWT:', error);
+      return null;
+    }
+  };
+
+  // Helper function to check if token is expired
+  const isTokenExpired = (token) => {
+    try {
+      const decoded = decodeJWT(token);
+      if (!decoded || !decoded.exp) return true;
+      
+      const currentTime = Math.floor(Date.now() / 1000);
+      return decoded.exp < currentTime;
+    } catch (error) {
+      return true;
+    }
+  };
+
   // Check authentication on component mount
   useEffect(() => {
-    const verifyAuth = async () => {
-      const token = localStorage.getItem("authToken");
-      if (!token) {
-        console.log("No auth token found");
+    const verifyAuth = () => {
+      const authToken = localStorage.getItem("authToken");
+      const userEmail = localStorage.getItem("userEmail");
+      const tokenExpiration = localStorage.getItem("tokenExpiration");
+      
+      console.log("Checking localStorage auth data...");
+      console.log("AuthToken exists:", !!authToken);
+      console.log("UserEmail:", userEmail);
+      console.log("TokenExpiration:", tokenExpiration);
+
+      if (!authToken || !userEmail) {
+        console.log("Missing auth data in localStorage");
         return;
       }
 
-      try {
-        console.log("Verifying token...");
-        const response = await axios.get(
-          "https://informativejournal-backend.vercel.app/verify",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        console.log("Verification response:", response.data);
-        const userEmail = response.data.email;
-
-        if (allowedEmails.includes(userEmail)) {
-          console.log("User authorized:", userEmail);
-          setIsAuthenticated(true);
-          setCurrentUser(userEmail);
-          fetchArticles();
-        } else {
-          console.log("User not in allowed list:", userEmail);
+      // Check if token is expired using the stored expiration time
+      if (tokenExpiration) {
+        const expirationTime = parseInt(tokenExpiration);
+        const currentTime = Date.now();
+        
+        if (currentTime > expirationTime) {
+          console.log("Token expired based on stored expiration");
           Swal.fire({
-            icon: "error",
-            title: "Access Denied",
-            text: "You are not authorized to access this admin panel.",
+            icon: "warning",
+            title: "Session Expired",
+            text: "Please login again.",
           });
           logout();
+          return;
         }
-      } catch (error) {
-        console.error(
-          "Token verification failed:",
-          error.response?.data || error.message
-        );
+      }
+
+      // Also check JWT expiration as backup
+      if (isTokenExpired(authToken)) {
+        console.log("Token expired based on JWT");
+        Swal.fire({
+          icon: "warning",
+          title: "Session Expired",
+          text: "Please login again.",
+        });
+        logout();
+        return;
+      }
+
+      // Check if email is in allowed list
+      if (allowedEmails.includes(userEmail)) {
+        console.log("User authorized:", userEmail);
+        setIsAuthenticated(true);
+        setCurrentUser(userEmail);
+        fetchArticles();
+      } else {
+        console.log("User not in allowed list:", userEmail);
+        Swal.fire({
+          icon: "error",
+          title: "Access Denied",
+          text: "You are not authorized to access this admin panel.",
+        });
         logout();
       }
     };
@@ -84,27 +134,42 @@ const AdminManager = () => {
       console.log("Attempting login for:", email);
       const response = await axios.post(
         "https://informativejournal-backend.vercel.app/login",
-        { email, password }
+        { email, password },
+        { timeout: 10000 }
       );
 
       console.log("Login response:", response.data);
 
       // Verify the response contains a token
       if (response.data.token) {
-        localStorage.setItem("authToken", response.data.token);
+        const token = response.data.token;
+        const userEmail = response.data.email || email;
 
-        // Double-check the email in the response
-        const tokenEmail = response.data.email || email;
+        // Store auth data in localStorage
+        localStorage.setItem("authToken", token);
+        localStorage.setItem("userEmail", userEmail);
+        
+        // Calculate and store token expiration (optional, for extra security)
+        const decoded = decodeJWT(token);
+        if (decoded && decoded.exp) {
+          localStorage.setItem("tokenExpiration", (decoded.exp * 1000).toString());
+        }
 
-        if (allowedEmails.includes(tokenEmail)) {
+        // Store user data if provided
+        if (response.data.user) {
+          localStorage.setItem("user", JSON.stringify(response.data.user));
+        }
+
+        // Double-check the email is authorized
+        if (allowedEmails.includes(userEmail)) {
           setIsAuthenticated(true);
-          setCurrentUser(tokenEmail);
+          setCurrentUser(userEmail);
           fetchArticles();
 
           Swal.fire({
             icon: "success",
             title: "Login Successful",
-            text: `Welcome, ${tokenEmail}`,
+            text: `Welcome, ${userEmail}`,
             showConfirmButton: false,
             timer: 1500,
           });
@@ -137,12 +202,20 @@ const AdminManager = () => {
 
   // Logout function
   const logout = () => {
+    // Clear all auth-related data from localStorage
     localStorage.removeItem("authToken");
+    localStorage.removeItem("userEmail");
+    localStorage.removeItem("tokenExpiration");
+    localStorage.removeItem("user");
+    
+    // Reset component state
     setIsAuthenticated(false);
     setCurrentUser(null);
     setArticles([]);
     setEmail("");
     setPassword("");
+    
+    console.log("User logged out, localStorage cleared");
   };
 
   // Fetch all articles
@@ -154,12 +227,17 @@ const AdminManager = () => {
         throw new Error("No auth token available");
       }
 
+      // Check token expiration before making API call
+      if (isTokenExpired(token)) {
+        throw new Error("Token expired");
+      }
+
       console.log("Fetching articles...");
       const response = await axios.get(
         "https://informativejournal-backend.vercel.app/articles",
         {
           headers: { Authorization: `Bearer ${token}` },
-          timeout: 10000, // 10 second timeout
+          timeout: 15000, // 15 second timeout
         }
       );
 
@@ -171,7 +249,11 @@ const AdminManager = () => {
         error.response?.data || error.message
       );
 
-      if (error.response?.status === 401 || error.response?.status === 403) {
+      if (
+        error.response?.status === 401 || 
+        error.response?.status === 403 ||
+        error.message === "Token expired"
+      ) {
         Swal.fire({
           icon: "error",
           title: "Session Expired",
@@ -193,7 +275,7 @@ const AdminManager = () => {
 
   // Delete article
   const handleDelete = async (category, slug) => {
-    Swal.fire({
+    const result = await Swal.fire({
       title: "Are you sure?",
       text: "You won't be able to revert this!",
       icon: "warning",
@@ -201,50 +283,56 @@ const AdminManager = () => {
       confirmButtonColor: "#3085d6",
       cancelButtonColor: "#d33",
       confirmButtonText: "Yes, delete it!",
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          const token = localStorage.getItem("authToken");
-          if (!token) {
-            throw new Error("No auth token available");
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+          throw new Error("No auth token available");
+        }
+
+        // Check token expiration
+        if (isTokenExpired(token)) {
+          throw new Error("Token expired");
+        }
+
+        await axios.delete(
+          `https://informativejournal-backend.vercel.app/articles/${category}/${slug}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            timeout: 15000,
           }
+        );
 
-          await axios.delete(
-            `https://informativejournal-backend.vercel.app/articles/${category}/${slug}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-              timeout: 10000,
-            }
-          );
+        Swal.fire("Deleted!", "Your article has been deleted.", "success");
+        fetchArticles();
+      } catch (error) {
+        console.error("Delete error:", error.response?.data || error.message);
 
-          Swal.fire("Deleted!", "Your article has been deleted.", "success");
-          fetchArticles();
-        } catch (error) {
-          console.error("Delete error:", error.response?.data || error.message);
-
-          if (
-            error.response?.status === 401 ||
-            error.response?.status === 403
-          ) {
-            Swal.fire({
-              icon: "error",
-              title: "Session Expired",
-              text: "Please login again.",
-            });
-            logout();
-          } else {
-            Swal.fire({
-              icon: "error",
-              title: "Delete Failed",
-              text:
-                error.response?.data?.message ||
-                error.message ||
-                "Server error",
-            });
-          }
+        if (
+          error.response?.status === 401 ||
+          error.response?.status === 403 ||
+          error.message === "Token expired"
+        ) {
+          Swal.fire({
+            icon: "error",
+            title: "Session Expired",
+            text: "Please login again.",
+          });
+          logout();
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Delete Failed",
+            text:
+              error.response?.data?.message ||
+              error.message ||
+              "Server error",
+          });
         }
       }
-    });
+    }
   };
 
   // Navigate to edit page
@@ -305,7 +393,8 @@ const AdminManager = () => {
           </form>
 
           <div className="mt-4 text-xs text-gray-500 text-center">
-            Authorized emails only
+            <p>Authorized emails only</p>
+            <p className="mt-1">({allowedEmails.join(", ")})</p>
           </div>
         </div>
       </div>
@@ -351,7 +440,7 @@ const AdminManager = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
           </div>
         ) : (
-          <div className="bg-white shadow overflow-hidden sm:rounded-lg overflow-x-auto">
+          <div className="bg-white shadow overflow-hidden sm:rounded-lg">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
