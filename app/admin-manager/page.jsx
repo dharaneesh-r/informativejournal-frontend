@@ -22,8 +22,8 @@ const AdminManager = () => {
 
     if (
       token &&
-      storedEmail === "dharaneeshr0803@gmail.com" &&
-      storedPassword === "Dhara@080304"
+      storedEmail === "dharaneeshr0803@gmail.com" || "marip45345@gmail.com" &&
+      storedPassword === "Dhara@080304" || "Marip@45345"
     ) {
       verifyToken(token);
     }
