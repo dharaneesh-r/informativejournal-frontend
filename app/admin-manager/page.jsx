@@ -41,7 +41,7 @@ const AdminManager = () => {
         }
       );
 
-      if (response.data.email === "dharaneeshr0803@gmail.com") {
+      if (response.data.email === "dharaneeshr0803@gmail.com" || "marip45345@gmail.com") {
         setIsAuthenticated(true);
         fetchArticles();
       } else {
@@ -59,8 +59,8 @@ const AdminManager = () => {
 
     try {
       if (
-        email === "dharaneeshr0803@gmail.com" &&
-        password === "Dhara@080304"
+        email === "dharaneeshr0803@gmail.com" || "marip45345@gmail.com" &&
+        password === "Dhara@080304" || "Marip@45345"
       ) {
         const response = await axios.post(
           "https://informativejournal-backend.vercel.app/login",
