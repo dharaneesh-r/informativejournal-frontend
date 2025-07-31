@@ -5,7 +5,6 @@ import Swal from "sweetalert2";
 import { useRouter } from "next/navigation";
 import { FiEdit, FiTrash2, FiPlus, FiLogOut } from "react-icons/fi";
 
-
 const AdminManager = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -14,16 +13,30 @@ const AdminManager = () => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // Valid admin credentials
+  const validCredentials = [
+    { email: "dharaneeshr0803@gmail.com", password: "Dhara@080304" },
+    { email: "marip45345@gmail.com", password: "Marip@45345" },
+  ];
+
+  // Check if credentials are valid
+  const isValidCredentials = (email, password) => {
+    return validCredentials.some(
+      (cred) => cred.email === email && cred.password === password
+    );
+  };
+
   // Check authentication on component mount
   useEffect(() => {
     const token = localStorage.getItem("authToken");
-    const storedEmail = localStorage.getItem("userEmail");
-    const storedPassword = localStorage.getItem("user.password");
+    const storedEmail = localStorage.getItem("adminEmail");
+    const storedPassword = localStorage.getItem("adminPassword");
 
     if (
       token &&
-      storedEmail === "dharaneeshr0803@gmail.com" || "marip45345@gmail.com" &&
-      storedPassword === "Dhara@080304" || "Marip@45345"
+      storedEmail &&
+      storedPassword &&
+      isValidCredentials(storedEmail, storedPassword)
     ) {
       verifyToken(token);
     }
@@ -41,7 +54,7 @@ const AdminManager = () => {
         }
       );
 
-      if (response.data.email === "dharaneeshr0803@gmail.com" || "marip45345@gmail.com") {
+      if (validCredentials.some((cred) => cred.email === response.data.email)) {
         setIsAuthenticated(true);
         fetchArticles();
       } else {
@@ -58,10 +71,7 @@ const AdminManager = () => {
     setLoading(true);
 
     try {
-      if (
-        email === "dharaneeshr0803@gmail.com" || "marip45345@gmail.com" &&
-        password === "Dhara@080304" || "Marip@45345"
-      ) {
+      if (isValidCredentials(email, password)) {
         const response = await axios.post(
           "https://informativejournal-backend.vercel.app/login",
           {
