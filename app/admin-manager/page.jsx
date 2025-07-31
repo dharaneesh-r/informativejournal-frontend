@@ -12,14 +12,22 @@ const AdminManager = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
+
+  // Allowed admin emails
+  const allowedEmails = ["dharaneeshr0803@gmail.com", "marip45345@gmail.com"];
 
   // Check authentication on component mount
   useEffect(() => {
     const verifyAuth = async () => {
       const token = localStorage.getItem("authToken");
-      if (!token) return;
+      if (!token) {
+        console.log("No auth token found");
+        return;
+      }
 
       try {
+        console.log("Verifying token...");
         const response = await axios.get(
           "https://informativejournal-backend.vercel.app/verify",
           {
@@ -27,19 +35,28 @@ const AdminManager = () => {
           }
         );
 
-        // Only allow specific admin emails
-        const allowedEmails = [
-          "dharaneeshr0803@gmail.com",
-          "marip45345@gmail.com",
-        ];
+        console.log("Verification response:", response.data);
+        const userEmail = response.data.email;
 
-        if (allowedEmails.includes(response.data.email)) {
+        if (allowedEmails.includes(userEmail)) {
+          console.log("User authorized:", userEmail);
           setIsAuthenticated(true);
+          setCurrentUser(userEmail);
           fetchArticles();
         } else {
+          console.log("User not in allowed list:", userEmail);
+          Swal.fire({
+            icon: "error",
+            title: "Access Denied",
+            text: "You are not authorized to access this admin panel.",
+          });
           logout();
         }
       } catch (error) {
+        console.error(
+          "Token verification failed:",
+          error.response?.data || error.message
+        );
         logout();
       }
     };
@@ -52,32 +69,65 @@ const AdminManager = () => {
     e.preventDefault();
     setLoading(true);
 
+    // Check if email is in allowed list before making API call
+    if (!allowedEmails.includes(email)) {
+      Swal.fire({
+        icon: "error",
+        title: "Access Denied",
+        text: "You are not authorized to access this admin panel.",
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
+      console.log("Attempting login for:", email);
       const response = await axios.post(
         "https://informativejournal-backend.vercel.app/login",
         { email, password }
       );
 
-      // Verify the response contains a token and valid admin email
+      console.log("Login response:", response.data);
+
+      // Verify the response contains a token
       if (response.data.token) {
         localStorage.setItem("authToken", response.data.token);
-        setIsAuthenticated(true);
-        fetchArticles();
 
-        Swal.fire({
-          icon: "success",
-          title: "Login Successful",
-          showConfirmButton: false,
-          timer: 1500,
-        });
+        // Double-check the email in the response
+        const tokenEmail = response.data.email || email;
+
+        if (allowedEmails.includes(tokenEmail)) {
+          setIsAuthenticated(true);
+          setCurrentUser(tokenEmail);
+          fetchArticles();
+
+          Swal.fire({
+            icon: "success",
+            title: "Login Successful",
+            text: `Welcome, ${tokenEmail}`,
+            showConfirmButton: false,
+            timer: 1500,
+          });
+        } else {
+          throw new Error("Email not authorized for admin access");
+        }
       } else {
-        throw new Error("Invalid response from server");
+        throw new Error("Invalid response from server - no token received");
       }
     } catch (error) {
+      console.error("Login error:", error.response?.data || error.message);
+
+      let errorMessage = "Invalid email or password";
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
       Swal.fire({
         icon: "error",
         title: "Login Failed",
-        text: error.response?.data?.message || "Invalid email or password",
+        text: errorMessage,
       });
       logout();
     } finally {
@@ -89,7 +139,10 @@ const AdminManager = () => {
   const logout = () => {
     localStorage.removeItem("authToken");
     setIsAuthenticated(false);
+    setCurrentUser(null);
     setArticles([]);
+    setEmail("");
+    setPassword("");
   };
 
   // Fetch all articles
@@ -97,18 +150,42 @@ const AdminManager = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("authToken");
+      if (!token) {
+        throw new Error("No auth token available");
+      }
+
+      console.log("Fetching articles...");
       const response = await axios.get(
         "https://informativejournal-backend.vercel.app/articles",
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          timeout: 10000, // 10 second timeout
+        }
       );
-      setArticles(response.data.data);
+
+      console.log("Articles fetched:", response.data.data?.length || 0);
+      setArticles(response.data.data || []);
     } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Failed to fetch articles",
-        text: error.response?.data?.message || "Server error",
-      });
-      logout();
+      console.error(
+        "Fetch articles error:",
+        error.response?.data || error.message
+      );
+
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        Swal.fire({
+          icon: "error",
+          title: "Session Expired",
+          text: "Please login again.",
+        });
+        logout();
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Failed to fetch articles",
+          text:
+            error.response?.data?.message || error.message || "Server error",
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -128,18 +205,43 @@ const AdminManager = () => {
       if (result.isConfirmed) {
         try {
           const token = localStorage.getItem("authToken");
+          if (!token) {
+            throw new Error("No auth token available");
+          }
+
           await axios.delete(
             `https://informativejournal-backend.vercel.app/articles/${category}/${slug}`,
-            { headers: { Authorization: `Bearer ${token}` } }
+            {
+              headers: { Authorization: `Bearer ${token}` },
+              timeout: 10000,
+            }
           );
+
           Swal.fire("Deleted!", "Your article has been deleted.", "success");
           fetchArticles();
         } catch (error) {
-          Swal.fire({
-            icon: "error",
-            title: "Delete Failed",
-            text: error.response?.data?.message || "Server error",
-          });
+          console.error("Delete error:", error.response?.data || error.message);
+
+          if (
+            error.response?.status === 401 ||
+            error.response?.status === 403
+          ) {
+            Swal.fire({
+              icon: "error",
+              title: "Session Expired",
+              text: "Please login again.",
+            });
+            logout();
+          } else {
+            Swal.fire({
+              icon: "error",
+              title: "Delete Failed",
+              text:
+                error.response?.data?.message ||
+                error.message ||
+                "Server error",
+            });
+          }
         }
       }
     });
@@ -175,6 +277,7 @@ const AdminManager = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter your admin email"
               />
             </div>
             <div>
@@ -187,18 +290,23 @@ const AdminManager = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter your password"
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className={`w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 ${
+              className={`w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors ${
                 loading ? "opacity-70 cursor-not-allowed" : ""
               }`}
             >
               {loading ? "Logging in..." : "Login"}
             </button>
           </form>
+
+          <div className="mt-4 text-xs text-gray-500 text-center">
+            Authorized emails only
+          </div>
         </div>
       </div>
     );
@@ -208,23 +316,30 @@ const AdminManager = () => {
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-          <h1 className="text-2xl font-bold">Article Management</h1>
+          <div>
+            <h1 className="text-2xl font-bold">Article Management</h1>
+            {currentUser && (
+              <p className="text-sm text-gray-600 mt-1">
+                Logged in as: {currentUser}
+              </p>
+            )}
+          </div>
           <div className="flex gap-2 w-full sm:w-auto">
             <button
               onClick={handleCreateKeywordArticle}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 w-full sm:w-auto justify-center"
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors w-full sm:w-auto justify-center"
             >
               <FiPlus /> Create Keyword Article
             </button>
             <button
               onClick={handleCreate}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 w-full sm:w-auto justify-center"
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors w-full sm:w-auto justify-center"
             >
               <FiPlus /> Create News Article
             </button>
             <button
               onClick={logout}
-              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 w-full sm:w-auto justify-center"
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors w-full sm:w-auto justify-center"
             >
               <FiLogOut /> Logout
             </button>
@@ -260,7 +375,7 @@ const AdminManager = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {articles.map((article) => (
-                    <tr key={article._id}>
+                    <tr key={article._id} className="hover:bg-gray-50">
                       <td className="px-4 py-4 whitespace-normal max-w-xs">
                         <div className="text-sm font-medium text-gray-900">
                           {article.title}
@@ -290,7 +405,7 @@ const AdminManager = () => {
                             onClick={() =>
                               handleEdit(article.category, article.slug)
                             }
-                            className="text-blue-600 hover:text-blue-900 p-1 rounded-md"
+                            className="text-blue-600 hover:text-blue-900 p-1 rounded-md hover:bg-blue-50 transition-colors"
                             title="Edit"
                           >
                             <FiEdit size={18} />
@@ -299,7 +414,7 @@ const AdminManager = () => {
                             onClick={() =>
                               handleDelete(article.category, article.slug)
                             }
-                            className="text-red-600 hover:text-red-900 p-1 rounded-md"
+                            className="text-red-600 hover:text-red-900 p-1 rounded-md hover:bg-red-50 transition-colors"
                             title="Delete"
                           >
                             <FiTrash2 size={18} />
