@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   LineChart,
   Line,
@@ -17,32 +17,89 @@ import {
 } from 'recharts';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
+const GA_MEASUREMENT_ID = 'G-DG0801N414'; // Your GA4 ID
 
 const AnalyticsDashboard = () => {
+  // internal state
   const [timeRange, setTimeRange] = useState('7days');
   const [activeTab, setActiveTab] = useState('overview');
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // GA-specific state
+  const [gaMetrics, setGaMetrics] = useState(null);
+  const [gaLoading, setGaLoading] = useState(false);
+  const [gaError, setGaError] = useState(null);
+
+  // Load GA script
+  const loadGtag = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    if (window.gtag) return;
+
+    const script1 = document.createElement('script');
+    script1.async = true;
+    script1.src = `https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`;
+    document.head.appendChild(script1);
+
+    const script2 = document.createElement('script');
+    script2.innerHTML = `
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '${GA_MEASUREMENT_ID}', {
+        page_path: window.location.pathname
+      });
+    `;
+    document.head.appendChild(script2);
+  }, []);
+
+  // Generic event tracker
+  const trackEvent = (name, params) => {
+    if (typeof window !== 'undefined' && window.gtag) {
+      window.gtag('event', name, params);
+    }
+  };
+
+  // Fetch GA aggregated metrics from backend
+  const fetchGAMetrics = useCallback(async () => {
+    setGaLoading(true);
+    setGaError(null);
+    try {
+      const res = await fetch(`/api/ga/summary?range=${timeRange}`);
+      if (!res.ok) throw new Error(`GA summary fetch failed: ${res.statusText}`);
+      const data = await res.json();
+      setGaMetrics(data);
+    } catch (e) {
+      console.error('GA fetch error:', e);
+      setGaError(e.message || 'Failed to fetch GA metrics');
+      setGaMetrics(null);
+    } finally {
+      setGaLoading(false);
+    }
+  }, [timeRange]);
+
+  useEffect(() => {
+    loadGtag();
+  }, [loadGtag]);
+
   useEffect(() => {
     const fetchArticles = async () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         const response = await fetch('https://informativejournal-backend.vercel.app/articles');
-        
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
         console.log('API Response:', data); // For debugging
-        
-        // Handle different response formats
+
         let articlesArray = [];
-        
+
         if (Array.isArray(data)) {
           articlesArray = data;
         } else if (data.data && Array.isArray(data.data)) {
@@ -54,8 +111,7 @@ const AnalyticsDashboard = () => {
         } else {
           throw new Error('API response does not contain a valid articles array. Received: ' + JSON.stringify(data));
         }
-        
-        // Validate and transform each article
+
         const validatedArticles = articlesArray.map((article, index) => ({
           id: article.id || article._id || `temp-${index}-${Date.now()}`,
           title: article.title || 'Untitled Article',
@@ -64,10 +120,10 @@ const AnalyticsDashboard = () => {
           views: Number(article.views) || 0,
           likes: Number(article.likes) || 0,
           comments: Number(article.comments) || 0,
-          slug: article.slug || article.title?.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '') || 'untitled',
+          slug: article.slug || (article.title ? article.title.toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]+/g, '') : 'untitled'),
           imageUrl: article.imageUrl || article.image || '/placeholder-article.jpg'
         }));
-        
+
         setArticles(validatedArticles);
       } catch (err) {
         console.error("Error fetching articles:", err);
@@ -80,24 +136,27 @@ const AnalyticsDashboard = () => {
     fetchArticles();
   }, []);
 
-  // Process article data for charts
+  useEffect(() => {
+    fetchGAMetrics();
+  }, [fetchGAMetrics]);
+
   const processData = () => {
     if (!Array.isArray(articles) || articles.length === 0) {
-      return { 
-        lineData: [], 
-        barData: [], 
-        categoryData: [], 
-        filteredArticles: [] 
+      return {
+        lineData: [],
+        barData: [],
+        categoryData: [],
+        filteredArticles: []
       };
     }
 
-    const sortedArticles = [...articles].sort((a, b) => 
-      new Date(b.publishedAt) - new Date(a.publishedAt)
+    const sortedArticles = [...articles].sort((a, b) =>
+      new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
     );
-    
+
     const now = new Date();
     let cutoffDate = new Date();
-    
+
     if (timeRange === '7days') {
       cutoffDate.setDate(now.getDate() - 7);
     } else if (timeRange === '30days') {
@@ -107,17 +166,17 @@ const AnalyticsDashboard = () => {
     } else {
       cutoffDate = new Date(0);
     }
-    
-    const filteredArticles = sortedArticles.filter(article => 
+
+    const filteredArticles = sortedArticles.filter(article =>
       new Date(article.publishedAt) >= cutoffDate
     );
-    
+
     const lineData = filteredArticles.map(article => ({
       date: new Date(article.publishedAt).toLocaleDateString(),
       views: article.views,
       title: article.title.substring(0, 20) + (article.title.length > 20 ? '...' : '')
     }));
-    
+
     const barData = [...filteredArticles]
       .sort((a, b) => b.views - a.views)
       .slice(0, 5)
@@ -127,7 +186,7 @@ const AnalyticsDashboard = () => {
         likes: article.likes,
         comments: article.comments
       }));
-    
+
     const categoryData = filteredArticles.reduce((acc, article) => {
       const existing = acc.find(item => item.name === article.category);
       if (existing) {
@@ -142,16 +201,24 @@ const AnalyticsDashboard = () => {
       }
       return acc;
     }, []);
-    
+
     return { lineData, barData, categoryData, filteredArticles };
   };
 
   const { lineData, barData, categoryData, filteredArticles } = processData();
   const totalViews = filteredArticles.reduce((sum, article) => sum + article.views, 0);
   const totalLikes = filteredArticles.reduce((sum, article) => sum + article.likes, 0);
-  const engagementRate = filteredArticles.length > 0 
+  const engagementRate = filteredArticles.length > 0
     ? Math.round((totalLikes / Math.max(totalViews, 1)) * 100)
     : 0;
+
+  const handleArticleClick = (article) => {
+    trackEvent('select_content', {
+      content_type: 'article',
+      item_id: article.id,
+      title: article.title,
+    });
+  };
 
   if (loading) {
     return (
@@ -180,8 +247,8 @@ const AnalyticsDashboard = () => {
             <li>Browser console for more details</li>
           </ul>
         </div>
-        <button 
-          onClick={() => window.location.reload()} 
+        <button
+          onClick={() => window.location.reload()}
           className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
         >
           Try Again
@@ -200,12 +267,12 @@ const AnalyticsDashboard = () => {
           <h3 className="text-lg font-medium">No Data Available</h3>
         </div>
         <p className="mt-2 text-yellow-700">
-          {articles.length === 0 
-            ? "No articles found in the system." 
+          {articles.length === 0
+            ? "No articles found in the system."
             : "No articles match the selected time range."}
         </p>
-        <button 
-          onClick={() => setTimeRange('all')} 
+        <button
+          onClick={() => setTimeRange('all')}
           className="mt-4 px-4 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 transition-colors"
         >
           Show All Articles
@@ -214,11 +281,19 @@ const AnalyticsDashboard = () => {
     );
   }
 
+  // Derived GA metrics with safe fallbacks
+  const gaActiveUsers = gaMetrics?.activeUsers ?? '—';
+  const gaSessions = gaMetrics?.sessions ?? '—';
+  const gaPageviews = gaMetrics?.pageviews ?? '—';
+  const gaEngagementRate = gaMetrics?.engagementRate ?? '—';
+  const gaAvgSessionDuration = gaMetrics?.averageSessionDuration ?? '—';
+  const gaEventCounts = gaMetrics?.eventCounts || {};
+
   return (
     <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6">News Analytics Dashboard</h1>
-        
+
         <div className="flex flex-wrap gap-2 mb-6">
           {['7days', '30days', '90days', 'all'].map(range => (
             <button
@@ -230,26 +305,27 @@ const AnalyticsDashboard = () => {
                   : 'bg-white text-gray-700 hover:bg-gray-100'
               }`}
             >
-              {range === '7days' ? 'Last 7 Days' : 
-               range === '30days' ? 'Last 30 Days' : 
-               range === '90days' ? 'Last 90 Days' : 'All Time'}
+              {range === '7days' ? 'Last 7 Days' :
+                range === '30days' ? 'Last 30 Days' :
+                  range === '90days' ? 'Last 90 Days' : 'All Time'}
             </button>
           ))}
         </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+
+        <div className="grid grid-cols-1 md:grid-cols-8 gap-4 mb-6">
+          {/* Internal stats */}
           <div className="bg-white p-4 rounded-lg shadow">
             <h3 className="text-gray-500 text-sm font-medium">Total Articles</h3>
             <p className="text-2xl font-bold text-gray-800">{filteredArticles.length}</p>
           </div>
           <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-gray-500 text-sm font-medium">Total Views</h3>
+            <h3 className="text-gray-500 text-sm font-medium">Internal Views</h3>
             <p className="text-2xl font-bold text-blue-600">
               {totalViews.toLocaleString()}
             </p>
           </div>
           <div className="bg-white p-4 rounded-lg shadow">
-            <h3 className="text-gray-500 text-sm font-medium">Total Likes</h3>
+            <h3 className="text-gray-500 text-sm font-medium">Internal Likes</h3>
             <p className="text-2xl font-bold text-green-600">
               {totalLikes.toLocaleString()}
             </p>
@@ -260,8 +336,49 @@ const AnalyticsDashboard = () => {
               {engagementRate}%
             </p>
           </div>
+          {/* GA metrics */}
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h3 className="text-gray-500 text-sm font-medium">GA Active Users</h3>
+            <p className="text-2xl font-bold text-indigo-600">
+              {gaLoading ? '…' : (typeof gaActiveUsers === 'number' ? gaActiveUsers.toLocaleString() : gaActiveUsers)}
+            </p>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h3 className="text-gray-500 text-sm font-medium">GA Sessions</h3>
+            <p className="text-2xl font-bold text-indigo-600">
+              {gaLoading ? '…' : (typeof gaSessions === 'number' ? gaSessions.toLocaleString() : gaSessions)}
+            </p>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h3 className="text-gray-500 text-sm font-medium">GA Pageviews</h3>
+            <p className="text-2xl font-bold text-blue-600">
+              {gaLoading ? '…' : (typeof gaPageviews === 'number' ? gaPageviews.toLocaleString() : gaPageviews)}
+            </p>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h3 className="text-gray-500 text-sm font-medium">GA Engagement Rate</h3>
+            <p className="text-2xl font-bold text-teal-600">
+              {gaLoading ? '…' : (typeof gaEngagementRate === 'number' ? `${Math.round(gaEngagementRate)}%` : gaEngagementRate)}
+            </p>
+          </div>
         </div>
-        
+
+        <div className="grid grid-cols-1 md:grid-cols-6 gap-4 mb-6">
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h3 className="text-gray-500 text-sm font-medium">Avg. Session Duration (sec)</h3>
+            <p className="text-2xl font-bold text-gray-800">
+              {gaLoading ? '…' : (typeof gaAvgSessionDuration === 'number' ? Math.round(gaAvgSessionDuration) : gaAvgSessionDuration)}
+            </p>
+          </div>
+          <div className="bg-white p-4 rounded-lg shadow">
+            <h3 className="text-gray-500 text-sm font-medium">Tracked Clicks (select_content)</h3>
+            <p className="text-2xl font-bold text-orange-600">
+              {gaLoading ? '…' : (gaEventCounts.select_content != null ? gaEventCounts.select_content.toLocaleString() : '0')}
+            </p>
+            <div className="text-xs text-gray-500">Article link clicks tracked as GA events</div>
+          </div>
+        </div>
+
         <div className="flex border-b border-gray-200 mb-6">
           {['overview', 'articles', 'categories'].map(tab => (
             <button
@@ -277,7 +394,7 @@ const AnalyticsDashboard = () => {
             </button>
           ))}
         </div>
-        
+
         {activeTab === 'overview' && (
           <div className="space-y-6">
             <div className="bg-white p-4 rounded-lg shadow">
@@ -290,18 +407,50 @@ const AnalyticsDashboard = () => {
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    <Line 
-                      type="monotone" 
-                      dataKey="views" 
-                      stroke="#8884d8" 
-                      activeDot={{ r: 8 }} 
+                    <Line
+                      type="monotone"
+                      dataKey="views"
+                      stroke="#8884d8"
+                      activeDot={{ r: 8 }}
                       strokeWidth={2}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             </div>
-            
+
+            {/* GA vs internal top pages comparison */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-white p-4 rounded-lg shadow">
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">Top Internal Articles</h2>
+                <div className="h-64 overflow-auto">
+                  {barData.map((b, i) => (
+                    <div key={i} className="flex justify-between py-1 border-b last:border-b-0">
+                      <div className="text-sm font-medium">{b.title}</div>
+                      <div className="text-sm">{b.views.toLocaleString()} views</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-lg shadow">
+                <h2 className="text-lg font-semibold text-gray-800 mb-4">Top GA Pages</h2>
+                <div className="h-64 overflow-auto">
+                  {gaLoading && <p className="text-sm">Loading GA top pages...</p>}
+                  {!gaLoading && gaMetrics && gaMetrics.topPages && gaMetrics.topPages.length ? (
+                    gaMetrics.topPages.map((p, idx) => (
+                      <div key={idx} className="flex justify-between py-1 border-b last:border-b-0">
+                        <div className="text-sm font-medium truncate">{p.title || p.path}</div>
+                        <div className="text-sm">{p.views.toLocaleString()} views</div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-500">No GA top pages available.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="bg-white p-4 rounded-lg shadow">
                 <h2 className="text-lg font-semibold text-gray-800 mb-4">Top Performing Articles</h2>
@@ -319,7 +468,7 @@ const AnalyticsDashboard = () => {
                   </ResponsiveContainer>
                 </div>
               </div>
-              
+
               <div className="bg-white p-4 rounded-lg shadow">
                 <h2 className="text-lg font-semibold text-gray-800 mb-4">Articles by Category</h2>
                 <div className="h-64">
@@ -340,10 +489,10 @@ const AnalyticsDashboard = () => {
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>
-                      <Tooltip 
+                      <Tooltip
                         formatter={(value, name, props) => [
                           `${props.payload.name}: ${value} articles (${props.payload.views} views)`
-                        ]} 
+                        ]}
                       />
                     </PieChart>
                   </ResponsiveContainer>
@@ -352,7 +501,7 @@ const AnalyticsDashboard = () => {
             </div>
           </div>
         )}
-        
+
         {activeTab === 'articles' && (
           <div className="bg-white rounded-lg shadow overflow-hidden">
             <div className="overflow-x-auto">
@@ -369,19 +518,19 @@ const AnalyticsDashboard = () => {
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {filteredArticles.map((article) => {
-                    const engagementPercentage = article.views 
+                    const engagementPercentage = article.views
                       ? Math.round((article.likes / article.views) * 100)
                       : 0;
-                      
+
                     return (
                       <tr key={article.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
                             <div className="flex-shrink-0 h-10 w-10">
-                              <img 
-                                className="h-10 w-10 rounded-md object-cover" 
-                                src={article.imageUrl} 
-                                alt={article.title} 
+                              <img
+                                className="h-10 w-10 rounded-md object-cover"
+                                src={article.imageUrl}
+                                alt={article.title}
                                 onError={(e) => {
                                   e.target.src = '/placeholder-article.jpg';
                                 }}
@@ -389,19 +538,20 @@ const AnalyticsDashboard = () => {
                             </div>
                             <div className="ml-4">
                               <div className="text-sm font-medium text-gray-900">
-                                <a 
-                                  href={`/${article.category}/${article.slug}`} 
-                                  target="_blank" 
+                                <a
+                                  href={`/${article.category}/${article.slug}`}
+                                  target="_blank"
                                   rel="noopener noreferrer"
                                   className="hover:text-blue-600 transition-colors"
+                                  onClick={() => handleArticleClick(article)}
                                 >
                                   {article.title}
                                 </a>
                               </div>
                               <div className="text-sm text-gray-500">
-                                <a 
-                                  href={`/${article.category}`} 
-                                  target="_blank" 
+                                <a
+                                  href={`/${article.category}`}
+                                  target="_blank"
                                   rel="noopener noreferrer"
                                   className="hover:text-blue-600 transition-colors"
                                 >
@@ -428,8 +578,8 @@ const AnalyticsDashboard = () => {
                             {engagementPercentage}%
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div 
-                              className="bg-blue-600 h-2 rounded-full" 
+                            <div
+                              className="bg-blue-600 h-2 rounded-full"
                               style={{ width: `${Math.min(engagementPercentage, 100)}%` }}
                             ></div>
                           </div>
@@ -442,7 +592,7 @@ const AnalyticsDashboard = () => {
             </div>
           </div>
         )}
-        
+
         {activeTab === 'categories' && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white p-4 rounded-lg shadow">
@@ -455,16 +605,16 @@ const AnalyticsDashboard = () => {
                   >
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis type="number" />
-                    <YAxis 
-                      dataKey="name" 
-                      type="category" 
-                      width={100} 
+                    <YAxis
+                      dataKey="name"
+                      type="category"
+                      width={100}
                       tick={{ fontSize: 12 }}
                     />
                     <Tooltip />
-                    <Bar 
-                      dataKey="views" 
-                      fill="#8884d8" 
+                    <Bar
+                      dataKey="views"
+                      fill="#8884d8"
                       radius={[0, 4, 4, 0]}
                       animationDuration={1500}
                     />
@@ -472,7 +622,7 @@ const AnalyticsDashboard = () => {
                 </ResponsiveContainer>
               </div>
             </div>
-            
+
             <div className="bg-white p-4 rounded-lg shadow">
               <h2 className="text-lg font-semibold text-gray-800 mb-4">Category Distribution</h2>
               <div className="space-y-4">
@@ -481,9 +631,9 @@ const AnalyticsDashboard = () => {
                   return (
                     <div key={category.name} className="space-y-1">
                       <div className="flex justify-between text-sm">
-                        <a 
-                          href={`/${category.name}`} 
-                          target="_blank" 
+                        <a
+                          href={`/${category.name}`}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="font-medium hover:text-blue-600 transition-colors"
                         >
@@ -494,8 +644,8 @@ const AnalyticsDashboard = () => {
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-green-600 h-2 rounded-full transition-all duration-500" 
+                        <div
+                          className="bg-green-600 h-2 rounded-full transition-all duration-500"
                           style={{ width: `${percentage}%` }}
                         ></div>
                       </div>
