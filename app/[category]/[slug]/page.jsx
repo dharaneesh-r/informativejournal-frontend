@@ -204,9 +204,7 @@ const page = async ({ params }) => {
   }
 
   return (
-    <div>
-      <SlugPage articleData={articleData} category={category} slug={slug} />
-    </div>
+    <SlugPage articleData={articleData} category={category} slug={slug} />
   );
 };
 
